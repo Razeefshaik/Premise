@@ -8,6 +8,7 @@ Run date: October 16, 2026 (IST). No results below imply a live GitHub demonstra
 | GitHub / agent / Brain / MCP tests | **21 passed**, 104.36 s |
 | Full host suite with expanded corpus and source permalink regression | **70 passed**, 188.36 s |
 | Python 3.12 container suite against real FalkorDB | **70 passed**, 219.81 s |
+| Final standalone image, no source mount or `.env` | **70 passed**, 75.58 s; built from clean runtime commit `3f88f3f` |
 | Headless Chrome UI | Desktop 1440×1050 and mobile 390×844 passed; no page errors or document overflow; Mermaid SVG rendered |
 | Final corpus | **20 distinct tickets, 40 chat messages, four runbooks** |
 | Clean local clone → standalone Docker startup | `/healthz` HTTP **200**, ready revision 1; no `.env` or GitHub token in image |
@@ -44,7 +45,7 @@ Each graph test uses an isolated `premise_test_<uuid>` graph and cleans it after
 No mocked graph substitutes for FalkorDB. Host artifacts, including JUnit XML and browser
 screenshots, live under ignored `artifacts/` so generated output is not mixed with source.
 
-The standalone image was built from a clean local Git clone, without the host `.venv`
+The final standalone image was built from a clean local Git clone, without the host `.venv`
 or ignored files. Its bootstrap ingested the bundled company into a new graph, and its
 health endpoint returned ready. Runtime source changes after the full container suite
 received focused regression checks: proposed-value commit citations (1 passed, 7.28 s)
