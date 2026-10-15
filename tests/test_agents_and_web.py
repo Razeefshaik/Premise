@@ -84,6 +84,7 @@ def test_analyst_rejects_hallucinated_ids(kestrel):
             return {'outcome':'answered_with_path','answer_markdown':'ADR-099 owns this','cited_ids':['ADR-099']}
     answer=answer_question(tools,'Why ADR-012?',adapter=Hallucinates())
     assert answer['mode']=='deterministic' and 'ADR-099' not in answer['answer_markdown']
+    assert 'p_jun' in answer['answer_markdown']
     assert answer['sources']
     assert not verify_answer({'outcome':'answered_with_path','answer_markdown':'See https://evil.example','cited_ids':[]},[])
     unknown=answer_question(tools,'zzzzfrobnitz')

@@ -8,6 +8,28 @@ from .verify import verify_answer, strings
 from .render import provenance
 
 
+def row_answer(name, rows):
+    """Useful prose from exact rows, with no invented model narrative."""
+    if name == "decision_lineage" and isinstance(rows,dict) and rows.get("decision"):
+        d=rows["decision"]
+        provided=sorted({p["guarantee"] for p in rows["paths"] if p["role"]=="PROVIDES"})
+        relied=sorted({p["guarantee"] for p in rows["paths"] if p["role"]=="RELIES_ON"})
+        reviewers=", ".join(rows["reviewers"]) or "No active reviewer found"
+        evidence="; ".join(f"{c['person']}: {c['evidence']} recent authored sources" for c in rows["candidates"])
+        return f"{d['id']}: {d['title']}. Lifecycle: {d['status']}. Provides {', '.join(provided) or 'no guarantees'}; relies on {', '.join(relied) or 'no guarantees'}. Current reviewers: {reviewers}. {evidence}. The requirement paths and source lines are shown below."
+    if name == "guarantee_health" and isinstance(rows,dict):
+        bad=[f"{g['id']} is {g['status']}" for g in rows["guarantees"] if g["status"]!='holds']
+        unknown=[a['id'] for a in rows["assumptions"] if a['state']=='unverified']
+        top=', '.join(g['id'] for g in rows['guarantees'][:3])
+        return f"{len(rows['guarantees'])} guarantees checked on all prerequisites. " + ('; '.join(bad) or 'Every checked guarantee holds') + f". Unverified attestations: {', '.join(unknown) or 'none'}. Highest PageRank: {top or 'no guarantees'}. PageRank describes dependencies and does not decide health."
+    if name == "who_knows" and rows:
+        people='; '.join(f"{r['name']} ({r['person']}): {r['evidence']} recent authored sources" for r in rows[:3] if r['person'])
+        return f"{rows[0]['team_name']} ({rows[0]['team']}) owns {rows[0]['service']}. Active experts ranked by evidence: {people or 'no active team members found'}."
+    if name == "orphaned_decisions" and rows:
+        return "These accepted decisions have no active accountable author or approver: " + ', '.join(r['decision'] for r in rows) + ". Use decision_lineage to find current reviewer candidates."
+    return "Graph evidence is shown below. Health uses every prerequisite; reviewer candidates are ranked by recent authored evidence."
+
+
 def answer_question(tools, question, settings=None, adapter=None):
     if not isinstance(question,str) or not question.strip() or len(question)>2000:
         raise ValueError("Question must contain 1 to 2000 characters")
@@ -42,9 +64,12 @@ def answer_question(tools, question, settings=None, adapter=None):
         else:
             resolved = dispatch("resolve",{"query":question,"limit":5})
             selected = next((x for x in resolved if "Decision" in x["labels"]),None)
-            if selected:
+            service = next((x for x in resolved if "Service" in x["labels"]),None)
+            if service and any(w in q for w in ("who","owns","owner","knows")):
+                dispatch("who_knows",{"id":service["id"]})
+            elif selected:
                 dispatch("decision_lineage",{"id":selected["id"]})
-            elif (service := next((x for x in resolved if "Service" in x["labels"]),None)):
+            elif service:
                 dispatch("who_knows",{"id":service["id"]})
             else:
                 dispatch("search_evidence",{"query":question,"limit":5})
@@ -54,7 +79,7 @@ def answer_question(tools, question, settings=None, adapter=None):
         empty = not rows or (isinstance(rows,dict) and rows.get("outcome")=="unknown_entity")
         answer = {"outcome":"unknown_entity" if isinstance(rows,dict) and rows.get("outcome")=="unknown_entity" else "not_in_graph" if empty else "answered_from_memory" if calls[-1]["tool"]=="recall" else "answered_with_path",
                   "answer_markdown":"This topic was not found in the graph. This does not establish that nothing is affected." if empty else
-                  "Graph evidence is shown below. Health uses every prerequisite; reviewer candidates are ranked by recent authored evidence.","cited_ids":[]}
+                  row_answer(calls[-1]["tool"], rows),"cited_ids":[]}
     ids = set(strings(calls))
     sources = provenance(tools.client,sorted(x for x in ids if len(x)<160))
     seen = {(s.get("path"),s.get("line")) for s in sources}
