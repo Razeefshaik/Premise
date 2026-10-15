@@ -10,6 +10,7 @@ Run date: October 16, 2026 (IST). No results below imply a live GitHub demonstra
 | Python 3.12 container suite against real FalkorDB | **70 passed**, 219.81 s |
 | Headless Chrome UI | Desktop 1440×1050 and mobile 390×844 passed; no page errors or document overflow; Mermaid SVG rendered |
 | Final corpus | **20 distinct tickets, 40 chat messages, four runbooks** |
+| Clean local clone → standalone Docker startup | `/healthz` HTTP **200**, ready revision 1; no `.env` or GitHub token in image |
 | Scenario CLI | **12/12 passed** |
 | FalkorDB module | `MODULE LIST` and startup logs confirm **4.18.3** |
 | GitHub account and both repositories | Authenticated GET requests succeeded; account `Razeefshaik`, both repo lookups HTTP 200 |
@@ -43,8 +44,14 @@ Each graph test uses an isolated `premise_test_<uuid>` graph and cleans it after
 No mocked graph substitutes for FalkorDB. Host artifacts, including JUnit XML and browser
 screenshots, live under ignored `artifacts/` so generated output is not mixed with source.
 
+The standalone image was built from a clean local Git clone, without the host `.venv`
+or ignored files. Its bootstrap ingested the bundled company into a new graph, and its
+health endpoint returned ready. Runtime source changes after the full container suite
+received focused regression checks: proposed-value commit citations (1 passed, 7.28 s)
+and Analyst argument/unknown-lookup evidence rejection (1 passed, 38.73 s).
+
 One initial regression run was invalidated by a container recreation (three connection
-errors); it was repeated on a stable server. The successful 47-test and 69-test runs above
+errors); it was repeated on a stable server. The successful 47-test and 70-test runs above
 supersede that interrupted run. No passing claim is made from the interrupted execution.
 
 Still required after manual publication:
