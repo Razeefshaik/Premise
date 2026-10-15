@@ -59,6 +59,9 @@ def answer_question(tools, question, settings=None, adapter=None):
     sources = provenance(tools.client,sorted(x for x in ids if len(x)<160))
     seen = {(s.get("path"),s.get("line")) for s in sources}
     for call in calls:
+        if call["tool"]=="who_knows":
+            for row in call["rows"]:
+                sources.extend(row.get("citations", []))
         if call["tool"]=="search_evidence":
             for row in call["rows"]:
                 if (row.get("path"),row.get("line")) not in seen:

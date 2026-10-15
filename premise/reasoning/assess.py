@@ -51,9 +51,9 @@ def assess(client: GraphClient, changes: list[ChangedFact], *, changed_paths: li
         return AssessmentResult(verdict="ERROR", graph_rev=rev, reasons=[Reason(code="R_UNAVAILABLE", detail=why)], **base)
     try:
         return _assess(client, changes, at, since_days, rev, run_repair, fix_budget, base)
-    except GraphUnavailable as exc:
+    except Exception as exc:
         return AssessmentResult(verdict="ERROR", graph_rev=rev,
-                                reasons=[Reason(code="R_UNAVAILABLE", detail=f"graph unavailable: {exc}")], **base)
+                                reasons=[Reason(code="R_UNAVAILABLE", detail=f"assessment unavailable: {type(exc).__name__}")], **base)
 
 
 def _assess(client, changes, at, since_days, rev, run_repair, fix_budget, base) -> AssessmentResult:

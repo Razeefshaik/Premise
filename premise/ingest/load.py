@@ -51,7 +51,7 @@ def load(client: GraphClient, model: Model, warnings: list[str], commit_sha: str
         for chunk in _chunks(rows):
             client.write(
                 f"UNWIND $rows AS row MERGE (n:Entity:{label} {{id: row.id}}) "
-                "SET n += row.props, n.seen_rev = $rev REMOVE n.retired_rev",
+                "SET n = row.props, n.id = row.id, n.seen_rev = $rev REMOVE n.retired_rev",
                 {"rows": chunk, "rev": rev},
             )
 
@@ -61,7 +61,7 @@ def load(client: GraphClient, model: Model, warnings: list[str], commit_sha: str
         for chunk in _chunks(rows):
             client.write(
                 f"UNWIND $rows AS row MATCH (a:Entity {{id: row.a}}), (b:Entity {{id: row.b}}) "
-                f"MERGE (a)-[r:{type_}]->(b) SET r += row.props, r.rev = $rev",
+                f"MERGE (a)-[r:{type_}]->(b) SET r = row.props, r.rev = $rev",
                 {"rows": chunk, "rev": rev},
             )
 

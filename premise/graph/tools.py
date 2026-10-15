@@ -105,7 +105,10 @@ class GraphTools:
                 "reviewers":active or [c.person for c in candidates], "sources":provenance(self.client,ids)}
 
     def who_knows(self, id):
-        return self.client.named("who_knows", {"id":id, "since":self.now-self.since_days*DAY_MS})
+        rows = self.client.named("who_knows", {"id":id, "since":self.now-self.since_days*DAY_MS})
+        for row in rows:
+            row["citations"] = self.client.named("evidence_sources", {"ids":row["sources"]}) if row["sources"] else []
+        return rows
 
     def search_evidence(self, query, limit=10):
         return self.client.named("search_evidence", {"q":terms(query), "limit":limit}) if terms(query) else []

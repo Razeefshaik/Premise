@@ -96,3 +96,16 @@ def test_validation_warnings(kestrel):
     warnings = json.loads(kestrel.read("MATCH (s:GraphState) RETURN s.warnings_json AS w")[0]["w"])
     assert "orphan assumption A_CART_TTL: no guarantee requires it" in warnings
     assert "orphaned decision ADR-012: nobody accountable is still active" in warnings
+
+
+def test_reingestion_clears_removed_authored_properties(new_graph, repo_copy):
+    from premise.graph.tools import GraphTools
+    c = new_graph()
+    ingest(c, repo_copy, 'a'*40, 'https://github.com/test/kestrel')
+    assert c.read("MATCH (:Person)-[a:ATTESTED]->(:Assumption {id:'A_RATES_SOURCE'}) RETURN a.review_by AS expiry")[0]['expiry']
+    replace_in(repo_copy, 'adr/ADR-003.md', '      review_by: 2026-09-30', '')
+    ingest(c, repo_copy, 'local')
+    assert c.read("MATCH (:Person)-[a:ATTESTED]->(:Assumption {id:'A_RATES_SOURCE'}) RETURN a.review_by AS expiry")[0]['expiry'] is None
+    health=GraphTools(c,NOW).call('guarantee_health',{'id':'G_RATES_FRESH'})
+    assert health['guarantees'][0]['status']=='holds'
+    assert all(s['url'] is None for s in health['sources'])

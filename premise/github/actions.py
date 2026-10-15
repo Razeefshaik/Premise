@@ -7,6 +7,7 @@ import math
 from ..ingest import yamlpos
 from ..reasoning.assess import graph_ready
 from ..reasoning.repair import Repairer
+from ..graph.client import GraphUnavailable
 from ..agent.render import provenance, render_comment
 from .store import Store, digest, assessment_id
 
@@ -26,7 +27,9 @@ class Executor:
     def fresh(self, result, number):
         pr = self.github.pull(number)
         ready, rev, _ = graph_ready(self.client)
-        if pr["state"] != "open" or pr["head"]["sha"] != result.head_sha or not ready or rev != result.graph_rev:
+        if not ready:
+            raise GraphUnavailable("Graph not ready during action execution")
+        if pr["state"] != "open" or pr["head"]["sha"] != result.head_sha or rev != result.graph_rev:
             raise StaleAssessment("PR head or graph revision changed; requeue required")
         return pr
 
@@ -52,6 +55,15 @@ class Executor:
             raise
 
     def execute(self, result, pr):
+        try:
+            return self._execute(result, pr)
+        except GraphUnavailable:
+            latest = self.github.pull(pr["number"])
+            if latest["state"] == "open" and latest["head"]["sha"] == result.head_sha:
+                self.github.status(result.head_sha, "error", "Assessment unavailable: graph failed during execution")
+            raise
+
+    def _execute(self, result, pr):
         number = pr["number"]
         if result.verdict == "ERROR":
             # An unavailable graph cannot record an action. Only a current-head error status is allowed.

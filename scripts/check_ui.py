@@ -1,0 +1,45 @@
+"""Headless desktop/mobile QA of a running local demo. Install playwright separately."""
+from pathlib import Path
+import json
+from playwright.sync_api import sync_playwright
+
+
+def main():
+    artifact=Path('artifacts'); artifact.mkdir(exist_ok=True)
+    candidates=[Path('C:/Program Files/Google/Chrome/Application/chrome.exe'),Path('C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe')]
+    executable=next((str(p) for p in candidates if p.exists()),None)
+    with sync_playwright() as p:
+        browser=p.chromium.launch(headless=True,**({'executable_path':executable} if executable else {}))
+        errors=[]
+        page=browser.new_page(viewport={'width':1440,'height':1050},device_scale_factor=1)
+        page.on('pageerror',lambda error:errors.append(str(error)))
+        page.goto('http://localhost:8000/',wait_until='networkidle')
+        page.get_by_role('heading',name='What still holds?').wait_for()
+        assert page.locator('tbody tr').count()>=9
+        page.screenshot(path=str(artifact/'brain-desktop.png'),full_page=True)
+        page.get_by_label('Your question').fill('Why ADR-012, and who owns it now?')
+        page.get_by_role('button',name='Find graph evidence').click()
+        page.locator('#answer h3').wait_for(timeout=60000)
+        assert 'ADR-012' in page.locator('#answer').inner_text()
+        assert 'p_jun' in page.locator('#answer').inner_text()
+        page.get_by_role('link',name='#9001 Local demo S1:',exact=False).click()
+        page.get_by_role('heading',name='Consequences, connected.').wait_for()
+        page.wait_for_timeout(1500)
+        graph=page.locator('.mermaid svg').count()>0
+        page.screenshot(path=str(artifact/'assessment-desktop.png'),full_page=True)
+        assert 'ADR-016' in page.locator('main').inner_text()
+        page.set_viewport_size({'width':390,'height':844})
+        page.screenshot(path=str(artifact/'assessment-mobile.png'),full_page=True)
+        assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
+        page.goto('http://localhost:8000/',wait_until='networkidle')
+        page.screenshot(path=str(artifact/'brain-mobile.png'),full_page=True)
+        assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
+        browser.close()
+        report={'page_errors':errors,'mermaid_svg_rendered':graph,'desktop':[1440,1050],'mobile':[390,844]}
+        (artifact/'ui-check.json').write_text(json.dumps(report,indent=2))
+        print(json.dumps(report))
+        assert not errors
+
+
+if __name__=='__main__':
+    main()
