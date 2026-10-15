@@ -83,6 +83,13 @@ class Executor:
         ids += [g.id for g in result.guarantees] + [d.id for d in result.decisions]
         ids += [x for c in result.not_affected + result.checked_with_problems for x in (c.decision, c.via_guarantee, c.sibling_of)]
         refs = provenance(self.client, ids)
+        # Proposed values are evidenced at the PR head; unchanged facts stay linked to main.
+        for c in result.changed_facts:
+            if not c.deleted:
+                refs = [r for r in refs if r["id"] != c.fact]
+                refs.append({"id":c.fact,"path":c.file,"line":c.line,
+                             "url":f"https://github.com/{self.github.repo}/blob/{result.head_sha}/{c.file}",
+                             "commit_sha":result.head_sha})
         people = self.client.read("MATCH (p:Person) RETURN p.id AS id, p.name AS name")
         body = render_comment(result, number, url, refs, {p["id"]:p["name"] for p in people})
         cp = {"number": number, "head_sha": result.head_sha, "body": body, "graph_rev": result.graph_rev}

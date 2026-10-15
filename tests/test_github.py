@@ -100,6 +100,7 @@ def test_status_comment_fix_and_main_isolation(operational):
     assert all(id in comment for id in ['ADR-012','ADR-015','ADR-018','ADR-016','A_REDIS_TTL'])
     assert 'Checked and not affected' in comment and 'mermaid' in comment
     assert '#L' in comment and '@p_' not in comment
+    assert f'/blob/{HEAD}/config/partners/paylane.yaml#L' in comment
     assert remote.pulls[0]['base']=='scenario/s1'
     assert len(remote.trees[0]['tree'])==2  # atomic complete remedy
     assert {f['value'] for f in client.named('facts_by_id',{'ids':['webhook.dedupe_ttl_hours']})}=={24}
