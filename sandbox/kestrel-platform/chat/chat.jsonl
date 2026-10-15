@@ -8,7 +8,7 @@
 {"id": "c8", "channel": "platform", "author": "p_ravi", "ts": "2026-10-08T10:01:00Z", "text": "Agreed. A_RATE_TTL can hold while A_RATES_SOURCE remains unverified.", "thread": "c7"}
 {"id": "c9", "channel": "platform", "author": "p_tess", "ts": "2026-10-08T10:02:00Z", "text": "The September 30 review date is in ADR-003. Please do not make the dashboard green by editing dates without evidence.", "thread": "c7"}
 {"id": "c10", "channel": "platform", "author": "p_ravi", "ts": "2026-10-08T10:03:00Z", "text": "I will capture publication and cache insertion timestamps for the runbook.", "thread": "c7"}
-{"id": "c11", "channel": "platform", "author": "p_tess", "ts": "2026-10-08T10:04:00Z", "text": "KES-131 tracks renewal. G_RATES_FRESH stays unknown until the attestation is current.", "thread": "c7"}
+{"id": "c11", "channel": "platform", "author": "p_tess", "ts": "2026-10-08T10:04:00Z", "text": "KES-137 tracks renewal. G_RATES_FRESH stays unknown until the attestation is current.", "thread": "c7"}
 {"id": "c12", "channel": "platform", "author": "p_sofia", "ts": "2026-10-08T10:05:00Z", "text": "That distinction should also appear in on-call handover: unknown means evidence is missing, not a confirmed outage.", "thread": "c7"}
 {"id": "c13", "channel": "storefront", "author": "p_kim", "ts": "2026-10-09T10:00:00Z", "text": "adservice cache TTL is 120 seconds. The recorded bound is 300 seconds.", "thread": null}
 {"id": "c14", "channel": "storefront", "author": "p_omar", "ts": "2026-10-09T10:01:00Z", "text": "Is a six-minute inventory cache covered by ADR-020?", "thread": "c13"}
@@ -27,7 +27,7 @@
 {"id": "c27", "channel": "storefront", "author": "p_omar", "ts": "2026-10-11T10:02:00Z", "text": "So exceeding it still needs review, even though there is no guarantee chain to flag.", "thread": "c25"}
 {"id": "c28", "channel": "storefront", "author": "p_kim", "ts": "2026-10-11T10:03:00Z", "text": "Yes. The orphan-assumption warning is intentional; we should decide whether a guarantee belongs there.", "thread": "c25"}
 {"id": "c29", "channel": "storefront", "author": "p_tess", "ts": "2026-10-11T10:04:00Z", "text": "My storefront membership ended in July. Please route current ownership questions to the active storefront team.", "thread": "c25"}
-{"id": "c30", "channel": "storefront", "author": "p_omar", "ts": "2026-10-11T10:05:00Z", "text": "I will keep the retention evidence in KES-133 rather than implying a new guarantee was already adopted.", "thread": "c25"}
+{"id": "c30", "channel": "storefront", "author": "p_omar", "ts": "2026-10-11T10:05:00Z", "text": "I will keep the retention evidence in KES-138 rather than implying a new guarantee was already adopted.", "thread": "c25"}
 {"id": "c31", "channel": "platform", "author": "p_ravi", "ts": "2026-10-12T10:00:00Z", "text": "productcatalogservice response size grew with the latest attributes.", "thread": null}
 {"id": "c32", "channel": "platform", "author": "p_tess", "ts": "2026-10-12T10:01:00Z", "text": "Do we have an authored guarantee about catalog payload size?", "thread": "c31"}
 {"id": "c33", "channel": "platform", "author": "p_ravi", "ts": "2026-10-12T10:02:00Z", "text": "No. KES-136 is observational evidence, not a machine-checkable guarantee.", "thread": "c31"}
