@@ -87,6 +87,9 @@ def test_analyst_rejects_hallucinated_ids(kestrel):
     assert 'p_jun' in answer['answer_markdown']
     assert answer['sources']
     assert not verify_answer({'outcome':'answered_with_path','answer_markdown':'See https://evil.example','cited_ids':[]},[])
+    invented={'outcome':'answered_with_path','answer_markdown':'ADR-099 owns this','cited_ids':['ADR-099']}
+    assert not verify_answer(invented,[{'tool':'resolve','arguments':{'query':'ADR-099'},'rows':[]}])
+    assert not verify_answer(invented,[{'tool':'decision_lineage','arguments':{'id':'ADR-099'},'rows':{'outcome':'unknown_entity','id':'ADR-099'}}])
     unknown=answer_question(tools,'zzzzfrobnitz')
     assert unknown['outcome']=='not_in_graph' and 'does not establish' in unknown['answer_markdown']
     assert answer_question(tools,'What about G_ABSENT?')['outcome']=='unknown_entity'

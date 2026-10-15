@@ -6,7 +6,10 @@ Run date: October 16, 2026 (IST). No results below imply a live GitHub demonstra
 | --- | --- |
 | Original milestone regressions | **47 passed**, 89.53 s, real FalkorDB 4.18.3 |
 | GitHub / agent / Brain / MCP tests | **21 passed**, 104.36 s |
-| Full suite, including authored-property removal regression | **69 passed**, 206.75 s |
+| Full host suite with expanded corpus and source permalink regression | **70 passed**, 188.36 s |
+| Python 3.12 container suite against real FalkorDB | **70 passed**, 219.81 s |
+| Headless Chrome UI | Desktop 1440×1050 and mobile 390×844 passed; no page errors or document overflow; Mermaid SVG rendered |
+| Final corpus | **20 distinct tickets, 40 chat messages, four runbooks** |
 | Scenario CLI | **12/12 passed** |
 | FalkorDB module | `MODULE LIST` and startup logs confirm **4.18.3** |
 | GitHub account and both repositories | Authenticated GET requests succeeded; account `Razeefshaik`, both repo lookups HTTP 200 |
@@ -15,7 +18,7 @@ Run date: October 16, 2026 (IST). No results below imply a live GitHub demonstra
 | Video / hackathon submission | **Not recorded or submitted** |
 
 The host suite ran on Python 3.13. The Docker deployment uses the required Python 3.12.
-The full host run emits one dependency deprecation warning: Starlette's test client warns
+Both test environments emit one dependency deprecation warning: Starlette's test client warns
 about httpx compatibility. Tests still pass. The requirements lock records the versions
 actually installed; it contains no credentials or local editable paths.
 

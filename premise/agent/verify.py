@@ -21,8 +21,15 @@ def verify_answer(answer, rows):
         return False
     if answer.get("outcome") not in {"answered_with_path","answered_from_memory","not_in_graph","unknown_entity"}:
         return False
-    known = set(strings(rows))
-    known.update(ID_TOKEN.findall(json.dumps(rows)))
+    # Caller-supplied arguments are not evidence. Unknown lookups cannot establish an entity.
+    evidence=[]
+    for row in rows:
+        value=row.get("rows") if isinstance(row,dict) and "tool" in row and "rows" in row else row
+        if isinstance(value,dict) and value.get("outcome")=="unknown_entity" and answer["outcome"]!="unknown_entity":
+            continue
+        evidence.append(value)
+    known = set(strings(evidence))
+    known.update(ID_TOKEN.findall(json.dumps(evidence)))
     text = answer["answer_markdown"]
     if re.search(r"https?://|\]\(", text):
         return False
