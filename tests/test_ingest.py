@@ -109,3 +109,13 @@ def test_reingestion_clears_removed_authored_properties(new_graph, repo_copy):
     health=GraphTools(c,NOW).call('guarantee_health',{'id':'G_RATES_FRESH'})
     assert health['guarantees'][0]['status']=='holds'
     assert all(s['url'] is None for s in health['sources'])
+
+
+def test_text_sources_have_commit_permalinks_and_portable_paths():
+    from premise.ingest.parse import parse_repo
+    sha='a'*40
+    model=parse_repo(SANDBOX,sha,'https://github.com/test/kestrel')
+    sources=model.nodes['Source']
+    assert sources['src:ticket:KES-101']['url']==f'https://github.com/test/kestrel/blob/{sha}/tickets/tickets.jsonl'
+    assert sources['src:chat:c1']['url']==f'https://github.com/test/kestrel/blob/{sha}/chat/chat.jsonl'
+    assert all('\\' not in source['path'] for source in sources.values())

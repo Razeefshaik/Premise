@@ -81,6 +81,8 @@ class GraphTools:
 
     def guarantee_health(self, id=None):
         gids = [r["id"] for r in self.client.read("MATCH (g:Guarantee) WHERE g.retired_rev IS NULL AND ($id IS NULL OR g.id=$id) RETURN g.id AS id ORDER BY id", {"id":id})]
+        if id and not gids:
+            return {"outcome":"unknown_entity","id":id,"guarantees":[],"assumptions":[],"sources":[],"now_ms":self.now}
         pairs = self.client.named("guarantee_assumption_pairs", {"assumptions": None, "guarantees": gids}) if gids else []
         aids = sorted({r["assumption"] for r in pairs})
         assumptions = evaluate_assumptions(self.client, aids, {}, self.now)
@@ -120,6 +122,8 @@ class GraphTools:
         return self.client.named("load_bearing_guarantees", {"limit":limit})
 
     def impact_if_broken(self, id):
+        if not self.client.read("MATCH (a:Assumption {id:$id}) WHERE a.retired_rev IS NULL RETURN a.id AS id", {"id":id}):
+            return {"outcome":"unknown_entity","id":id,"hypothetical":True,"guarantees":[],"sources":[]}
         pairs = self.client.named("guarantee_assumption_pairs", {"assumptions":[id], "guarantees":None})
         gids = sorted({r["guarantee"] for r in pairs})
         return {"hypothetical":True, "assumption":id, "guarantees":self.client.named("guarantee_impact", {"guarantees":gids}) if gids else [],

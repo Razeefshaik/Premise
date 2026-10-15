@@ -4,3 +4,37 @@
 {"id": "c4", "channel": "storefront", "author": "p_omar", "ts": "2026-10-03T14:02:00Z", "text": "checkoutservice payment timeout is 1000 ms, do not lower it without talking to Payments.", "thread": null}
 {"id": "c5", "channel": "payments", "author": "p_jun", "ts": "2026-10-05T09:30:00Z", "text": "Heard Paylane may lengthen their retry policy next month.", "thread": null}
 {"id": "c6", "channel": "platform", "author": "p_sofia", "ts": "2026-10-06T16:20:00Z", "text": "emailservice retries are at 5, provider allows 10.", "thread": null}
+{"id": "c7", "channel": "platform", "author": "p_tess", "ts": "2026-10-08T10:00:00Z", "text": "currencyservice cache age is only half the freshness story. The rate publication evidence needs a new review.", "thread": null}
+{"id": "c8", "channel": "platform", "author": "p_ravi", "ts": "2026-10-08T10:01:00Z", "text": "Agreed. A_RATE_TTL can hold while A_RATES_SOURCE remains unverified.", "thread": "c7"}
+{"id": "c9", "channel": "platform", "author": "p_tess", "ts": "2026-10-08T10:02:00Z", "text": "The September 30 review date is in ADR-003. Please do not make the dashboard green by editing dates without evidence.", "thread": "c7"}
+{"id": "c10", "channel": "platform", "author": "p_ravi", "ts": "2026-10-08T10:03:00Z", "text": "I will capture publication and cache insertion timestamps for the runbook.", "thread": "c7"}
+{"id": "c11", "channel": "platform", "author": "p_tess", "ts": "2026-10-08T10:04:00Z", "text": "KES-131 tracks renewal. G_RATES_FRESH stays unknown until the attestation is current.", "thread": "c7"}
+{"id": "c12", "channel": "platform", "author": "p_sofia", "ts": "2026-10-08T10:05:00Z", "text": "That distinction should also appear in on-call handover: unknown means evidence is missing, not a confirmed outage.", "thread": "c7"}
+{"id": "c13", "channel": "storefront", "author": "p_kim", "ts": "2026-10-09T10:00:00Z", "text": "adservice cache TTL is 120 seconds. The recorded bound is 300 seconds.", "thread": null}
+{"id": "c14", "channel": "storefront", "author": "p_omar", "ts": "2026-10-09T10:01:00Z", "text": "Is a six-minute inventory cache covered by ADR-020?", "thread": "c13"}
+{"id": "c15", "channel": "storefront", "author": "p_kim", "ts": "2026-10-09T10:02:00Z", "text": "No. A_AD_CACHE would be false at 360 seconds, and G_ADS_FRESH would be broken.", "thread": "c13"}
+{"id": "c16", "channel": "storefront", "author": "p_omar", "ts": "2026-10-09T10:03:00Z", "text": "We should attach the configuration diff rather than rely on a summary of the experiment.", "thread": "c13"}
+{"id": "c17", "channel": "storefront", "author": "p_kim", "ts": "2026-10-09T10:04:00Z", "text": "KES-132 has the exact values. This is a lower-tier service, so the review still matters without being a tier-one blocker.", "thread": "c13"}
+{"id": "c18", "channel": "storefront", "author": "p_ravi", "ts": "2026-10-09T10:05:00Z", "text": "The platform team can help inspect cache age, but storefront remains the owning team.", "thread": "c13"}
+{"id": "c19", "channel": "platform", "author": "p_sofia", "ts": "2026-10-10T10:00:00Z", "text": "emailservice uses five attempts; emailprovider.max_retries records ten.", "thread": null}
+{"id": "c20", "channel": "platform", "author": "p_ravi", "ts": "2026-10-10T10:01:00Z", "text": "The proposed eight-attempt change remains within the external budget.", "thread": "c19"}
+{"id": "c21", "channel": "platform", "author": "p_sofia", "ts": "2026-10-10T10:02:00Z", "text": "Correct. A_EMAIL_BUDGET holds at eight. We still need separate delivery monitoring.", "thread": "c19"}
+{"id": "c22", "channel": "platform", "author": "p_tess", "ts": "2026-10-10T10:03:00Z", "text": "Does the model check backoff delay or delivery success?", "thread": "c19"}
+{"id": "c23", "channel": "platform", "author": "p_sofia", "ts": "2026-10-10T10:04:00Z", "text": "Neither. ADR-011 promises the attempt budget only. The runbook now says that explicitly.", "thread": "c19"}
+{"id": "c24", "channel": "platform", "author": "p_ravi", "ts": "2026-10-10T10:05:00Z", "text": "Please link KES-134 and the configuration line when this comes up in review.", "thread": "c19"}
+{"id": "c25", "channel": "storefront", "author": "p_omar", "ts": "2026-10-11T10:00:00Z", "text": "cartservice session retention is 72 hours today.", "thread": null}
+{"id": "c26", "channel": "storefront", "author": "p_kim", "ts": "2026-10-11T10:01:00Z", "text": "A_CART_TTL records a seven-day ceiling, but it is not required by a guarantee.", "thread": "c25"}
+{"id": "c27", "channel": "storefront", "author": "p_omar", "ts": "2026-10-11T10:02:00Z", "text": "So exceeding it still needs review, even though there is no guarantee chain to flag.", "thread": "c25"}
+{"id": "c28", "channel": "storefront", "author": "p_kim", "ts": "2026-10-11T10:03:00Z", "text": "Yes. The orphan-assumption warning is intentional; we should decide whether a guarantee belongs there.", "thread": "c25"}
+{"id": "c29", "channel": "storefront", "author": "p_tess", "ts": "2026-10-11T10:04:00Z", "text": "My storefront membership ended in July. Please route current ownership questions to the active storefront team.", "thread": "c25"}
+{"id": "c30", "channel": "storefront", "author": "p_omar", "ts": "2026-10-11T10:05:00Z", "text": "I will keep the retention evidence in KES-133 rather than implying a new guarantee was already adopted.", "thread": "c25"}
+{"id": "c31", "channel": "platform", "author": "p_ravi", "ts": "2026-10-12T10:00:00Z", "text": "productcatalogservice response size grew with the latest attributes.", "thread": null}
+{"id": "c32", "channel": "platform", "author": "p_tess", "ts": "2026-10-12T10:01:00Z", "text": "Do we have an authored guarantee about catalog payload size?", "thread": "c31"}
+{"id": "c33", "channel": "platform", "author": "p_ravi", "ts": "2026-10-12T10:02:00Z", "text": "No. KES-136 is observational evidence, not a machine-checkable guarantee.", "thread": "c31"}
+{"id": "c34", "channel": "platform", "author": "p_sofia", "ts": "2026-10-12T10:03:00Z", "text": "That should be clear in Company Brain answers: absent from the graph does not prove a change is safe.", "thread": "c31"}
+{"id": "c35", "channel": "platform", "author": "p_ravi", "ts": "2026-10-12T10:04:00Z", "text": "I will include request and response sizes, then ask storefront which clients depend on those attributes.", "thread": "c31"}
+{"id": "c36", "channel": "platform", "author": "p_ravi", "ts": "2026-10-13T10:00:00Z", "text": "shippingservice latency and checkoutservice latency are separate measurements in KES-135.", "thread": null}
+{"id": "c37", "channel": "platform", "author": "p_omar", "ts": "2026-10-13T10:01:00Z", "text": "Checkout calls shippingservice for quotes, but this model does not promise an end-to-end shipping deadline.", "thread": "c36"}
+{"id": "c38", "channel": "platform", "author": "p_sofia", "ts": "2026-10-13T10:02:00Z", "text": "Please capture a trace before adding a timeout assumption. We should not invent a bound from one incident.", "thread": "c36"}
+{"id": "c39", "channel": "platform", "author": "p_ravi", "ts": "2026-10-13T10:03:00Z", "text": "Agreed. Ownership and dependency evidence can answer who to ask; a new guarantee needs an authored decision.", "thread": "c36"}
+{"id": "c40", "channel": "platform", "author": "p_tess", "ts": "2026-10-13T10:04:00Z", "text": "Source citations should point to the ticket observation so nobody mistakes it for current policy.", "thread": "c36"}

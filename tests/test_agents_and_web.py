@@ -89,6 +89,8 @@ def test_analyst_rejects_hallucinated_ids(kestrel):
     assert not verify_answer({'outcome':'answered_with_path','answer_markdown':'See https://evil.example','cited_ids':[]},[])
     unknown=answer_question(tools,'zzzzfrobnitz')
     assert unknown['outcome']=='not_in_graph' and 'does not establish' in unknown['answer_markdown']
+    assert answer_question(tools,'What about G_ABSENT?')['outcome']=='unknown_entity'
+    assert answer_question(tools,'What about A_ABSENT?')['outcome']=='unknown_entity'
 
 
 def test_web_brain_assessment_entities_and_failure(kestrel):

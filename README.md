@@ -287,8 +287,8 @@ with readable graph text available if offline. Hosted status links require a pub
 Live GitHub red-to-green testing, branch protection, provider calls, Claude Desktop UI,
 recording/uploading the demo, and submission remain explicit external rehearsal steps.
 The local reset command deliberately does not force-reset remote scenario branches.
-The dataset retains the supplied milestone's 14 tickets, 6 chat messages and 2 runbooks;
-the spec's larger text corpus is optional expansion, not fabricated completed content.
+The fictional dataset includes 20 tickets, 40 chat messages and four runbooks. The added
+text preserves the flagship decision lexical gap and the original reviewer-evidence counts.
 
 ## Attribution and AI use
 
@@ -297,8 +297,10 @@ follow Google's [Online Boutique](https://github.com/GoogleCloudPlatform/microse
 licensed Apache-2.0, with fictional webhookingress and refundworker services added. No
 Online Boutique implementation code is redistributed.
 
-The supplied milestone, specification and synthetic company text were produced with AI
+The supplied milestone, specification and original synthetic company text were produced with AI
 assistance (Claude, as disclosed in the supplied README). This continuation used OpenAI
-Codex for implementation, tests and documentation. Deterministic parsing builds the graph;
+Codex for implementation, tests, documentation, six additional tickets, 34 chat messages
+and two runbooks. Those examples were checked against the authored model and should be
+reviewed by the project author before demonstration. Deterministic parsing builds the graph;
 no LLM extracts production facts or decides verdicts. Synthetic data and automated test
 evidence should be reviewed before the public demonstration.

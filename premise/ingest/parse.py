@@ -306,7 +306,7 @@ def parse_adrs(m: Model, root: Path, sha: str, repo: str | None) -> None:
 
 def parse_texts(m: Model, root: Path, sha: str, repo: str | None) -> None:
     for file in sorted((root / "docs").rglob("*.md")):
-        path = str(file.relative_to(root))
+        path = file.relative_to(root).as_posix()
         fm_text, body, first = _split_front_matter(file.read_text())
         fm = yaml.safe_load(fm_text) if fm_text else {}
         sid = _source(m, path, "doc", sha, repo, title=path, ts=to_ms((fm or {}).get("updated")))
@@ -322,7 +322,8 @@ def parse_texts(m: Model, root: Path, sha: str, repo: str | None) -> None:
                 continue
             t = json.loads(raw)
             sid = f"src:ticket:{t['id']}"
-            m.node("Source", sid, tpath, path=tpath, kind="ticket", url=None, commit_sha=sha, ts=to_ms(t["created_at"]),
+            url = f"{repo}/blob/{sha}/{tpath}" if repo and re.fullmatch(r"[0-9a-f]{40}", sha) else None
+            m.node("Source", sid, tpath, path=tpath, kind="ticket", url=url, commit_sha=sha, ts=to_ms(t["created_at"]),
                    search_text=f"{t['id']} {t['title']}", line=ln)
             m.edge("AUTHORED", t["author"], sid, tpath, ln)
             m.references.append((tpath, "Person", t["author"]))
@@ -339,7 +340,8 @@ def parse_texts(m: Model, root: Path, sha: str, repo: str | None) -> None:
                 continue
             c = json.loads(raw)
             sid = f"src:chat:{c['id']}"
-            m.node("Source", sid, cpath, path=cpath, kind="chat", url=None, commit_sha=sha, ts=to_ms(c["ts"]),
+            url = f"{repo}/blob/{sha}/{cpath}" if repo and re.fullmatch(r"[0-9a-f]{40}", sha) else None
+            m.node("Source", sid, cpath, path=cpath, kind="chat", url=url, commit_sha=sha, ts=to_ms(c["ts"]),
                    search_text=f"chat {c['channel']} {c['id']}", line=ln)
             m.edge("AUTHORED", c["author"], sid, cpath, ln)
             m.references.append((cpath, "Person", c["author"]))

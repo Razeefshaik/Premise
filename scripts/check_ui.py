@@ -5,15 +5,18 @@ from playwright.sync_api import sync_playwright
 
 
 def main():
+    print('Starting headless UI check',flush=True)
     artifact=Path('artifacts'); artifact.mkdir(exist_ok=True)
     candidates=[Path('C:/Program Files/Google/Chrome/Application/chrome.exe'),Path('C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe')]
     executable=next((str(p) for p in candidates if p.exists()),None)
     with sync_playwright() as p:
         browser=p.chromium.launch(headless=True,**({'executable_path':executable} if executable else {}))
+        print('Browser started',flush=True)
         errors=[]
         page=browser.new_page(viewport={'width':1440,'height':1050},device_scale_factor=1)
         page.on('pageerror',lambda error:errors.append(str(error)))
         page.goto('http://localhost:8000/',wait_until='networkidle')
+        print('Brain loaded',flush=True)
         page.get_by_role('heading',name='What still holds?').wait_for()
         assert page.locator('tbody tr').count()>=9
         page.screenshot(path=str(artifact/'brain-desktop.png'),full_page=True)
@@ -22,7 +25,8 @@ def main():
         page.locator('#answer h3').wait_for(timeout=60000)
         assert 'ADR-012' in page.locator('#answer').inner_text()
         assert 'p_jun' in page.locator('#answer').inner_text()
-        page.get_by_role('link',name='#9001 Local demo S1:',exact=False).click()
+        print('Question answered with reviewer evidence',flush=True)
+        page.get_by_role('link',name='#9001 Local demo S1:',exact=False).first.click()
         page.get_by_role('heading',name='Consequences, connected.').wait_for()
         page.wait_for_timeout(1500)
         graph=page.locator('.mermaid svg').count()>0
