@@ -1,0 +1,158 @@
+# Ground truth for the decision model in sandbox/kestrel-platform.
+# Each scenario patches files on top of main, exactly like a pull request would, and states what Premise must find.
+now: 2026-10-16T00:00:00Z
+since_days: 180
+
+scenarios:
+  S1:
+    title: Record Paylane's new 72 hour retry policy
+    patches:
+      - {op: set, file: config/partners/paylane.yaml, key: retry.window_hours, value: 72}
+    expect:
+      verdict: BLOCKED
+      reasons: [R_BROKEN_T1]
+      violated: [A_RETRY_WINDOW]
+      broken: [G_CHARGE_ONCE, G_DEDUPE, G_LEDGER_CONSISTENT, G_REFUND_MATCH]
+      unknown: []
+      chains:
+        G_REFUND_MATCH: [G_REFUND_MATCH, G_CHARGE_ONCE, G_DEDUPE, A_RETRY_WINDOW]
+      flagged:
+        ADR-007: [promises]
+        ADR-012: [promises, relies_on]
+        ADR-015: [promises, relies_on]
+        ADR-018: [promises, relies_on]
+      not_flagged: [ADR-016, ADR-010, ADR-009]
+      not_affected: [ADR-016]
+      reviewers:
+        ADR-012: [p_jun, p_anika]
+        ADR-007: [p_anika, p_ravi]
+      fixes_verified: [{webhook.dedupe_ttl_hours: 72, redis.max_ttl_hours: 72}]
+      fixes_rejected: [{webhook.dedupe_ttl_hours: 72}]
+      fixes_never_touch: [paylane.retry_window_hours, paylane.delivery_timeout_ms]
+
+  S1_FIXED:
+    title: S1 plus the verified fix (the red to green beat)
+    patches:
+      - {op: set, file: config/partners/paylane.yaml, key: retry.window_hours, value: 72}
+      - {op: set, file: config/webhookingress.yaml, key: dedupe.ttl_hours, value: 72}
+      - {op: set, file: config/platform/redis.yaml, key: limits.max_ttl_hours, value: 72}
+    expect:
+      verdict: CLEAR_WITHIN_SCOPE
+      reasons: [R_ALL_HOLD]
+      violated: []
+      broken: []
+      unknown: []
+      holds: [G_CHARGE_ONCE, G_DEDUPE, G_LEDGER_CONSISTENT, G_REFUND_MATCH]
+      not_affected: [ADR-016]
+
+  S2:
+    title: Raise email retries to 8 (decoy, same vocabulary)
+    patches:
+      - {op: set, file: config/emailservice.yaml, key: retry.max_attempts, value: 8}
+    expect:
+      verdict: CLEAR_WITHIN_SCOPE
+      reasons: [R_ALL_HOLD]
+      violated: []
+      holds: [G_EMAIL_WITHIN_BUDGET]
+      flagged: {}
+
+  S3:
+    title: Delete the dedupe TTL key
+    patches:
+      - {op: delete, file: config/webhookingress.yaml, key: dedupe.ttl_hours}
+    expect:
+      verdict: NEEDS_REVIEW
+      reasons: [R_UNKNOWN]
+      violated: []
+      unevaluable: [A_REDIS_TTL, A_RETRY_WINDOW]
+      broken: []
+      unknown: [G_CHARGE_ONCE, G_DEDUPE, G_LEDGER_CONSISTENT, G_REFUND_MATCH]
+
+  S4:
+    title: Dedupe TTL written as a string
+    patches:
+      - {op: set, file: config/webhookingress.yaml, key: dedupe.ttl_hours, value: "24h"}
+    expect:
+      verdict: NEEDS_REVIEW
+      reasons: [R_UNKNOWN]
+      unevaluable: [A_REDIS_TTL, A_RETRY_WINDOW]
+      unknown: [G_CHARGE_ONCE, G_DEDUPE, G_LEDGER_CONSISTENT, G_REFUND_MATCH]
+
+  S5:
+    title: Raise the charge timeout to 1500 ms
+    patches:
+      - {op: set, file: config/paymentservice.yaml, key: charge.timeout_ms, value: 1500}
+    expect:
+      verdict: BLOCKED
+      reasons: [R_BROKEN_T1]
+      violated: [A_CHARGE_BEFORE_TIMEOUT]
+      broken: [G_NO_DOUBLE_SUBMIT]
+      flagged:
+        ADR-009: [promises]
+      not_flagged: [ADR-012]
+      fixes_verified: [{checkoutservice.payment_timeout_ms: 1501}, {paymentservice.charge_timeout_ms: 999}]
+
+  S6:
+    title: Cache ads for ten minutes (tier 3)
+    patches:
+      - {op: set, file: config/adservice.yaml, key: cache.ttl_seconds, value: 600}
+    expect:
+      verdict: NEEDS_REVIEW
+      reasons: [R_BROKEN_LOW_TIER]
+      broken: [G_ADS_FRESH]
+      flagged:
+        ADR-020: [promises]
+      fixes_verified: [{adservice.cache_ttl_seconds: 300}]
+
+  S7:
+    title: Edit the text of ADR-012
+    patches:
+      - {op: append, file: adr/ADR-012.md, text: "\nClarified wording.\n"}
+    expect:
+      verdict: NEEDS_REVIEW
+      reasons: [R_MODEL_CHANGE]
+      violated: []
+
+  S8:
+    title: Edit the README only
+    patches:
+      - {op: append, file: README.md, text: "\nTypo fix.\n"}
+    expect:
+      verdict: CLEAR_WITHIN_SCOPE
+      reasons: [R_NO_TRACKED_FACTS]
+
+  S10:
+    title: Keep cart sessions for 200 hours (orphan assumption)
+    patches:
+      - {op: set, file: config/cartservice.yaml, key: session.ttl_hours, value: 200}
+    expect:
+      verdict: NEEDS_REVIEW
+      reasons: [R_ORPHAN_ASSUMPTION]
+      violated: [A_CART_TTL]
+      broken: []
+      fixes_verified: [{cartservice.session_ttl_hours: 168}]
+
+  S11:
+    title: S1 and S5 together
+    patches:
+      - {op: set, file: config/partners/paylane.yaml, key: retry.window_hours, value: 72}
+      - {op: set, file: config/paymentservice.yaml, key: charge.timeout_ms, value: 1500}
+    expect:
+      verdict: BLOCKED
+      reasons: [R_BROKEN_T1]
+      violated: [A_CHARGE_BEFORE_TIMEOUT, A_RETRY_WINDOW]
+      broken: [G_CHARGE_ONCE, G_DEDUPE, G_LEDGER_CONSISTENT, G_NO_DOUBLE_SUBMIT, G_REFUND_MATCH]
+      fixes_verified: [{webhook.dedupe_ttl_hours: 72, redis.max_ttl_hours: 72, paymentservice.charge_timeout_ms: 999}]
+      fixes_never_touch: [paylane.retry_window_hours]
+
+  S12:
+    title: Shorten currency cache to 45 minutes (guarantee rests on an expired attestation)
+    patches:
+      - {op: set, file: config/currencyservice.yaml, key: cache.ttl_minutes, value: 45}
+    expect:
+      verdict: NEEDS_REVIEW
+      reasons: [R_UNKNOWN]
+      violated: []
+      unverified: [A_RATES_SOURCE]
+      unknown: [G_RATES_FRESH]
+      pre_existing: [R_UNKNOWN]

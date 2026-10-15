@@ -1,0 +1,3 @@
+service: emailservice
+retry:
+  max_attempts: 5

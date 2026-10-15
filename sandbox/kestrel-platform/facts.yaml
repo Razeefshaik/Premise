@@ -1,0 +1,61 @@
+facts:
+  paylane.retry_window_hours:
+    file: config/partners/paylane.yaml
+    key: retry.window_hours
+    controlled_by: external
+    owner: t_payments
+  paylane.delivery_timeout_ms:
+    file: config/partners/paylane.yaml
+    key: delivery.timeout_ms
+    controlled_by: external
+    owner: t_payments
+  webhook.dedupe_ttl_hours:
+    file: config/webhookingress.yaml
+    key: dedupe.ttl_hours
+    controlled_by: us
+    owner: t_payments
+  webhook.ack_timeout_ms:
+    file: config/webhookingress.yaml
+    key: ack.timeout_ms
+    controlled_by: us
+    owner: t_payments
+  redis.max_ttl_hours:
+    file: config/platform/redis.yaml
+    key: limits.max_ttl_hours
+    controlled_by: us
+    owner: t_platform
+  paymentservice.charge_timeout_ms:
+    file: config/paymentservice.yaml
+    key: charge.timeout_ms
+    controlled_by: us
+    owner: t_payments
+  checkoutservice.payment_timeout_ms:
+    file: config/checkoutservice.yaml
+    key: payment.timeout_ms
+    controlled_by: us
+    owner: t_storefront
+  emailservice.retry_max_attempts:
+    file: config/emailservice.yaml
+    key: retry.max_attempts
+    controlled_by: us
+    owner: t_platform
+  emailprovider.max_retries:
+    file: config/partners/emailprovider.yaml
+    key: limits.max_retries
+    controlled_by: external
+    owner: t_platform
+  currency.cache_ttl_minutes:
+    file: config/currencyservice.yaml
+    key: cache.ttl_minutes
+    controlled_by: us
+    owner: t_platform
+  adservice.cache_ttl_seconds:
+    file: config/adservice.yaml
+    key: cache.ttl_seconds
+    controlled_by: us
+    owner: t_storefront
+  cartservice.session_ttl_hours:
+    file: config/cartservice.yaml
+    key: session.ttl_hours
+    controlled_by: us
+    owner: t_storefront

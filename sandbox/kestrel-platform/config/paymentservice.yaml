@@ -1,0 +1,3 @@
+service: paymentservice
+charge:
+  timeout_ms: 800

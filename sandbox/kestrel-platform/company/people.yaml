@@ -1,0 +1,54 @@
+people:
+  - id: p_anika
+    name: Anika Rao
+    status: active
+    memberships:
+      - {team: t_payments, since: 2023-04-01}
+  - id: p_jun
+    name: Jun Park
+    status: active
+    memberships:
+      - {team: t_payments, since: 2024-02-12}
+  - id: p_marco
+    name: Marco Ruiz
+    status: departed
+    left_at: 2026-08-14
+    memberships:
+      - {team: t_payments, since: 2021-06-01, until: 2026-08-14}
+  - id: p_lena
+    name: Lena Fischer
+    status: departed
+    left_at: 2026-05-30
+    memberships:
+      - {team: t_payments, since: 2020-09-01, until: 2026-05-30}
+  - id: p_dev
+    name: Dev Malhotra
+    status: leave
+    memberships:
+      - {team: t_payments, since: 2022-03-14}
+  - id: p_ravi
+    name: Ravi Menon
+    status: active
+    memberships:
+      - {team: t_platform, since: 2021-01-04}
+  - id: p_sofia
+    name: Sofia Lindqvist
+    status: active
+    memberships:
+      - {team: t_platform, since: 2023-08-21}
+  - id: p_omar
+    name: Omar Haddad
+    status: active
+    memberships:
+      - {team: t_storefront, since: 2022-05-02}
+  - id: p_kim
+    name: Kim Nguyen
+    status: active
+    memberships:
+      - {team: t_storefront, since: 2024-07-01}
+  - id: p_tess
+    name: Tess Okafor
+    status: active
+    memberships:
+      - {team: t_storefront, since: 2022-01-10, until: 2026-07-01}
+      - {team: t_platform, since: 2026-07-01}

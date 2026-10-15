@@ -1,0 +1,6 @@
+service: webhookingress
+dedupe:
+  store: shared-cache
+  ttl_hours: 24
+ack:
+  timeout_ms: 2000

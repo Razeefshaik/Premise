@@ -1,0 +1,3 @@
+service: cartservice
+session:
+  ttl_hours: 72

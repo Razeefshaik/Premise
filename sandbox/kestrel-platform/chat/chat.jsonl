@@ -1,0 +1,6 @@
+{"id": "c1", "channel": "payments", "author": "p_jun", "ts": "2026-09-30T10:12:00Z", "text": "Anyone know why paymentservice has no idempotency table anymore?", "thread": null}
+{"id": "c2", "channel": "payments", "author": "p_anika", "ts": "2026-09-30T10:15:00Z", "text": "ADR-012. Ingress handles duplicates now, see G_DEDUPE in ADR-007.", "thread": "c1"}
+{"id": "c3", "channel": "platform", "author": "p_ravi", "ts": "2026-10-01T08:40:00Z", "text": "Redis cluster limits are 48 hours max TTL, ask before raising it.", "thread": null}
+{"id": "c4", "channel": "storefront", "author": "p_omar", "ts": "2026-10-03T14:02:00Z", "text": "checkoutservice payment timeout is 1000 ms, do not lower it without talking to Payments.", "thread": null}
+{"id": "c5", "channel": "payments", "author": "p_jun", "ts": "2026-10-05T09:30:00Z", "text": "Heard Paylane may lengthen their retry policy next month.", "thread": null}
+{"id": "c6", "channel": "platform", "author": "p_sofia", "ts": "2026-10-06T16:20:00Z", "text": "emailservice retries are at 5, provider allows 10.", "thread": null}

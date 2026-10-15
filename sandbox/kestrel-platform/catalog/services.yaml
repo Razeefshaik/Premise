@@ -1,0 +1,84 @@
+services:
+  - id: frontend
+    name: Frontend
+    tier: 1
+    owner: t_storefront
+    aliases: [web frontend]
+    depends_on:
+      - {to: checkoutservice, kind: sync}
+      - {to: cartservice, kind: sync}
+      - {to: productcatalogservice, kind: sync}
+      - {to: currencyservice, kind: sync}
+      - {to: shippingservice, kind: sync}
+      - {to: recommendationservice, kind: sync}
+      - {to: adservice, kind: sync}
+  - id: checkoutservice
+    name: Checkout service
+    tier: 1
+    owner: t_storefront
+    aliases: [checkout]
+    depends_on:
+      - {to: cartservice, kind: sync}
+      - {to: productcatalogservice, kind: sync}
+      - {to: currencyservice, kind: sync}
+      - {to: shippingservice, kind: sync}
+      - {to: paymentservice, kind: sync}
+      - {to: emailservice, kind: sync}
+  - id: paymentservice
+    name: Payment service
+    tier: 1
+    owner: t_payments
+    aliases: [payment service]
+  - id: cartservice
+    name: Cart service
+    tier: 1
+    owner: t_storefront
+    aliases: [cart service]
+  - id: webhookingress
+    name: Webhook ingress
+    tier: 1
+    owner: t_payments
+    fictional: true
+    aliases: [webhook ingress]
+    depends_on:
+      - {to: paymentservice, kind: async}
+  - id: refundworker
+    name: Refund worker
+    tier: 2
+    owner: t_payments
+    fictional: true
+    aliases: [refund worker]
+    depends_on:
+      - {to: paymentservice, kind: sync}
+  - id: productcatalogservice
+    name: Product catalog service
+    tier: 2
+    owner: t_platform
+    aliases: [product catalog]
+  - id: currencyservice
+    name: Currency service
+    tier: 2
+    owner: t_platform
+    aliases: [currency service]
+  - id: shippingservice
+    name: Shipping service
+    tier: 2
+    owner: t_platform
+    aliases: [shipping service]
+  - id: recommendationservice
+    name: Recommendation service
+    tier: 3
+    owner: t_storefront
+    aliases: [recommendations]
+    depends_on:
+      - {to: productcatalogservice, kind: sync}
+  - id: emailservice
+    name: Email service
+    tier: 3
+    owner: t_platform
+    aliases: [email service]
+  - id: adservice
+    name: Ad service
+    tier: 3
+    owner: t_storefront
+    aliases: [ad service]

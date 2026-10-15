@@ -1,0 +1,38 @@
+[project]
+name = "premise"
+version = "0.1.0"
+description = "Checks every change against the guarantees your engineering decisions depend on. Built on FalkorDB."
+requires-python = ">=3.12"
+dependencies = [
+  "falkordb>=1.8",
+  "pyyaml>=6",
+  "pydantic>=2",
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.30,<1",
+  "jinja2>=3.1,<4",
+  "httpx>=0.27,<1",
+  "anthropic>=0.84,<1",
+  "mcp>=1.20,<2",
+  "python-dotenv>=1,<2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.24"]
+lite = ["falkordblite>=0.10; sys_platform == 'linux'"]
+
+[project.scripts]
+premise = "premise.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["premise*"]
+
+[tool.setuptools.package-data]
+"premise.graph" = ["queries/*.cypher"]
+"premise.web" = ["templates/*.html", "static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,3 @@
+service: checkoutservice
+payment:
+  timeout_ms: 1000

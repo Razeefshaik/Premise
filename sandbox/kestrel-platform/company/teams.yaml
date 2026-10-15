@@ -1,0 +1,7 @@
+teams:
+  - id: t_payments
+    name: Payments
+  - id: t_storefront
+    name: Storefront
+  - id: t_platform
+    name: Platform

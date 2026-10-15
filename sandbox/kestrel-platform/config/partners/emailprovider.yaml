@@ -1,0 +1,4 @@
+# Limits published by our transactional email provider.
+provider: postbird
+limits:
+  max_retries: 10

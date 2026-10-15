@@ -1,0 +1,3 @@
+service: adservice
+cache:
+  ttl_seconds: 120

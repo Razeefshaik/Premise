@@ -1,0 +1,5 @@
+# Shared Redis cluster limits.
+cluster: shared-cache
+limits:
+  max_ttl_hours: 48
+  max_memory_gb: 32

@@ -1,0 +1,3 @@
+service: currencyservice
+cache:
+  ttl_minutes: 30
