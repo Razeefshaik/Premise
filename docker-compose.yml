@@ -1,0 +1,32 @@
+services:
+  falkordb:
+    image: falkordb/falkordb:v4.18.3
+    ports:
+      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - premise_graph:/data
+    command: ["redis-server", "--loadmodule", "/FalkorDB/bin/src/falkordb.so", "--appendonly", "yes", "--dir", "/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 2s
+      retries: 30
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      FALKORDB_HOST: falkordb
+      FALKORDB_PORT: 6379
+      SANDBOX_CLONE_DIR: /app/.runtime/kestrel
+      POLL_ENABLED: ${POLL_ENABLED:-false}
+    depends_on:
+      falkordb:
+        condition: service_healthy
+    command: ["python", "-m", "premise.bootstrap"]
+volumes:
+  premise_graph:

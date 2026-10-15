@@ -38,6 +38,11 @@ def falkordb_port(tmp_path_factory):
     if env_port and _port_open(int(env_port)):
         yield int(env_port)
         return
+    if not env_port and _port_open(6379):
+        yield 6379
+        return
+    if os.name == "nt":
+        pytest.fail("Start FalkorDB with docker compose up -d falkordb; Windows cannot run the Linux lite module")
     import redislite
 
     bindir = Path(redislite.__file__).parent / "bin"

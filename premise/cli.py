@@ -30,9 +30,81 @@ def main(argv: list[str] | None = None) -> int:
     p_all = sub.add_parser("scenarios")
     p_all.add_argument("--repo", default=s.sandbox_dir)
     p_all.add_argument("--file", default="scenarios/scenarios.yaml")
+    p_assess = sub.add_parser("assess")
+    p_assess.add_argument("--pr",type=int,required=True)
+    p_assess.add_argument("--json",action="store_true")
+    p_assess.add_argument("--execute",action="store_true",help="Post statuses/comments; may open a fix PR if AUTO_FIX_PR=true")
+    sub.add_parser("health")
+    p_ask=sub.add_parser("ask")
+    p_ask.add_argument("question")
+    p_serve=sub.add_parser("serve")
+    p_serve.add_argument("--bind",default="127.0.0.1")
+    p_serve.add_argument("--web-port",type=int,default=8000)
+    sub.add_parser("mcp")
+    sub.add_parser("poll-once")
+    sub.add_parser("reconcile")
+    sub.add_parser("demo",help="Persist locally evaluated scenarios for browsing; no GitHub calls")
+    p_reset=sub.add_parser("reset")
+    p_reset.add_argument("--demo",action="store_true",required=True)
     args = ap.parse_args(argv)
 
     client = GraphClient(args.host, args.port, args.graph)
+    if args.cmd == "serve":
+        import uvicorn
+        from .web.app import create_app
+        from dataclasses import replace
+        uvicorn.run(create_app(client,replace(s,graph_name=args.graph,falkordb_host=args.host,falkordb_port=args.port)),host=args.bind,port=args.web_port)
+        return 0
+    if args.cmd == "mcp":
+        from .mcp_server import create_server
+        create_server(client).run(transport="stdio")
+        return 0
+    if args.cmd in {"health","ask"}:
+        from .graph.tools import GraphTools
+        from .agent.analyst import answer_question
+        tools=GraphTools(client)
+        result=tools.call("guarantee_health",{}) if args.cmd=="health" else answer_question(tools,args.question,s)
+        print(json.dumps(result,indent=2,default=str))
+        return 0
+    if args.cmd in {"assess","poll-once","reconcile"}:
+        from .github.api import GitHub
+        from .github.gitrepo import GitRepo
+        from .github.poller import Pipeline
+        github=GitHub(s.sandbox_repo,s.github_token)
+        pipeline=Pipeline(client,github,GitRepo(s.sandbox_clone_dir,f"https://github.com/{s.sandbox_repo}.git"),s)
+        try:
+            if args.cmd=="poll-once":
+                print(json.dumps([r.model_dump() for r in pipeline.once()],indent=2))
+            elif args.cmd=="reconcile":
+                print(json.dumps(pipeline.executor.reconcile(),indent=2))
+            else:
+                pipeline.sync_main()
+                result=pipeline.assess_pr(args.pr,execute=args.execute)
+                print(result.model_dump_json(indent=2))
+                return 1 if result.verdict=="ERROR" else 0
+        finally:
+            github.close()
+        return 0
+    if args.cmd in {"demo","reset"}:
+        from .github.store import Store
+        # Local demo records are explicit synthetic PRs; never call GitHub or reset remote branches.
+        if args.cmd=="reset":
+            client.write("MATCH (a:Assessment)-[:OF]->(p:ChangeProposal) WHERE p.demo=true DETACH DELETE a")
+            client.write("MATCH (p:ChangeProposal {demo:true}) DETACH DELETE p")
+        ingest(client,s.sandbox_dir,"local-demo",f"https://github.com/{s.sandbox_repo}")
+        data=load_scenarios("scenarios/scenarios.yaml")
+        store=Store(client)
+        for number,name in enumerate(["S1","S1_FIXED","S2","S12"],start=9001):
+            result=run_scenario(client,Path(s.sandbox_dir),data["scenarios"][name],scenario_now(data))
+            result.pr=f"pr:{number}"
+            result.head_sha="local-demo-"+name
+            pr={"number":number,"title":f"Local demo {name}: {data['scenarios'][name]['title']}","state":"open",
+                "head":{"sha":result.head_sha,"ref":"demo/"+name,"repo":{"full_name":s.sandbox_repo}},
+                "base":{"ref":"main","repo":{"full_name":s.sandbox_repo}}}
+            aid=store.save(result,pr)
+            client.write("MATCH (p:ChangeProposal {id:$id}) SET p.demo=true",{"id":result.pr})
+            print(f"{name}: {result.verdict} {s.public_base_url}/assessments/{aid}")
+        return 0
     if args.cmd == "ingest":
         try:
             r = ingest(client, args.repo, args.sha, args.url)
