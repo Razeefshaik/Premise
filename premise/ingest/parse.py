@@ -98,7 +98,7 @@ class Model:
 # ---------------------------------------------------------------------------------------------------------------
 def _source(m: Model, path: str, kind: str, commit_sha: str, repo_url: str | None, **props: Any) -> str:
     sid = f"src:{path}"
-    url = f"{repo_url}/blob/{commit_sha}/{path}" if repo_url else None
+    url = f"{repo_url}/blob/{commit_sha}/{path}" if repo_url and re.fullmatch(r"[0-9a-f]{40}", commit_sha) else None
     m.node("Source", sid, path, path=path, kind=kind, url=url, commit_sha=commit_sha,
            search_text=props.pop("title", path), **props)
     return sid

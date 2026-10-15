@@ -1,0 +1,59 @@
+# Three-minute demonstration
+
+Use `docs/PUBLISH.md` to publish and run the sandbox rehearsal first. This is a script, not
+evidence that a live GitHub rehearsal or video recording has already happened.
+
+| Time | Show | Say / do |
+| --- | --- | --- |
+| 0:00–0:15 | ADR-007 source | Decisions promise guarantees; guarantees need assumptions. Show G_DEDUPE and the current attestation. |
+| 0:15–0:30 | S1 sandbox PR | Record the partner's 72-hour retry policy. The partner fact is external and cannot be reverted by the agent. |
+| 0:30–1:10 | Real status and comment | 72 exceeds our 24-hour TTL. Follow G_DEDUPE → G_CHARGE_ONCE → G_REFUND_MATCH → G_LEDGER_CONSISTENT. ADR-012/015/018 are affected despite not mentioning retries. ADR-016 is evaluated and still holds. Jun ranks first for ADR-012 with six recent sources. |
+| 1:10–1:45 | Rejected candidate and stacked fix | TTL 72 alone breaks the Redis limit. TTL 72 plus Redis max 72 verifies every prerequisite. Merge the fix into the original PR branch, then show the original check turn green. |
+| 1:45–2:00 | S2 PR | Email retries 8 remain within the provider budget 10. Clear within tracked scope. |
+| 2:00–2:20 | Assessment UI | Show graph witnesses, exact source lines, checked-not-affected decisions, and the fulltext lexical gap. |
+| 2:20–2:50 | MCP client / Brain | Ask the questions below. Show expired currency attestation and live ownership evidence. |
+| 2:50–3:00 | Product / repositories | Premise checks each change against the guarantees your decisions depend on. Show the public source and tracks. |
+
+Three questions:
+
+1. Which guarantees are load bearing, and which rest on unverified assumptions?
+2. Why does ADR-012 skip idempotency, and who owns that decision now?
+3. Who knows paymentservice, and what evidence supports that?
+
+For an offline walkthrough:
+
+```powershell
+docker compose up -d
+docker compose exec app premise demo
+```
+
+Open `http://localhost:8000`. Rows with PR numbers 9001–9004 explicitly say **Local demo**.
+They are deterministic scenario evaluations saved in real FalkorDB, not real GitHub PRs.
+`premise reset --demo` replaces local demo history only; it never changes remote branches,
+comments, or PRs. Historic live assessments remain separate.
+
+The demo clock for scenarios is 2026-10-16T00:00Z; normal health and live PR assessments use
+the current UTC time. Attestations can expire, so re-attest authored data deliberately for
+a later demonstration instead of bypassing the evaluator.
+
+## MCP setup
+
+The official SDK stdio server has nine read tools. On Windows, configure your MCP client
+with the absolute virtual-environment Python executable and `cwd` set to this repository:
+
+```json
+{
+  "mcpServers": {
+    "premise": {
+      "command": "S:/StudyResource/TechBoooo/Hackathons/weMakeDevs-FolkoreDB/Premise/.venv/Scripts/python.exe",
+      "args": ["-m", "premise.cli", "mcp"],
+      "cwd": "S:/StudyResource/TechBoooo/Hackathons/weMakeDevs-FolkoreDB/Premise",
+      "env": {"FALKORDB_HOST": "localhost", "FALKORDB_PORT": "6379", "GRAPH_NAME": "premise_kestrel"}
+    }
+  }
+}
+```
+
+Clients without `cwd` support can invoke the installed absolute `premise.exe` with the same
+graph environment. Start FalkorDB and ingest before connecting. No LLM key is required
+for MCP: the client's own model selects the tools. No action or arbitrary Cypher tool exists.

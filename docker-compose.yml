@@ -5,8 +5,9 @@ services:
       - "127.0.0.1:6379:6379"
       - "127.0.0.1:3000:3000"
     volumes:
-      - premise_graph:/data
-    command: ["redis-server", "--loadmodule", "/FalkorDB/bin/src/falkordb.so", "--appendonly", "yes", "--dir", "/data"]
+      - premise_graph:/var/lib/falkordb/data
+    environment:
+      REDIS_ARGS: "--appendonly yes"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s

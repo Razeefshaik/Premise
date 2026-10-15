@@ -5,7 +5,7 @@ import re
 
 
 def safe(text):
-    return str(text).replace("|", "\\|").replace("<", "&lt;").replace(">", "&gt;").replace("\n", " ")
+    return str(text).replace("|", "\\|").replace("<", "&lt;").replace(">", "&gt;").replace("@", "＠").replace("\n", " ")
 
 
 def mermaid(result):
@@ -35,7 +35,7 @@ def render_comment(result, number, url, sources=(), names=None):
     refs = {s["id"]: s for s in sources}
     def cite(entity):
         s = refs.get(entity)
-        return f"[{safe(entity)}]({s['url'].split('#')[0]}#L{s['line']})" if s and s.get("url", "").startswith("https://github.com/") else f"`{safe(entity)}`"
+        return f"[{safe(entity)}]({s['url'].split('#')[0]}#L{s['line']})" if s and (s.get("url") or "").startswith("https://github.com/") else f"`{safe(entity)}`"
     out = [f"## Premise: {result.verdict}", "", "### Reasons", ""]
     out += [f"- `{r.code}`{' (pre-existing)' if r.pre_existing else ''}: {safe(r.detail)}" for r in result.reasons]
     out += ["", "### What changed", "", "| Fact | Before | Proposed |", "| --- | --- | --- |"]

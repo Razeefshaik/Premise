@@ -40,7 +40,8 @@ class FixSession:
                     "facts": list(self.repair.facts({f for a in self.result.assumptions for f in (a.lhs_fact,a.rhs_fact) if f}).values())}
         if name == "assumptions_on_fact":
             from ..reasoning.evaluate import evaluate
-            ev = evaluate(self.client, {**self.overlay, args["fact"]: self.repair.facts({args["fact"]})[args["fact"]]["value"]}, self.result.now_ms)
+            info = self.repair.facts({args["fact"]})[args["fact"]]
+            ev = evaluate(self.client, {args["fact"]: info["value"], **self.overlay}, self.result.now_ms)
             return [a.model_dump() for a in ev.assumptions.values() if args["fact"] in (a.lhs_fact,a.rhs_fact)]
         if name == "test_fix":
             key = self.validate(args["changes"])
@@ -61,8 +62,13 @@ class FixSession:
                 key = self.validate(changes)
                 ev = self.tested.get(key)
                 if ev is not None:
+                    from .verify import verify_answer
+                    rationale = str(proposal.get("rationale", ""))[:1000]
+                    if not verify_answer({"outcome":"answered_with_path","answer_markdown":rationale,"cited_ids":[]},
+                                         [self.result.model_dump(), [a.model_dump() for a in ev.assumptions.values()]]):
+                        rationale = "Candidate evaluated against all graph prerequisites."
                     accepted.append(Fix(changes=changes, status="verified" if ev.all_hold else "partial" if not ev.violated else "rejected",
-                        failed=sorted(set(ev.violated + ev.unknown)), origin="llm", rationale=str(proposal.get("rationale", ""))[:1000]))
+                        failed=sorted(set(ev.violated + ev.unknown)), origin="llm", rationale=rationale))
             except (ValueError, KeyError, TypeError):
                 continue
         accepted.sort(key=lambda f: (f.status != "verified", self.repair._cost(f.changes)))

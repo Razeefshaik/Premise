@@ -7,6 +7,7 @@ from ..ingest.run import ingest
 from ..reasoning.assess import assess, graph_ready
 from ..reasoning.intake import overlay_from_files
 from ..reasoning.models import AssessmentResult, Reason
+from ..graph.client import GraphUnavailable
 from .actions import Executor, StaleAssessment
 from .store import Store
 
@@ -53,7 +54,16 @@ class Pipeline:
         return result
 
     def once(self):
-        self.sync_main()
+        try:
+            self.sync_main()
+        except Exception:
+            # Without a ready graph, only current-head error statuses are permitted.
+            prs, _ = self.github.open_pulls()
+            for pr in prs or []:
+                latest = self.github.pull(pr["number"])
+                if latest["state"] == "open" and latest["head"]["sha"] == pr["head"]["sha"]:
+                    self.github.status(pr["head"]["sha"], "error", "Assessment unavailable: ingestion or graph failed")
+            raise
         self.executor.reconcile()
         cursor = self.store.cursor()
         rev = self.client.named("graph_state")[0]["rev"]
@@ -73,7 +83,7 @@ class Pipeline:
                 results.append(result)
                 if result.verdict != "ERROR":
                     done[key] = result.head_sha
-            except StaleAssessment:
+            except (StaleAssessment, GraphUnavailable):
                 continue
         # An incomplete poll must not retain an ETag that would suppress retries.
         self.store.set_cursor({"rev": rev, "etag": etag if len(done) == len(prs) else None, "prs": done})
