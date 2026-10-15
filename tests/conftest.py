@@ -24,18 +24,21 @@ ROOT = Path(__file__).resolve().parents[1]
 SANDBOX = ROOT / "sandbox" / "kestrel-platform"
 SCENARIOS = load_scenarios(ROOT / "scenarios" / "scenarios.yaml")
 NOW = to_ms(SCENARIOS["now"])
+SERVER_HOST = os.environ.get("FALKORDB_HOST", "127.0.0.1")
 
 
 def _port_open(port: int) -> bool:
     with socket.socket() as s:
         s.settimeout(0.3)
-        return s.connect_ex(("127.0.0.1", port)) == 0
+        return s.connect_ex((SERVER_HOST, port)) == 0
 
 
 @pytest.fixture(scope="session")
 def falkordb_port(tmp_path_factory):
     env_port = os.environ.get("FALKORDB_PORT")
-    if env_port and _port_open(int(env_port)):
+    if env_port:
+        if not _port_open(int(env_port)):
+            pytest.fail(f"Configured FalkorDB is unreachable at {SERVER_HOST}:{env_port}")
         yield int(env_port)
         return
     if not env_port and _port_open(6379):
@@ -70,7 +73,7 @@ def new_graph(falkordb_port):
     clients: list[GraphClient] = []
 
     def make() -> GraphClient:
-        c = GraphClient(port=falkordb_port, graph_name=f"premise_test_{uuid.uuid4().hex[:10]}")
+        c = GraphClient(host=SERVER_HOST, port=falkordb_port, graph_name=f"premise_test_{uuid.uuid4().hex[:10]}")
         clients.append(c)
         return c
 
@@ -82,7 +85,7 @@ def new_graph(falkordb_port):
 @pytest.fixture(scope="module")
 def kestrel(falkordb_port):
     """The sandbox company ingested once per test module, read only."""
-    c = GraphClient(port=falkordb_port, graph_name=f"premise_test_{uuid.uuid4().hex[:10]}")
+    c = GraphClient(host=SERVER_HOST, port=falkordb_port, graph_name=f"premise_test_{uuid.uuid4().hex[:10]}")
     ingest(c, SANDBOX, "testsha", "https://github.com/example/kestrel-platform")
     yield c
     c.delete_graph()
