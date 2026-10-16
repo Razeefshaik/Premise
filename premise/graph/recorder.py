@@ -16,15 +16,20 @@ _SECRET_KEY = re.compile(r"token|password|passwd|secret|authorization|api.?key|c
 _SECRET_VALUE = re.compile(r"(?:github_pat_[A-Za-z0-9_]+|gh[pousr]_[A-Za-z0-9]+|sk-(?:ant-)?[A-Za-z0-9_-]{12,}|Bearer\s+\S+)", re.I)
 
 
-def _safe(value, key="", depth=0):
+def _safe(value, key="", depth=0, truncated=None, path=""):
     if _SECRET_KEY.search(key):
         return "[redacted]"
     if depth >= 12:
+        if truncated is not None:
+            truncated.append(path)
         return "[depth limit]"
     if isinstance(value, dict):
-        return {str(k): _safe(v, str(k), depth + 1) for k, v in value.items()}
+        return {str(k): _safe(v, str(k), depth + 1, truncated, path + "/" + str(k)) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
-        return [_safe(v, depth=depth + 1) for v in value[:20]]
+        if truncated is not None and len(value) > 20:
+            truncated.append(path)
+        return [_safe(v, depth=depth + 1, truncated=truncated, path=path + "/" + str(n))
+                for n, v in enumerate(value[:20])]
     if isinstance(value, str):
         return _SECRET_VALUE.sub("[redacted]", value)
     return value
@@ -74,7 +79,9 @@ class QueryRecorder:
             if not recorders:
                 return original(*args, **kwargs)
             name = next((name for owner, name in reversed(_names.get()) if owner is client), "inline")
-            entry = {"name": name, "cypher": text, "params": _safe(params or {}),
+            truncated = []
+            entry = {"name": name, "cypher": text, "params": _safe(params or {}, truncated=truncated),
+                     "truncated_params": truncated,
                      "operation": method, "ms": 0.0, "rows": 0}
             started = perf_counter()
             try:

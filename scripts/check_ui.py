@@ -15,8 +15,10 @@ def main():
         browser=p.chromium.launch(headless=True,**({'executable_path':executable} if executable else {}))
         print('Browser started',flush=True)
         errors=[]
+        console_errors=[]
         page=browser.new_page(viewport={'width':1440,'height':1050},device_scale_factor=1)
         page.on('pageerror',lambda error:errors.append(str(error)))
+        page.on('console',lambda message:console_errors.append(message.text) if message.type=='error' else None)
         page.goto(base+'/',wait_until='networkidle')
         print('Brain loaded',flush=True)
         page.get_by_role('heading',name='What still holds?').wait_for()
@@ -59,10 +61,11 @@ def main():
             page.locator(f'[data-preset="{preset}"]').click()
             page.locator('#check-verdict').filter(has_text=expected).wait_for()
         browser.close()
-        report={'page_errors':errors,'mermaid_svg_rendered':graph,'desktop':[1440,1050],'mobile':[390,844]}
+        report={'page_errors':errors,'console_errors':console_errors,'mermaid_svg_rendered':graph,'desktop':[1440,1050],'mobile':[390,844]}
         (artifact/'ui-check.json').write_text(json.dumps(report,indent=2))
         print(json.dumps(report))
         assert not errors
+        assert not console_errors
 
 
 if __name__=='__main__':

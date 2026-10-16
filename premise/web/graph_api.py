@@ -4,8 +4,10 @@ from __future__ import annotations
 from copy import deepcopy
 from threading import RLock
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Path
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.routing import APIRoute
 
 from ..agent.render import provenance
 from ..graph.client import GraphUnavailable
@@ -24,6 +26,20 @@ class UnknownEntity(Exception):
 
 class InvalidKinds(Exception):
     pass
+
+
+class GraphRoute(APIRoute):
+    """Invalid input executes no queries, but still carries the trace envelope."""
+    def get_route_handler(self):
+        handler = super().get_route_handler()
+        async def handle(request):
+            try:
+                return await handler(request)
+            except RequestValidationError as exc:
+                return JSONResponse({"error": "invalid_request", "graph_rev": None, "nodes": [], "edges": [],
+                    "truncated": False, "queries": [],
+                    "validation": [{"loc": e["loc"], "type": e["type"]} for e in exc.errors()]}, status_code=422)
+        return handle
 
 
 class GraphExplorer:
@@ -162,7 +178,7 @@ class GraphExplorer:
 
 
 def create_graph_router(client, at_ms=None, node_cap=300):
-    router = APIRouter(prefix="/api/graph", tags=["graph"])
+    router = APIRouter(prefix="/api/graph", tags=["graph"], route_class=GraphRoute)
     explorer = GraphExplorer(client, at_ms=at_ms, node_cap=node_cap)
 
     @router.get("/overview")
@@ -180,7 +196,7 @@ def create_graph_router(client, at_ms=None, node_cap=300):
         return explorer.execute(lambda health: explorer.path(from_id, to_id, health))
 
     @router.get("/node/{id}")
-    def node(id: str):
+    def node(id: str = Path(min_length=1, max_length=160)):
         return explorer.execute(lambda health: explorer.node(id, health))
 
     return router

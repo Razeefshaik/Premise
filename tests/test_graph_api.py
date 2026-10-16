@@ -24,12 +24,13 @@ def test_recorder_named_inline_write_nested_and_restore(new_graph):
     original = {name: getattr(graph, name) for name in ("read", "named", "write")}
     with QueryRecorder(graph) as outer:
         graph.write("CREATE (:GraphState {id:'state', rev:1, ingest_state:'ready'})")
-        graph.named("graph_state")
+        graph.named(name="graph_state")
         with QueryRecorder(graph) as inner:
-            graph.read("RETURN $values AS values", {"values": list(range(35))})
+            graph.read(cypher="RETURN $values AS values", params={"values": list(range(35))})
         graph.read("RETURN 1 AS value")
     assert [q["name"] for q in outer.entries] == ["inline", "graph_state", "inline", "inline"]
     assert len(inner.entries) == 1 and len(inner.entries[0]["params"]["values"]) == 20
+    assert inner.entries[0]["truncated_params"] == ["/values"]
     assert outer.entries[0]["operation"] == "write" and outer.entries[1]["rows"] == 1
     assert all(q["ms"] >= 0 and isinstance(q["ms"], float) for q in outer.entries)
     assert all(getattr(graph, name) == original[name] for name in original)
@@ -109,7 +110,8 @@ def test_neighborhood_depths_kinds_cap_and_injection_boundaries(kestrel):
             assert all(e["type"] in EDGE_TYPES for e in data["edges"])
             assert all(e["source"] in ids and e["target"] in ids for e in data["edges"])
         for depth in (0, 5, "1] DELETE n", "1.5"):
-            assert http.get("/api/graph/neighborhood", params={"focus": "G_DEDUPE", "depth": depth}).status_code == 422
+            invalid = http.get("/api/graph/neighborhood", params={"focus": "G_DEDUPE", "depth": depth})
+            assert invalid.status_code == 422 and invalid.json()["queries"] == []
         data = http.get("/api/graph/neighborhood", params={"focus": "G_DEDUPE", "depth": 4, "kinds": "reasoning,facts"}).json()
         assert not {n["label"] for n in data["nodes"]} & {"Person", "Team", "Service"}
         assert http.get("/api/graph/neighborhood", params={"focus": "G_DEDUPE", "kinds": "Assessment"}).status_code == 422
@@ -146,6 +148,19 @@ def test_path_uses_bounded_minimum_hops_and_node_evidence(kestrel):
         assert "p_anika" in detail["reviewers"] and detail["owners"]
         absent = http.get("/api/graph/path", params={"from": "ADR-012", "to": "A_ABSENT"})
         assert absent.status_code == 404
+        reverse = http.get("/api/graph/path", params={"from": "A_RETRY_WINDOW", "to": "ADR-012"}).json()
+        assert reverse["path"] == list(reversed(data["path"]))
+        same = http.get("/api/graph/path", params={"from": "G_DEDUPE", "to": "G_DEDUPE"}).json()
+        assert same["path"] == ["G_DEDUPE"] and same["edges"] == []
+
+
+def test_request_validation_errors_do_not_run_queries(kestrel, monkeypatch):
+    monkeypatch.setattr(kestrel, "read", lambda *a, **kw: pytest.fail("invalid input reached the graph"))
+    with TestClient(app(kestrel)) as http:
+        for url in ("/api/graph/neighborhood", "/api/graph/path?from=ADR-012", "/api/graph/node/" + "x" * 161):
+            response = http.get(url)
+            assert response.status_code == 422 and response.json()["error"] == "invalid_request"
+            assert response.json()["queries"] == []
 
 
 def test_disconnected_unknown_operational_and_not_ready_graphs(new_graph):

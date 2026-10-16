@@ -391,6 +391,14 @@ The frozen **40-snippet holdout** currently gives E2/E3/Kind 2/E1 precision and 
 Razeef's hand review**, not production accuracy. Actual Codex responses are recorded and
 replayed offline; see [the complete evaluation](docs/V2_EVAL.md).
 
+## V3: interactive verification (in progress)
+
+The V3 design is [docs/Premise_V3_Design.md](docs/Premise_V3_Design.md); see the
+[phase tracker and verified API contract](docs/V3_STATUS.md). V3.1 lives on
+`v3/query-recorder-graph-api`, with read-only `/api/graph/overview`, `/neighborhood`,
+`/path` and `/node/<id>` endpoints. Responses include the actual Cypher, parameters,
+row counts and client timings. The interactive Explorer is the next phase.
+
 ## Attribution and AI use
 
 Kestrel, its people and partners are fictional. Its service naming and selected call edges
