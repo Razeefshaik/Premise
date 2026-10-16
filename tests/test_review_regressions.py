@@ -195,6 +195,9 @@ def test_fresh_graph_bootstraps_without_hiding_query_bugs(new_graph,monkeypatch)
     ('G_DEDUPE holds, i.e. its prerequisites hold.',True),
     ('Every guarantee holds.',False),  # G_RATES_FRESH is unknown.
     ('G_RATES_FRESH is unknown.',True),
+    ('G_RATES_FRESH depends on unverified assumption A_RATES_SOURCE.',True),
+    ('G_DEDUPE is unverified and depends on assumption A_RATES_SOURCE.',False),
+    ('**G_DEDUPE** is currently unverified and depends on assumption A_RATES_SOURCE.',False),
 ])
 def test_explicit_health_claims_match_tool_rows(kestrel,text,valid):
     rows=[{'tool':'guarantee_health','arguments':{},'rows':GraphTools(kestrel,NOW).call('guarantee_health',{})}]

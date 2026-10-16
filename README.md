@@ -17,6 +17,9 @@ The authoritative design is [Revision 2](docs/Premise_Implementation_Spec.md).
 [Publishing handoff](docs/PUBLISH.md) · [Three-minute demo](docs/DEMO.md) ·
 [Actual validation](docs/VALIDATION.md)
 
+On branch `feat/local-codex-cli`, the optional [local Codex provider](docs/LOCAL_CODEX.md)
+uses your installed, signed-in CLI. The existing Anthropic/Docker setup remains the default.
+
 ## The useful distinction
 
 ADR-007 promises both deduplication and fast acknowledgement. ADR-012 depends on

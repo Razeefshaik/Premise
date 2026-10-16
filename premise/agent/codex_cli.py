@@ -167,6 +167,7 @@ class CodexAdapter:
     def __init__(self, binary="", model="", graph=None, timeout=180):
         self.binary, self.model, self.graph, self.timeout = binary, model, graph, timeout
         self.trace = []
+        self.last_answer = None
 
     def tool_loop(self, system, question, schemas, dispatch, budget):
         binary = resolve_binary(self.binary)
@@ -174,6 +175,7 @@ class CodexAdapter:
         transcript, calls = [], 0
         deadline = time.monotonic() + self.timeout
         self.trace = []
+        self.last_answer = None
         with tempfile.TemporaryDirectory(prefix="premise-codex-") as directory:
             schema_file = Path(directory) / "step.schema.json"
             schema_file.write_text(json.dumps(Step.model_json_schema()), encoding="utf-8")
@@ -219,6 +221,7 @@ class CodexAdapter:
                     answer = json.loads(step.answer_json)
                     if not isinstance(answer, dict):
                         raise CodexUnavailable("Final answer must be an object")
+                    self.last_answer = answer
                     return answer
                 if step.name not in allowed or calls >= budget or step.answer_json:
                     raise CodexUnavailable("Tool request is outside the permitted budget or schema")

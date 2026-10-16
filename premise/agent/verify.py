@@ -36,6 +36,21 @@ def statuses_match(text, evidence):
         if not claims:
             continue
         ids = {i for i in id_tokens(clause) if i.startswith(("G_", "A_"))}
+        if len(claims) == 1 and ids:
+            state = next(iter(claims))
+            prefix = "G_" if state in {"holds", "broken", "unknown"} else "A_"
+            other_ids = {i for i in ids if not i.startswith(prefix)}
+            if other_ids:
+                # 'G_RATES_FRESH depends on unverified assumption A_RATES_SOURCE'
+                # is a claim about the assumption, not an unverified guarantee.
+                noun = r"\bguarantees?\b" if prefix == "G_" else r"\b(?:assumptions?|attestations?|prerequisites?)\b"
+                if not re.search(noun, clause, re.I):
+                    return False
+                plain = clause.replace("*", "").replace("`", "")
+                for entity in other_ids:
+                    if re.search(rf"\b{re.escape(entity)}\b\s*(?:(?:is|are|was|remains|currently)\s+)*{state}\b", plain, re.I):
+                        return False
+                ids -= other_ids
         if not ids:
             # General statements such as 'Every guarantee holds' need all returned rows.
             prefix = "G_" if re.search(r"\bguarantees?\b", clause, re.I) else "A_" if re.search(r"\bassumptions?\b", clause, re.I) else None
