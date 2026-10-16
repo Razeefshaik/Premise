@@ -1,0 +1,16 @@
+{% macro icon(name, label=None) -%}
+<svg class="i" {% if label %}role="img" aria-label="{{label}}"{% else %}aria-hidden="true"{% endif %}><use href="/static/icons.svg#{{name}}"></use></svg>
+{%- endmacro %}
+
+{% macro state(value, text=None, size='') -%}
+{%- set v = (value or '')|lower -%}
+{%- if v in ['holds','holding','verified','clear_within_scope'] %}{% set glyph = 'check' %}
+{%- elif v in ['broken','violated','blocked','rejected','error'] %}{% set glyph = 'octagon-x' %}
+{%- elif v in ['unknown','unverified','unevaluable','needs_review','partial'] %}{% set glyph = 'circle-help' %}
+{%- else %}{% set glyph = None %}{% endif -%}
+<span class="badge {{v}} {{size}}">{% if glyph %}{{ icon(glyph) }}{% endif %}{{ text if text is not none else value }}</span>
+{%- endmacro %}
+
+{% macro source_link(s) -%}
+{% if s.url %}<a href="{{s.url.split('#')[0]}}#L{{s.line}}">{{s.path}}:{{s.line}}</a>{% else %}<span>{{s.path}}:{{s.line}} (local checkout)</span>{% endif %}
+{%- endmacro %}

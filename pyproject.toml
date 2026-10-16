@@ -32,7 +32,7 @@ include = ["premise*"]
 
 [tool.setuptools.package-data]
 "premise.graph" = ["queries/*.cypher"]
-"premise.web" = ["templates/*.html", "static/*"]
+"premise.web" = ["templates/*.html", "static/*", "static/img/*.webp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

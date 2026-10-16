@@ -35,6 +35,33 @@ def attestation_evidence(graph, assumptions):
                      for a in item.attestations] for item in assumptions}
 
 
+STATE_CLASSES = ('\n  classDef broken fill:#3b1913,stroke:#f27a62,color:#ffd8cf'
+                 '\n  classDef unknown fill:#3a2c12,stroke:#eab65a,color:#f8e3bc'
+                 '\n  classDef holds fill:#16271d,stroke:#8fcfa6,color:#d7efdf')
+
+
+def coloured(text, guarantees):
+    """Append state classes for the dark theme; guarantees are dicts with id, status and chain."""
+    text += STATE_CLASSES
+    for g in guarantees:
+        nodes = ','.join(dict.fromkeys(re.sub(r'[^A-Za-z0-9_]', '_', node) for node in [g['id'], *g['chain']]))
+        text += f"\n  class {nodes} {g['status'] if g['status'] in ('broken','holds') else 'unknown'}"
+    if not guarantees and 'clear[' in text:
+        text += '\n  class clear holds'
+    return text
+
+
+def scenario_presets(graph, keys=('S1','S1_FIXED','S6','S12')):
+    from ..scenarios import load_scenarios
+    facts = graph.named('registered_facts')
+    lookup = {(f['file'],f['key']):f['id'] for f in facts}
+    data = load_scenarios(Path(__file__).resolve().parents[2]/'scenarios/scenarios.yaml')
+    return facts, [{'id':key,'title':data['scenarios'][key]['title'],
+                    'values':{lookup[(p['file'],p['key'])]:p['value'] for p in data['scenarios'][key]['patches']
+                              if p['op']=='set' and (p['file'],p['key']) in lookup}}
+                   for key in keys]
+
+
 class Question(BaseModel):
     question: str = Field(min_length=1,max_length=2000)
 
@@ -81,8 +108,12 @@ def create_app(client=None, config=None):
         health = tools.call("guarantee_health",{})
         state = graph.named("graph_state")[0]
         import json
+        facts, presets = scenario_presets(graph)
+        plate = {"guarantees":[{k:g[k] for k in ("id","status","statement","prerequisites")} for g in health["guarantees"]],
+                 "assumptions":[{k:a.get(k) for k in ("id","state","text","kind","lhs_fact","rhs_fact")} for a in health["assumptions"]],
+                 "facts":[{k:f[k] for k in ("id","value","controlled_by")} for f in facts],"presets":presets}
         return templates.TemplateResponse(request=request,name="brain.html",context={"health":health,"state":state,
-            "orphaned":tools.call("orphaned_decisions",{}),"recent":store.recent(),
+            "orphaned":tools.call("orphaned_decisions",{}),"recent":store.recent(),"plate":plate,
             "warnings":json.loads(state["warnings_json"] or "[]"),"llm":s.llm_enabled,"provider":s.llm_provider})
 
     @app.post("/api/ask")
@@ -101,27 +132,14 @@ def create_app(client=None, config=None):
         if result['verdict'] == 'ERROR':
             return JSONResponse(result, status_code=503)
         visual = AssessmentResult(verdict=result['verdict'], guarantees=[GuaranteeResult(**g) for g in result['not_holding']])
-        result['mermaid'] = mermaid(visual)
-        result['mermaid'] += '\n  classDef broken fill:#fae5e8,stroke:#a73146\n  classDef unknown fill:#fff0d2,stroke:#785412\n  classDef holds fill:#dfefe7,stroke:#24634d'
-        for g in result['not_holding']:
-            nodes = ','.join(dict.fromkeys(re.sub(r'[^A-Za-z0-9_]', '_', node) for node in [g['id'], *g['chain']]))
-            result['mermaid'] += f"\n  class {nodes} {g['status']}"
-        if not result['not_holding']:
-            result['mermaid'] += '\n  class clear holds'
+        result['mermaid'] = coloured(mermaid(visual), result['not_holding'])
         result['names'] = {p['id']:p['name'] for p in graph.read('MATCH (p:Person) RETURN p.id AS id, p.name AS name')}
         return result
 
     @app.get('/what-if', response_class=HTMLResponse)
     def what_if(request: Request):
-        from ..scenarios import load_scenarios
         tools.guard()
-        facts = graph.named('registered_facts')
-        lookup = {(f['file'],f['key']):f['id'] for f in facts}
-        data = load_scenarios(Path(__file__).resolve().parents[2]/'scenarios/scenarios.yaml')
-        presets = [{'id':key,'title':data['scenarios'][key]['title'],
-                    'values':{lookup[(p['file'],p['key'])]:p['value'] for p in data['scenarios'][key]['patches']
-                              if p['op']=='set' and (p['file'],p['key']) in lookup}}
-                   for key in ['S1','S1_FIXED','S6','S12']]
+        facts, presets = scenario_presets(graph)
         return templates.TemplateResponse(request=request,name='whatif.html',context={'facts':facts,'presets':presets})
 
     @app.get("/api/health")
@@ -141,7 +159,7 @@ def create_app(client=None, config=None):
         search = graph.named("search_decision_passages",{"q":lexical_query}) if lexical_query else []
         lexical = sorted({r["decision"] for r in search})
         return templates.TemplateResponse(request=request,name="assessment.html",context={"result":result,"aid":aid,
-            "mermaid":mermaid(result),"sources":provenance(graph,ids),"lexical":lexical,"lexical_query":lexical_query,
+            "mermaid":mermaid(result),"styled":coloured(mermaid(result),[g.model_dump() for g in result.guarantees if g.status != "holds"]),"sources":provenance(graph,ids),"lexical":lexical,"lexical_query":lexical_query,
             "attestations":attestation_evidence(graph,result.assumptions),
             "graph_only":sorted(set(d.id for d in result.decisions)-set(lexical))})
 

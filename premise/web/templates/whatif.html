@@ -1,8 +1,54 @@
-{% extends 'base.html' %}{% block title %}What if · Premise{% endblock %}{% block content %}
-<div class="heading"><div><p class="eyebrow">Explore a change</p><h1>What would break?</h1><p class="intro">Try a proposed value, follow its consequences, and test a complete repair.</p></div></div>
-<p class="reason-panel" role="note">Hypothetical. Nothing is stored or posted.</p>
-<section aria-labelledby="presets-heading"><h2 id="presets-heading">Start with a scenario</h2><div class="preset-buttons">{% for preset in presets %}<button type="button" class="preset" data-preset="{{preset.id}}">{{preset.id}}: {{preset.title}}</button>{% endfor %}<button type="button" id="reset-proposal">Clear proposal</button></div></section>
-<section><h2>Registered facts</h2><p>Enter JSON scalars; quote strings when needed. Leave blank to keep main. Enter <code>null</code> to propose deletion.</p><div class="table-wrap"><table><thead><tr><th>Fact / source</th><th>Main</th><th>Owner</th><th>Control</th><th>Proposed</th></tr></thead><tbody>{% for f in facts %}<tr><td><a href="/entities/{{f.id}}">{{f.id}}</a><small>{{f.file}}:{{f.line}}</small></td><td><code>{{f.value|tojson}}</code></td><td>{{f.owner or 'Unspecified'}}</td><td><span class="badge {{'unknown' if f.controlled_by == 'external' else 'holds'}}">{{f.controlled_by}}</span></td><td><label class="sr-only" for="fact-{{loop.index}}">Proposed {{f.id}}</label><input class="fact-input" id="fact-{{loop.index}}" data-fact="{{f.id}}" autocomplete="off" placeholder="Keep main"></td></tr>{% endfor %}</tbody></table></div></section>
-<section id="check-result" aria-live="polite"><div class="section-heading"><h2>Predicted impact</h2><span id="check-verdict" class="badge">Choose a change</span></div><p id="check-advice"></p><ul id="check-reasons"></ul><div class="graph-panel" id="whatif-graph"></div><div id="whatif-guarantees"></div><h3>Decisions and reviewers</h3><div id="whatif-decisions"></div><h3>Verified fixes</h3><div class="fixes" id="whatif-fixes"></div></section>
-<script type="application/json" id="whatif-data">{{{'presets':presets}|tojson}}</script>
-{% endblock %}{% block scripts %}<script type="module" src="/static/whatif.js"></script>{% endblock %}
+{% extends 'base.html' %}{% from '_ui.html' import icon, state as badge %}
+{% block title %}What if · Premise{% endblock %}
+{% block page %}page-whatif{% endblock %}
+{% block content %}
+<header class="page-head with-plate">
+  <img class="head-plate" src="/static/img/plate-retina.webp" width="823" height="560" alt="Cajal's schematic of the mammalian retina, small arrows marking the direction of current flow">
+  <div class="page-head-copy">
+    <h1 class="rise">What would break?</h1>
+    <p class="statement rise">Try a proposed value, follow its consequences, and test a complete repair.</p>
+    <p class="note rise" role="note">{{ icon('flask-conical') }}Hypothetical. Nothing is stored or posted.</p>
+    <p class="plate-note rise"><span class="fig">Fig. 1.</span> Santiago Ramón y Cajal, the mammalian retina, 1901. His arrows mark the direction of current flow.</p>
+  </div>
+</header>
+
+<div class="workbench">
+  <div class="proposal">
+    <section aria-labelledby="presets-heading">
+      <h2 id="presets-heading">Start with a scenario</h2>
+      <div class="preset-buttons">
+        {% for preset in presets %}<button type="button" class="chip preset" data-preset="{{ preset.id }}">{{ icon('zap') }}<span><span class="id"><code>{{ preset.id }}</code></span> {{ preset.title }}</span></button>{% endfor %}
+        <button type="button" class="chip quiet-chip" id="reset-proposal">{{ icon('eraser') }}<span>Clear proposal</span></button>
+      </div>
+    </section>
+    <section aria-labelledby="facts-heading">
+      <h2 id="facts-heading">Registered facts</h2>
+      <p class="lede">Enter JSON scalars; quote strings when needed. Leave blank to keep main. Enter <code>null</code> to propose deletion.</p>
+      <div class="table-wrap"><table class="facts">
+        <thead><tr><th scope="col">Fact / source</th><th scope="col">Main</th><th scope="col">Owner</th><th scope="col">Control</th><th scope="col">Proposed</th></tr></thead>
+        <tbody>{% for f in facts %}<tr>
+          <td><a class="id" href="/entities/{{ f.id }}"><code>{{ f.id }}</code></a><small><code>{{ f.file }}:{{ f.line }}</code></small></td>
+          <td data-label="Main"><code>{{ f.value|tojson }}</code></td>
+          <td data-label="Owner">{{ f.owner or 'Unspecified' }}</td>
+          <td data-label="Control">{{ badge('unknown' if f.controlled_by == 'external' else 'holds', f.controlled_by) }}</td>
+          <td><label class="sr-only" for="fact-{{ loop.index }}">Proposed {{ f.id }}</label><input class="fact-input" id="fact-{{ loop.index }}" data-fact="{{ f.id }}" autocomplete="off" spellcheck="false" placeholder="Keep main"></td>
+        </tr>{% endfor %}</tbody>
+      </table></div>
+    </section>
+  </div>
+
+  <section id="check-result" class="impact" aria-live="polite" aria-labelledby="impact-heading">
+    <div class="impact-head"><h2 id="impact-heading">Predicted impact</h2><span id="check-verdict" class="badge">Choose a change</span></div>
+    <p id="check-advice" class="advice"></p>
+    <ul id="check-reasons" class="reason-list compact"></ul>
+    <div class="graph-panel" id="whatif-graph"></div>
+    <div id="whatif-guarantees"></div>
+    <h3>{{ icon('users') }}Decisions and reviewers</h3>
+    <div id="whatif-decisions" class="decisions"></div>
+    <h3>{{ icon('wrench') }}Verified fixes</h3>
+    <div class="fixes" id="whatif-fixes"></div>
+  </section>
+</div>
+<script type="application/json" id="whatif-data">{{ {'presets': presets}|tojson }}</script>
+{% endblock %}
+{% block scripts %}<script type="module" src="/static/whatif.js"></script>{% endblock %}
