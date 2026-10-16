@@ -32,6 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--port", type=int, default=s.falkordb_port)
     ap.add_argument("--staging-graph", default=os.getenv("V2_STAGING_GRAPH", "premise_v2_staging"))
     ap.add_argument("--decision-graph", default=os.getenv("V2_DECISION_GRAPH", "premise_v2_decision"))
+    ap.add_argument("--knowledge-graph", default=os.getenv("V2_KNOWLEDGE_GRAPH", "premise_knowledge"))
     ap.add_argument("--model", default=s.sandbox_dir, help="model repo root (KIF layout)")
     sub = ap.add_subparsers(dest="cmd", required=True)
     run = sub.add_parser("run", help="collect fixtures, reconcile, write proposals (dry run by default)")
@@ -45,6 +46,8 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--model-budget", type=int, default=40)
     run.add_argument("--open-challenges", action="store_true", help="publish attestation issues (requires V2_OPEN_ISSUES=true)")
     sub.add_parser("registry-check")
+    knowledge = sub.add_parser("load-knowledge", help="load reviewed knowledge from a clean merged model repo")
+    knowledge.add_argument("--model", default=argparse.SUPPRESS)
     ev = sub.add_parser("eval")
     ev.add_argument("--fixtures", default="fixtures/v2")
     ev.add_argument("--write", default="docs/V2_EVAL.md")
@@ -58,9 +61,14 @@ def main(argv: list[str] | None = None) -> int:
     protected = {s.graph_name, "premise_codex_demo"}
     protected.update(name.strip() for name in os.getenv("V2_PROTECTED_GRAPHS", "").split(",") if name.strip())
     errors = check_isolation(args.staging_graph, args.decision_graph, protected)
+    if args.knowledge_graph in protected:
+        errors.append(f"knowledge graph '{args.knowledge_graph}' is protected (used by v1)")
+    if args.knowledge_graph in {args.staging_graph, args.decision_graph}:
+        errors.append("knowledge, staging and decision graphs must differ")
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 2
+    args.protected_graphs = protected
     try:
         return _execute(args, s)
     except (GraphUnavailable, redis.exceptions.ConnectionError, redis.exceptions.TimeoutError):
@@ -73,6 +81,18 @@ def _execute(args: argparse.Namespace, s) -> int:
     r = redis.Redis(host=args.host, port=args.port)
     staging = GraphClient(args.host, args.port, args.staging_graph)
     decision = GraphClient(args.host, args.port, args.decision_graph)
+    if args.cmd == "load-knowledge":
+        from premise.ingest.run import ingest
+        from .knowledge import load_knowledge, require_merged_model
+        try:
+            sha = require_merged_model(args.model)
+            ingest(decision, args.model, sha)
+            result = load_knowledge(GraphClient(args.host, args.port, args.knowledge_graph), decision, args.model, args.protected_graphs)
+        except (ValueError, OSError) as exc:
+            print(str(exc), file=sys.stderr)
+            return 2
+        print(json.dumps(result, indent=2))
+        return 0
     if args.cmd == "reset":
         staging.delete_graph()
         r.delete("premise:v2:raw", "premise:v2:raw:dead", "premise:v2:raw:failures")

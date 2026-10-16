@@ -8,3 +8,4 @@ v1 ingest ignores this folder. Premise v2 reads it. Every change here goes throu
 | `identities.yaml` | Explicit mapping from Slack, Jira and GitHub accounts to people |
 | `fact_units.yaml` | Unit of every registered fact, used to convert "3 days" into 72 hours |
 | `fact_aliases.yaml` | How people talk about each fact, used to find claims in chat and tickets |
+| `partners.yaml` | Registered descriptive partner entities for v2; never added to the v1 decision graph |

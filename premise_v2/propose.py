@@ -185,7 +185,7 @@ class ProposalWriter:
             p.pr_url = pr["html_url"]
             published = {"pr_url": p.pr_url, "pr_number": pr["number"], "published_hash": digest, "remote_state": "open"}
         self.staging.upsert_proposal(key, {"branch": branch, "status": "open", "kind": kind,
-                                         "title": title, "file": rel, "body": body, "diff": p.diff,
+                                         "title": title, "file": rel, "body": body, "diff": p.diff, "new_text": new,
                                          "preview_json": json.dumps(prev), "body_hash": digest,
                                          "verdict_preview": prev["verdict"], **metadata, **published})
         return p

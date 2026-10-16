@@ -32,6 +32,7 @@ class Ext:
     aliases: dict[str, dict[str, list[str]]] = field(default_factory=dict)
     identities: dict[str, dict[str, str]] = field(default_factory=dict)
     identity_links: list[dict] = field(default_factory=list)
+    partners: list[dict] = field(default_factory=list)
     relations: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
@@ -45,6 +46,7 @@ class Ext:
         return cls(root=root, units=read("fact_units.yaml") or {}, aliases=read("fact_aliases.yaml") or {},
                    identities=(read("identities.yaml") or {}).get("people", {}),
                    identity_links=(read("identities.yaml") or {}).get("links", []),
+                   partners=(read("partners.yaml") or {}).get("partners", []),
                    relations=read("relations.yaml") or {"registry_version": 0, "relations": []})
 
     def dimension(self, fact: str) -> str | None:

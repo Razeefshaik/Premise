@@ -1,0 +1,8 @@
+# Descriptive v2 entities. v1 has external facts, but no Partner nodes.
+partners:
+  - id: paylane
+    name: Paylane
+    aliases: [paylane]
+  - id: emailprovider
+    name: Postbird
+    aliases: [postbird, emailprovider]
