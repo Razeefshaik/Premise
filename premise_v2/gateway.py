@@ -75,6 +75,8 @@ class Gateway:
                 return GatewayResult("stale", env)
             same = env.op == "upsert" and env.content_hash == latest["hash"] and not latest["deleted"]
             if same and latest["processed"]:
+                if env.sequence > latest["sequence"]:
+                    self.staging.advance_version(env.entity_key, env.sequence)
                 return GatewayResult("duplicate", env)       # replay, or touched but unchanged
         if env.op == "delete":
             return GatewayResult("deleted", env)

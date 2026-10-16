@@ -44,6 +44,10 @@ class Staging:
         """Set only after claims are stored, so a crash between the two steps is retried, not skipped."""
         self.c.write("MATCH (i:Item {key:$k}) SET i.processed_seq=$s", {"k": key, "s": sequence})
 
+    def advance_version(self, key: str, sequence: int) -> None:
+        self.c.write("MATCH (i:Item {key:$k}) WHERE i.sequence < $s SET i.sequence=$s, i.processed_seq=$s",
+                     {"k": key, "s": sequence})
+
     def store_item(self, env: Envelope, *, cls: str, in_scope: bool, person: str, link_method: str,
                    redactions: dict, kif: dict) -> None:
         self.c.write(

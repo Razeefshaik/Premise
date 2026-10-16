@@ -122,3 +122,16 @@ def test_workers_emit_connector_scopes(r, new_graph, stream_name):
         envelopes = list(w.fetch(None))
         assert envelopes and all(e.scope == w.scope for e in envelopes)
         assert p.staging.live_keys(w.scope) == w.list_keys()
+
+
+def test_noop_edit_advances_version_before_late_older_edit(r, new_graph, stream_name):
+    p = pipeline(r, new_graph, stream_name)
+    p.staging.setup()
+    p.handle(env("Paylane now retries for 72 hours.", seq=1))
+    p.handle(env("Paylane now retries for 72 hours.", seq=3))
+    p.handle(env("Paylane now retries for 48 hours.", seq=2))
+    assert p.summary.gateway == {"stored": 1, "duplicate": 1, "stale": 1}
+    latest = p.staging.latest_version("slack:C1:1.0")
+    assert latest["sequence"] == 3 and latest["processed"]
+    claims = p.staging.active_claims()
+    assert [(c["value"], c["sequence"]) for c in claims] == [(72, 1)]
