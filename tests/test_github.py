@@ -132,6 +132,17 @@ def test_comment_updated_for_new_revision(operational):
     assert ('PATCH','/repos/test/kestrel/issues/comments/1') in remote.requests
 
 
+def test_reassessment_restores_terminal_status_after_pending(operational):
+    client,result,remote,executor=operational
+    executor.execute(result,remote.pr)
+    executor.github.status(HEAD,'pending','Assessing decision guarantees')
+    assert remote.statuses[-1]['state']=='pending'
+    executor.execute(result,remote.pr)
+    assert remote.statuses[-1]['state']=='failure'
+    assert len(remote.comments)==1 and len(remote.pulls)==1
+    assert client.read("MATCH (a:Action) RETURN count(a) AS n")[0]['n']==3
+
+
 @pytest.mark.parametrize('change',['head','revision','closed'])
 def test_stale_actions_skipped(operational,change):
     client,result,remote,executor=operational

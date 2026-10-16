@@ -36,7 +36,10 @@ class Executor:
     def _run(self, result, number, kind, key, payload, call):
         aid = assessment_id(result)
         previous = self.store.action(key)
-        if previous and previous["status"] == "done" and previous.get("payload_json") == json.dumps(payload):
+        # GitHub uses the latest status for this SHA/context. A new assessment posts
+        # pending even when the final payload was sent before, so always restore it.
+        # Comments and fix PRs still use the durable deduplication guard.
+        if kind != "status" and previous and previous["status"] == "done" and previous.get("payload_json") == json.dumps(payload):
             return previous.get("external_url", "")
         try:
             self.fresh(result, number)

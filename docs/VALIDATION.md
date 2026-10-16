@@ -1,6 +1,24 @@
 # Validation record
 
-Run date: October 16, 2026 (IST). No results below imply a live GitHub demonstration.
+Run date: October 16, 2026 (IST). Initial build checks and subsequent live checks are distinguished below.
+
+## Live follow-up: repeated assessment status repair
+
+The live PR #3 assessment correctly returned CLEAR_WITHIN_SCOPE, but GitHub remained
+pending. Status history showed success followed by pending on the same SHA/context.
+The executor had deduplicated the final success using its saved Action record, even
+though the new assessment had posted pending. Final statuses now always pass the stale
+guard and are re-posted; comments and fix PRs retain their deduplication rules.
+
+- A new regression reproduced the stuck-pending bug before the fix.
+- After the fix, all **14 GitHub regression tests passed** in 21.13 seconds.
+- A real reassessment of [PR #3](https://github.com/Razeefshaik/kestrel-platform/pull/3)
+  posted success, confirmed through GitHub's combined-status API.
+- The same live read confirmed success for [PR #1](https://github.com/Razeefshaik/kestrel-platform/pull/1).
+- GitHub confirmed [fix PR #2](https://github.com/Razeefshaik/kestrel-platform/pull/2)
+  was merged by the user into `scenario/s1-retry-72`.
+
+The initial build record below predates those user-run live rehearsals.
 
 | Check | Actual result |
 | --- | --- |
