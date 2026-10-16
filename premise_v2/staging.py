@@ -66,6 +66,7 @@ class Staging:
                      "i.scope=coalesce($scope, i.scope), i.updated_ms=$now, i.processed_seq=$seq",
                      {"k": env.entity_key, "seq": env.sequence, "hash": env.content_hash, "scope": env.scope, "now": now_ms()})
         self.retract_claims(env.entity_key, "source_deleted")
+        self.c.write("MATCH (o:Ownership {item:$k}) DELETE o", {"k": env.entity_key})
 
     def live_keys(self, scope: str) -> set[str]:
         rows = self.c.read("MATCH (i:Item) WHERE i.scope=$s AND NOT i.deleted RETURN i.key AS k", {"s": scope})

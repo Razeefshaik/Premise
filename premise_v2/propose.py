@@ -15,6 +15,8 @@ import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from pathlib import PurePosixPath
+import json
 
 from premise.agent.render import safe
 from premise.graph.client import GraphClient
@@ -43,6 +45,7 @@ class Proposal:
     state: str                 # created | updated | unchanged | skipped
     reason: str = ""
     pr_url: str | None = None
+    kind: str = "drift"
 
 
 def _when(ms: int | None) -> str:
@@ -62,6 +65,7 @@ def _validate_edit(model_root: Path, rel: str, new_text: str) -> list[str]:
     with tempfile.TemporaryDirectory(prefix="premise-v2-") as tmp:
         copy = Path(tmp) / "model"
         shutil.copytree(model_root, copy, ignore=shutil.ignore_patterns(".git"))
+        (copy / rel).parent.mkdir(parents=True, exist_ok=True)
         (copy / rel).write_text(new_text, encoding="utf-8")
         errors, _ = validate(parse_repo(copy))
         return errors
@@ -139,11 +143,36 @@ class ProposalWriter:
         names = {r["id"]: r["name"] for r in self.decision.read("MATCH (p:Person) RETURN p.id AS id, p.name AS name")}
         prev = preview(self.decision, d.file, new)
         body = render_body(d, prev, names)
+        return self._save(d.key_id, branch, title, d.file, old, new, body, prev, "drift",
+                          {"fact": d.fact, "value": d.value, "support": d.support, "contested": d.contested,
+                           "evidence_json": json.dumps(d.supporting + d.disagreeing + d.weak),
+                           "origins_json": json.dumps(d.origins)})
+
+    def write_document(self, kind: str, key: str, rel: str, new: str, body: str, title: str) -> Proposal:
+        path = PurePosixPath(rel)
+        allowed = (kind == "identity" and rel == "ext/identities.yaml"
+                   or kind == "knowledge" and rel == "knowledge/relations.yaml"
+                   or kind == "decision" and rel.startswith("adr/ADR-DRAFT-") and rel.endswith(".md"))
+        if not allowed or path.is_absolute() or ".." in path.parts or "\\" in rel:
+            raise ValueError("proposal path is not allowed for this kind")
+        branch = f"v2/{kind}-{hashlib.sha256(key.encode()).hexdigest()[:12]}"
+        old = (self.root / rel).read_text(encoding="utf-8") if (self.root / rel).exists() else ""
+        errors = _validate_edit(self.root, rel, new)
+        rejected = self.staging.rejection(key)
+        if errors or rejected:
+            return Proposal(key, branch, title, rel, new, "", "", {}, "skipped",
+                            "rejected by a human" if rejected else "invalid edit: " + "; ".join(errors[:3]), kind=kind)
+        prev = preview(self.decision, rel, new) if kind == "decision" else {
+            "verdict": "NEEDS_REVIEW", "not_holding": [], "verified_fixes": [], "decisions": []}
+        body += f"\n\nHuman review required.\n\n<!-- premise:v2:{kind}:{key} -->"
+        return self._save(key, branch, title, rel, old, new, body, prev, kind, {"fact": key, "value": ""})
+
+    def _save(self, key, branch, title, rel, old, new, body, prev, kind, metadata):
         digest = hashlib.sha256(body.encode()).hexdigest()
         existing = self.staging.proposal(key)
         state = "created" if not existing else "unchanged" if existing.get("body_hash") == digest else "updated"
-        p = Proposal(key, branch, title, d.file, new, _diff(d.file, old, new), body, prev, state,
-                     pr_url=(existing or {}).get("pr_url"))
+        p = Proposal(key, branch, title, rel, new, _diff(rel, old, new), body, prev, state,
+                     pr_url=(existing or {}).get("pr_url"), kind=kind)
         if self.out:
             self.out.mkdir(parents=True, exist_ok=True)
             (self.out / f"{branch.replace('/', '_')}.md").write_text(f"# {title}\n\n{body}\n\n```diff\n{p.diff}```\n", encoding="utf-8")
@@ -155,8 +184,10 @@ class ProposalWriter:
             pr = self._open_pr(p)
             p.pr_url = pr["html_url"]
             published = {"pr_url": p.pr_url, "pr_number": pr["number"], "published_hash": digest, "remote_state": "open"}
-        self.staging.upsert_proposal(key, {"fact": d.fact, "value": d.value, "branch": branch, "status": "open",
-                                           "body_hash": digest, "verdict_preview": prev["verdict"], **published})
+        self.staging.upsert_proposal(key, {"branch": branch, "status": "open", "kind": kind,
+                                         "title": title, "file": rel, "body": body, "diff": p.diff,
+                                         "preview_json": json.dumps(prev), "body_hash": digest,
+                                         "verdict_preview": prev["verdict"], **metadata, **published})
         return p
 
     # ---- live mode ---------------------------------------------------------------------------------

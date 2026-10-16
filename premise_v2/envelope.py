@@ -33,6 +33,7 @@ class AuthorRef(BaseModel):
     source_user_id: str | None = None
     display_name: str | None = None
     email: str | None = None
+    email_verified: bool = False
 
 
 class Envelope(BaseModel):

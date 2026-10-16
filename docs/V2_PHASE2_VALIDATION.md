@@ -8,6 +8,7 @@ are preserved. The design is [Premise_v2_Phase2_Design.md](Premise_v2_Phase2_Des
 | Package | Implemented behavior | Full-suite result |
 | --- | --- | --- |
 | P2.1 | Dict checkpoints, failure records/retries, four connector interfaces, read-only GitHub, exported Pages, CODEOWNERS evidence | **224 passed**, 1 existing warning, 120.66 s |
+| P2.2 | Account-based claims, reversible identity links, verified email, strict fuzzy proposals, bridge checks, shared proposal publication | **230 passed**, 1 existing warning, 145.42 s |
 
 Tests use real FalkorDB and synthetic fixtures. GitHub API behavior is exercised through a
 read-only extension of the existing FakeGitHub; no live GitHub or model calls occur in tests.

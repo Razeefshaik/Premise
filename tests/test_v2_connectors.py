@@ -107,9 +107,10 @@ def test_bad_github_comment_is_data_not_a_generator_failure(tmp_path):
     fixture = tmp_path / "github.json"
     data = github_fixture(fixture)
     data["issue_comments"].insert(0, {"id": 99, "issue_url": "bad-url"})
+    data["pulls"].append({"body": "invalid PR without a number"})
     fixture.write_text(json.dumps(data), encoding="utf-8")
     rows = list(GitHubConnector("owner/repo", fixture=fixture).load(None))
-    assert sum(isinstance(e, ConnectorFailure) for e in rows) == 1
+    assert sum(isinstance(e, ConnectorFailure) for e in rows) == 2
     assert sum(not isinstance(e, ConnectorFailure) for e in rows) == 4
 
 

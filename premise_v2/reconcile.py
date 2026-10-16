@@ -105,13 +105,14 @@ def _origins(claims: list[dict], items_by_ref: dict[str, str]) -> list[list[str]
 
 def _evidence(c: dict) -> dict:
     return {k: c.get(k) for k in ("envelope_key", "url", "person", "quote", "status", "as_of_ms", "value", "raw",
-                                  "previous", "supersedes", "source", "container", "visibility")}
+                                  "previous", "supersedes", "source", "container", "visibility", "account")}
 
 
 def reconcile(staging: Staging, decision: GraphClient, model_root: str | Path) -> tuple[list[Drift], list[dict]]:
     """Returns (drifts, confirmations). Reads the decision graph only through RO queries."""
     model_root = Path(model_root)
-    claims = staging.active_claims()
+    from .identity import IdentityDirectory
+    claims = IdentityDirectory(staging, decision, model_root).resolve_claims(staging.active_claims())
     facts = {r["id"]: r for r in decision.named("facts_by_id", {"ids": sorted({c["fact"] for c in claims})})} if claims else {}
     items_by_ref = {}
     for c in claims:

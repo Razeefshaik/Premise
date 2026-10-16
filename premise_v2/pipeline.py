@@ -18,7 +18,8 @@ from premise.ingest.run import ingest
 from .envelope import Envelope
 from .extract import FactClaimExtractor, body_of, ground
 from .gateway import Gateway
-from .normalize import IdentityResolver, to_kif
+from .normalize import to_kif
+from .identity import IdentityDirectory
 from .propose import ProposalWriter
 from .reconcile import reconcile
 from .registry import Ext, check_relations
@@ -47,6 +48,7 @@ class RunSummary:
     caught_up: bool = True
     proposal_skip_reason: str = ""
     connector_failures: list = field(default_factory=list)
+    identity_proposals: list = field(default_factory=list)
 
 
 def fixture_workers(fixtures: str | Path) -> list:
@@ -71,7 +73,7 @@ class Pipeline:
         self.stream = EnvelopeStream(r, stream=stream_name, dead=f"{stream_name}:dead", failures=f"{stream_name}:failures")
         self.workers = workers
         self.gateway = Gateway(self.ext, self.staging)
-        self.resolver = IdentityResolver(self.ext)
+        self.identities = IdentityDirectory(self.staging, decision, self.model_root)
         self.extractor = FactClaimExtractor(self.ext)
         self.writer = ProposalWriter(self.staging, decision, self.model_root, out_dir, github, model_prefix=model_prefix)
         self.summary = RunSummary()
@@ -130,21 +132,23 @@ class Pipeline:
     def handle(self, env: Envelope) -> None:
         res = self.gateway.process(env)
         self.summary.gateway[res.action] = self.summary.gateway.get(res.action, 0) + 1
-        if res.action == "duplicate" and env.scope:
-            self.staging.adopt_scope(env.entity_key, env.scope)
-        if res.action in {"duplicate", "stale"}:
+        if res.action == "stale":
             return
         if res.action == "deleted":
             self.staging.tombstone(env)
             return
+        account = self.identities.capture(res.envelope)
+        if res.action == "duplicate" and env.scope:
+            self.staging.adopt_scope(env.entity_key, env.scope)
+        if res.action == "duplicate":
+            return
         clean = res.envelope
-        link = self.resolver.resolve(clean)
         self.summary.redactions += sum(res.redactions.values())
-        self.staging.store_item(clean, cls=res.cls, in_scope=res.in_scope, person=link.person, link_method=link.method,
-                                redactions=res.redactions, kif=to_kif(clean, res.cls, link.person))
+        self.staging.store_item(clean, cls=res.cls, in_scope=res.in_scope, person=account, link_method="account",
+                                redactions=res.redactions, kif=to_kif(clean, res.cls, account))
         self.staging.retract_claims(clean.entity_key, "superseded_by_edit", below_sequence=clean.sequence)
         if res.in_scope and res.cls in EXTRACT_CLASSES:
-            claims, _ = self.extractor.extract(clean, link.person)
+            claims, _ = self.extractor.extract(clean, account)
             body = body_of(clean)
             for c in claims:
                 ok, why = ground(c, body, self.ext)
@@ -187,6 +191,8 @@ class Pipeline:
             self.summary.proposals.append({"key": p.key, "branch": p.branch, "state": p.state, "reason": p.reason,
                                            "verdict_preview": p.preview.get("verdict"), "pr_url": p.pr_url})
         for existing in self.staging.proposals():
+            if existing.get("kind", "drift") != "drift":
+                continue
             if existing["key"] in current:
                 continue
             d = by_key.get(existing["key"])
@@ -196,4 +202,5 @@ class Pipeline:
             withdrawn = self.writer.withdraw(existing["key"], reason)
             if withdrawn:
                 self.summary.withdrawals.append(withdrawn)
+        self.summary.identity_proposals = self.identities.propose(self.writer)
         return self.summary

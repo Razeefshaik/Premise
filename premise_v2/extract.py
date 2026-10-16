@@ -64,7 +64,11 @@ class Claim:
     extractor: str = "fact_claims/1"
 
     def to_props(self) -> dict:
-        return asdict(self)
+        props = asdict(self)
+        # Keep the Phase 1 constructor compatible, but persist the source account,
+        # never a person assignment that could become stale after a link changes.
+        props["account"] = props.pop("person")
+        return props
 
 
 def body_of(env: Envelope) -> str:

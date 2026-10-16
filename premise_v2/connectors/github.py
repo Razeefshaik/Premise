@@ -10,7 +10,7 @@ from .base import ConnectorFailure, timestamp
 
 
 def is_premise(body):
-    return "<!-- premise:" in (body or "")
+    return isinstance(body, str) and "<!-- premise:" in body
 
 
 class GitHubConnector:
@@ -58,7 +58,8 @@ class GitHubConnector:
         except Exception as exc:
             yield ConnectorFailure(scope=self.scope, error=f"cannot read GitHub snapshot ({type(exc).__name__})")
             return checkpoint or {}
-        excluded = {p["number"] for p in data.get("pulls", []) if is_premise(p.get("body"))}
+        excluded = {p["number"] for p in data.get("pulls", []) if isinstance(p, dict)
+                    and isinstance(p.get("number"), int) and is_premise(p.get("body"))}
         rows = []
         for kind, collection in [("issue", "issues"), ("pull_request", "pulls")]:
             for obj in data.get(collection, []):
@@ -79,7 +80,8 @@ class GitHubConnector:
                     continue
                 if number in excluded:
                     continue
-                parent_kind = "pull_request" if collection == "review_comments" or any(p["number"] == number for p in data.get("pulls", [])) else "issue"
+                parent_kind = "pull_request" if collection == "review_comments" or any(
+                    isinstance(p, dict) and p.get("number") == number for p in data.get("pulls", [])) else "issue"
                 rows.append((native, "comment", obj, f"github:{self.repo}/{parent_kind}/{number}"))
         for obj in data.get("files", []):
             path = obj.get("path") if isinstance(obj, dict) else None

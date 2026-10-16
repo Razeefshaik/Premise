@@ -63,7 +63,8 @@ def load_fixture(worker, checkpoint):
                     env = next(gen)
                 except StopIteration as done:
                     if done.value is not None:
-                        high = max(str(high or ""), str(done.value))
+                        high = (str(max(float(high or 0), float(done.value))) if worker.name == "slack"
+                                else max(str(high or ""), str(done.value)))
                     break
                 if env.entity_key not in seen:
                     seen.add(env.entity_key)
