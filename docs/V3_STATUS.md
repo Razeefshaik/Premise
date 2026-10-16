@@ -6,9 +6,9 @@ Each phase has its own branch and local commits. No V3 merge or push has been pe
 | Phase | Status | Branch |
 | --- | --- | --- |
 | V3.1 Query recorder + Graph API | Complete and verified locally | `v3/query-recorder-graph-api` |
-| V3.2 Decision Explorer | Implemented; batch verification in progress | `v3/decision-explorer` |
-| V3.3 Live consequences | Implemented; batch verification in progress | `v3/live-consequences` |
-| V3.4 Benchmark | Implemented; batch verification in progress | `v3/benchmark` |
+| V3.2 Decision Explorer | Complete and batch verified | `v3/decision-explorer` |
+| V3.3 Live consequences | Complete and batch verified | `v3/live-consequences` |
+| V3.4 Benchmark | Complete and batch verified | `v3/benchmark` |
 | V3.5 Red team | Pending | `v3/red-team` (planned) |
 | V3.6 Continuity | Pending | `v3/continuity` (planned) |
 | V3.7 Time machine | Pending | `v3/time-machine` (planned) |
@@ -126,5 +126,9 @@ splits are published, with a table/chart on `/benchmark` and caveats in
 creation/query/cleanup without a model download; their provenance is stored with them.
 The benchmark report uses actual local inference, not the test embedding fixture.
 
-Focused benchmark integration checks: **3 passed**. All **12 scenarios passed** during
-the batch browser run. Full regression and final browser confirmation are in progress.
+Focused benchmark integration checks: **3 passed**. Batch verification: **302 tests passed
+in 266.36 seconds**, **12/12 scenarios passed**, and browser checks passed at desktop
+1440×1050 and mobile 390×844 with no page/console errors. The browser exercised actual
+node clicking, four red guarantees for S1, verified repair back to green, recorded Cypher
+and the benchmark chart/table. Small later stylesheet refinements reuse the same controls;
+their final captures will be included in the V3 finish review.

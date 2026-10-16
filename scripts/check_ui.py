@@ -73,6 +73,7 @@ def main():
             page.locator('#cypher-drawer summary').click()
             assert page.locator('#cypher-queries section').count()>0
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            page.evaluate('window.scrollTo(0,0)')
             page.screenshot(path=str(artifact/f"explorer-{size['width']}.png"),full_page=True)
             page.locator('[data-explorer-preset="S1"]').click()
             page.locator('#explorer-verdict').filter(has_text='BLOCKED').wait_for()

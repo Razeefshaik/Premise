@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Decision Explorer · Premise{% endblock %}
+{% block page %}v3-app{% endblock %}
 {% block content %}
 <section class="v3-head"><h1>Decision Explorer</h1><p>Follow a promise to its facts, evidence and people.</p></section>
 <section class="v3-controls" aria-label="Graph controls"><form id="focus-form"><label for="entity-search">Find an entity</label><div class="v3-inline"><input id="entity-search" list="entity-options" placeholder="G_DEDUPE or service id" autocomplete="off"><datalist id="entity-options"></datalist><button type="submit">Focus</button><button type="button" id="overview-button">Overview</button></div></form><label for="graph-depth">Depth <output id="depth-value">1</output><input type="range" id="graph-depth" min="1" max="4" value="1"></label><fieldset id="graph-kinds"><legend>Include</legend>{% for kind in ['reasoning','services','people','facts'] %}<label><input type="checkbox" value="{{ kind }}" {{ 'checked' if kind in ['reasoning','services'] else '' }}>{{ kind }}</label>{% endfor %}</fieldset></section>
