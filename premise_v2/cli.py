@@ -15,6 +15,16 @@ from .pipeline import Pipeline, fixture_workers
 from .registry import Ext, check_relations
 
 
+def check_isolation(staging: str, decision: str, protected: set[str]) -> list[str]:
+    errors = []
+    if staging == decision:
+        errors.append("staging and decision graphs must differ")
+    for name, role in ((staging, "staging"), (decision, "decision")):
+        if name in protected:
+            errors.append(f"{role} graph '{name}' is protected (used by v1)")
+    return errors
+
+
 def main(argv: list[str] | None = None) -> int:
     s = settings()
     ap = argparse.ArgumentParser(prog="premise-v2")
@@ -40,13 +50,16 @@ def main(argv: list[str] | None = None) -> int:
         errors = check_relations(Ext.load(args.model).relations)
         print("registry ok" if not errors else "\n".join(errors))
         return 1 if errors else 0
+    protected = {s.graph_name, "premise_codex_demo"}
+    protected.update(name.strip() for name in os.getenv("V2_PROTECTED_GRAPHS", "").split(",") if name.strip())
+    errors = check_isolation(args.staging_graph, args.decision_graph, protected)
+    if errors:
+        print("\n".join(errors), file=sys.stderr)
+        return 2
     r = redis.Redis(host=args.host, port=args.port)
     staging = GraphClient(args.host, args.port, args.staging_graph)
     decision = GraphClient(args.host, args.port, args.decision_graph)
     if args.cmd == "reset":
-        if args.decision_graph == s.graph_name:
-            print("refusing: the decision graph name matches v1's graph", file=sys.stderr)
-            return 1
         staging.delete_graph()
         r.delete("premise:v2:raw", "premise:v2:raw:dead", "premise:v2:raw:failures")
         print("v2 staging graph and stream deleted")
