@@ -5,6 +5,7 @@ The verdict is a deterministic function of graph query results. No LLM output is
 from __future__ import annotations
 
 import datetime as dt
+import logging
 from typing import Any
 
 from ..graph.client import GraphClient, GraphUnavailable
@@ -14,6 +15,7 @@ from .models import (AssessmentResult, Candidate, ChangedFact, CheckedDecision, 
 from .repair import Repairer
 
 DAY_MS = 24 * 3600 * 1000
+log = logging.getLogger(__name__)
 
 
 def now_ms() -> int:
@@ -23,8 +25,11 @@ def now_ms() -> int:
 def graph_ready(client: GraphClient) -> tuple[bool, int | None, str]:
     try:
         rows = client.named("graph_state")
-    except Exception as exc:  # unreachable server, missing graph, timeouts
+    except GraphUnavailable as exc:
         return False, None, f"graph unavailable: {exc}"
+    except Exception:
+        log.exception("Unexpected graph readiness failure")
+        raise
     if not rows or rows[0]["ingest_state"] != "ready":
         state = rows[0]["ingest_state"] if rows else None
         return False, rows[0]["rev"] if rows else None, f"graph not ready (ingest_state={state})"
@@ -52,8 +57,11 @@ def assess(client: GraphClient, changes: list[ChangedFact], *, changed_paths: li
     try:
         return _assess(client, changes, at, since_days, rev, run_repair, fix_budget, base)
     except Exception as exc:
+        if not isinstance(exc, GraphUnavailable):
+            log.exception("Unexpected reasoning failure")
         return AssessmentResult(verdict="ERROR", graph_rev=rev,
-                                reasons=[Reason(code="R_UNAVAILABLE", detail=f"assessment unavailable: {type(exc).__name__}")], **base)
+                                reasons=[Reason(code="R_UNAVAILABLE" if isinstance(exc, GraphUnavailable) else "R_INTERNAL_ERROR",
+                                    detail=f"assessment unavailable: {type(exc).__name__}")], **base)
 
 
 def _assess(client, changes, at, since_days, rev, run_repair, fix_budget, base) -> AssessmentResult:

@@ -61,6 +61,14 @@ def test_provider_failure_keeps_deterministic_fixes(kestrel):
     assert [f.model_dump() for f in result.fixes]==before
 
 
+def test_fix_controller_rejects_reverting_controllable_pr_fact(kestrel):
+    result=run_scenario(kestrel,SANDBOX,SCENARIOS['scenarios']['S2'],NOW)
+    session=FixSession(kestrel,result)
+    # This would be healthy, but it merely undoes the author's change from 5 to 8.
+    with pytest.raises(ValueError,match='Reverts'):
+        session.dispatch('test_fix',{'changes':{'emailservice.retry_max_attempts':5}})
+
+
 def test_brain_health_and_routing(kestrel):
     tools=GraphTools(kestrel,NOW)
     health=tools.call('guarantee_health',{})
@@ -87,6 +95,8 @@ def test_analyst_rejects_hallucinated_ids(kestrel):
     assert 'p_jun' in answer['answer_markdown']
     assert answer['sources']
     assert not verify_answer({'outcome':'answered_with_path','answer_markdown':'See https://evil.example','cited_ids':[]},[])
+    # No dotted domain/id: this assertion specifically protects the URL ban.
+    assert not verify_answer({'outcome':'answered_with_path','answer_markdown':'See https://localhost/','cited_ids':[]},[])
     invented={'outcome':'answered_with_path','answer_markdown':'ADR-099 owns this','cited_ids':['ADR-099']}
     assert not verify_answer(invented,[{'tool':'resolve','arguments':{'query':'ADR-099'},'rows':[]}])
     assert not verify_answer(invented,[{'tool':'decision_lineage','arguments':{'id':'ADR-099'},'rows':{'outcome':'unknown_entity','id':'ADR-099'}}])
@@ -108,6 +118,10 @@ def test_web_brain_assessment_entities_and_failure(kestrel):
         assert brain.status_code==200 and 'What still holds?' in brain.text
         assessment=client.get('/assessments/'+aid)
         assert assessment.status_code==200 and 'ADR-016' in assessment.text
+        assert 'paylane | retry | window' in assessment.text
+        assert 'Attested:' in assessment.text and 'Review by:' in assessment.text
+        assert '1788307200000' not in assessment.text
+        assert '"person":' not in assessment.text
         assert client.get('/api/assessments/'+aid).json()['verdict']=='BLOCKED'
         for id in ['ADR-012','G_DEDUPE','A_RETRY_WINDOW','paymentservice','p_jun']:
             assert client.get('/entities/'+id).status_code==200

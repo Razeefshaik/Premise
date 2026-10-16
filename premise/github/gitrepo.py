@@ -2,8 +2,15 @@
 from __future__ import annotations
 
 from pathlib import Path
+from dataclasses import dataclass
 import re
 import subprocess
+
+
+@dataclass
+class PRFiles:
+    head: dict[str, str | None]
+    base: dict[str, str | None]
 
 
 class GitRepo:
@@ -40,8 +47,10 @@ class GitRepo:
             raise RuntimeError("PR head changed during intake; retry required")
         base = self.git("merge-base", main_sha, actual).strip()
         paths = self.git("diff", "--name-only", "-z", base, actual).split("\0")
-        changed = {}
+        changed, original = {}, {}
         for path in filter(None, paths):
             exists = subprocess.run(["git", "-C", str(self.root), "cat-file", "-e", f"{actual}:{path}"], capture_output=True)
             changed[path] = None if exists.returncode else self.git("show", f"{actual}:{path}")
-        return changed
+            exists = subprocess.run(["git", "-C", str(self.root), "cat-file", "-e", f"{base}:{path}"], capture_output=True)
+            original[path] = None if exists.returncode else self.git("show", f"{base}:{path}")
+        return PRFiles(head=changed, base=original)

@@ -72,7 +72,8 @@ class Executor:
             # An unavailable graph cannot record an action. Only a current-head error status is allowed.
             latest = self.github.pull(number)
             if latest["head"]["sha"] == result.head_sha and latest["state"] == "open":
-                self.github.status(result.head_sha, "error", "Assessment unavailable: graph not ready")
+                detail = result.reasons[0].detail if result.reasons else "Assessment unavailable"
+                self.github.status(result.head_sha, "error", detail[:140])
             return {"status": "error"}
         aid = self.store.save(result, pr)
         url = f"{self.public_url}/assessments/{aid}"

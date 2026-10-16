@@ -5,7 +5,10 @@ import re
 
 
 def safe(text):
-    return str(text).replace("|", "\\|").replace("<", "&lt;").replace(">", "&gt;").replace("@", "＠").replace("\n", " ")
+    text = str(text).replace("\\", "\\\\")
+    for char in "|[]()`*_!":
+        text = text.replace(char, "\\" + char)
+    return text.replace("<", "&lt;").replace(">", "&gt;").replace("@", "＠").replace("\n", " ").replace("\r", " ")
 
 
 def mermaid(result):

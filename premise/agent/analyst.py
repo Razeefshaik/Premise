@@ -50,6 +50,8 @@ def answer_question(tools, question, settings=None, adapter=None):
                 "the server attaches citations. Missing knowledge means not_in_graph, never no impact.", question, tools.schemas(),dispatch,budget=6)
         except Exception:
             answer = None
+    # Fallback tool results must never retroactively ground a model that used no tools.
+    model_used_tools = bool(calls)
     if not calls:
         q = question.lower()
         entity = re.search(r"ADR-\d{3}|[GA]_[A-Z_]+",question,re.I)
@@ -73,7 +75,7 @@ def answer_question(tools, question, settings=None, adapter=None):
                 dispatch("who_knows",{"id":service["id"]})
             else:
                 dispatch("search_evidence",{"query":question,"limit":5})
-    valid = verify_answer(answer,calls)
+    valid = model_used_tools and verify_answer(answer,calls)
     if not valid:
         rows = calls[-1]["rows"]
         empty = not rows or (isinstance(rows,dict) and rows.get("outcome")=="unknown_entity")
@@ -91,4 +93,6 @@ def answer_question(tools, question, settings=None, adapter=None):
             for row in call["rows"]:
                 if (row.get("path"),row.get("line")) not in seen:
                     sources.append({k:row.get(k) for k in ("id","path","line","url")})
-    return {**answer,"sources":sources,"tool_results":calls,"mode":"llm" if valid else "deterministic"}
+    return {**answer,"sources":sources,"tool_results":calls,"mode":"llm" if valid else "deterministic",
+            "verification":"Model summary; IDs and explicit status claims checked, other claims not verified."
+                if valid else "Deterministic summary from graph tool results."}

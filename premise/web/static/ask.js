@@ -21,6 +21,7 @@ form.addEventListener('submit', async event => {
     append('h3', result.outcome.replaceAll('_', ' '));
     append('p', result.answer_markdown);
     append('small', `Answer mode: ${result.mode}`);
+    append('p', result.verification);
     for (const call of result.tool_results) {
       const details = append('details', '');
       const summary = document.createElement('summary');

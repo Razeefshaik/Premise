@@ -11,7 +11,7 @@ import pytest
 from premise.config import Settings
 from premise.github.api import GitHub, GitHubError
 from premise.github.actions import Executor, StaleAssessment
-from premise.github.gitrepo import GitRepo
+from premise.github.gitrepo import GitRepo, PRFiles
 from premise.github.poller import Pipeline
 from premise.github.store import Store, assessment_id
 from premise.ingest.run import ingest
@@ -193,19 +193,30 @@ def test_fix_executor_rejects_external_and_unverified(operational):
     assert not remote.trees and not remote.pulls
 
 
+def test_fix_executor_rejects_reverting_controllable_pr_fact(operational):
+    client,_,remote,executor=operational
+    result=run_scenario(client,SANDBOX,SCENARIOS['scenarios']['S2'],NOW)
+    result.pr='pr:1'; result.head_sha=HEAD
+    with pytest.raises(ValueError,match='Reverting'):
+        executor.fix_pr(result,remote.pr,{'emailservice.retry_max_attempts':5})
+    assert not remote.trees and not remote.pulls
+
+
 def test_git_intake_only_own_diff(tmp_path):
     origin=tmp_path/'origin'; origin.mkdir()
     def git(*args):
         return subprocess.check_output(['git','-C',str(origin),*args],stderr=subprocess.DEVNULL).decode().strip()
     git('init','-b','main'); git('config','user.name','test'); git('config','user.email','test@example.com')
-    (origin/'fact.yaml').write_text('value: 24\n')
+    (origin/'fact.yaml').write_text('value: 24\nack: 2000\n')
     git('add','.'); git('commit','-m','base'); git('checkout','-b','scenario')
-    (origin/'fact.yaml').write_text('value: 72\n'); git('commit','-am','change')
+    (origin/'fact.yaml').write_text('value: 72\nack: 2000\n'); git('commit','-am','change')
     head=git('rev-parse','HEAD'); git('update-ref','refs/pull/1/head',head)
-    git('checkout','main'); (origin/'unrelated.md').write_text('main only'); git('add','.'); git('commit','-m','main advance')
+    git('checkout','main'); (origin/'fact.yaml').write_text('value: 24\nack: 2500\n')
+    (origin/'unrelated.md').write_text('main only'); git('add','.'); git('commit','-m','main advance')
     repo=GitRepo(tmp_path/'managed',str(origin))
     main=repo.main(); files=repo.pr_files(1,head,main)
-    assert files=={'fact.yaml':'value: 72\n'}
+    assert files.head=={'fact.yaml':'value: 72\nack: 2000\n'}
+    assert files.base=={'fact.yaml':'value: 24\nack: 2000\n'}
     with pytest.raises(RuntimeError): repo.pr_files(1,'f'*40,main)
 
 
@@ -224,7 +235,9 @@ def test_poller_reassesses_new_main_revision(operational):
         root=SANDBOX
         sha='1'*40
         def main(self): return self.sha
-        def pr_files(self,*args): return {'config/partners/paylane.yaml':'retry:\n  window_hours: 72\ndelivery:\n  timeout_ms: 5000\n'}
+        def pr_files(self,*args): return PRFiles(
+            {'config/partners/paylane.yaml':'retry:\n  window_hours: 72\ndelivery:\n  timeout_ms: 5000\n'},
+            {'config/partners/paylane.yaml': (SANDBOX/'config/partners/paylane.yaml').read_text()})
     git=Git()
     pipeline=Pipeline(client,executor.github,git,Settings(auto_fix_pr=False))
     pipeline.once()

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import datetime as dt
+import re
 from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
@@ -18,6 +20,17 @@ from ..github.store import Store
 
 ROOT = Path(__file__).parent
 templates = Jinja2Templates(directory=str(ROOT/"templates"))
+
+
+def attestation_evidence(graph, assumptions):
+    ids = sorted({a["person"] for item in assumptions for a in item.attestations})
+    names = {row["id"]: row["name"] for row in graph.read(
+        "MATCH (p:Person) WHERE p.id IN $ids RETURN p.id AS id, p.name AS name", {"ids": ids})} if ids else {}
+    def date(value):
+        return dt.datetime.fromtimestamp(value / 1000, dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC") if value is not None else None
+    return {item.id: [{**a, "name": names.get(a["person"], a["person"]),
+                      "attested_on": date(a.get("on")), "review_date": date(a.get("review_by"))}
+                     for a in item.attestations] for item in assumptions}
 
 
 class Question(BaseModel):
@@ -85,10 +98,14 @@ def create_app(client=None, config=None):
         if not result:
             raise HTTPException(404,"Assessment not found")
         ids = [c.fact for c in result.changed_facts]+[a.id for a in result.assumptions]+[g.id for g in result.guarantees]+[d.id for d in result.decisions]
-        search = graph.named("search_decision_passages",{"q":"retry | Paylane | window"}) if "paylane.retry_window_hours" in ids else []
+        terms = sorted({word for c in result.changed_facts for word in re.findall(r"[a-zA-Z0-9]+", c.fact)
+                        if len(word) > 2 and word not in {"hours", "seconds", "minutes"}})[:12]
+        lexical_query = " | ".join(terms)
+        search = graph.named("search_decision_passages",{"q":lexical_query}) if lexical_query else []
         lexical = sorted({r["decision"] for r in search})
         return templates.TemplateResponse(request=request,name="assessment.html",context={"result":result,"aid":aid,
-            "mermaid":mermaid(result),"sources":provenance(graph,ids),"lexical":lexical,
+            "mermaid":mermaid(result),"sources":provenance(graph,ids),"lexical":lexical,"lexical_query":lexical_query,
+            "attestations":attestation_evidence(graph,result.assumptions),
             "graph_only":sorted(set(d.id for d in result.decisions)-set(lexical))})
 
     @app.get("/api/assessments/{aid}")
