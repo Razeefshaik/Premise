@@ -1,10 +1,70 @@
-{% extends 'base.html' %}{% block title %}{{id}} · Premise{% endblock %}{% block content %}
-<a class="back" href="/">Company Brain</a><div class="heading"><div><p class="eyebrow">Decision and ownership explorer</p><h1>{{id}}</h1>{% if data is mapping and data.decision %}<p class="intro">{{data.decision.title}}</p>{% endif %}</div></div>
-{% if data is mapping and data.decision %}<div class="meta"><span>Lifecycle: {{data.decision.status}}</span><span>Current reviewers: {{data.reviewers|join(', ') or 'No active reviewer'}}</span></div>
-<div class="split lower"><section><h2>Reasoning paths</h2>{% for p in data.paths %}<div class="evidence-line"><span class="badge">{{p.role|lower}}</span><p>{% for item in p.chain %}<a href="/entities/{{item}}">{{item}}</a>{% if not loop.last %} → {% endif %}{% endfor %}<small>{{p.facts|join(', ')}}</small></p></div>{% endfor %}</section><section><h2>Reviewer evidence</h2>{% if data.unavailable %}<p>Unavailable accountable people: {{data.unavailable|join(', ')}}</p>{% endif %}<ul>{% for c in data.candidates %}<li>{{c.person}}: {{c.evidence}} recent authored sources</li>{% endfor %}</ul>{% for s in data.supersession %}<p>{{s.newer}} supersedes {{s.id if s.newer == id else id}}</p>{% endfor %}</section></div>
-{% elif data is mapping and data.guarantees is defined %}<section><h2>Current guarantee health</h2>{% for g in data.guarantees %}<div class="evidence-line"><span class="badge {{g.status}}">{{g.status}}</span><p>{{g.statement}}<small>{{g.prerequisites|length}} prerequisites checked · {{g.unverified}} unverified</small></p></div>{% endfor %}<div class="table-wrap"><table><thead><tr><th>Assumption</th><th>Health</th><th>Evidence</th></tr></thead><tbody>{% for a in data.assumptions %}<tr><td><a href="/entities/{{a.id}}">{{a.id}}</a><small>{{a.text}}</small></td><td><span class="badge {{a.state}}">{{a.state}}</span></td><td>{% if a.kind == 'predicate' %}{{a.lv}} {{a.op}} {{a.rv}}{% else %}Current attestation required{% endif %}</td></tr>{% endfor %}</tbody></table></div></section>
-{% elif data is sequence and data is not string %}<section><h2>Ownership and expertise</h2><div class="table-wrap"><table><thead><tr><th>Team</th><th>Active expert</th><th>Recent authored sources</th></tr></thead><tbody>{% for r in data %}<tr><td>{{r.team_name}}</td><td>{{r.name or 'No active member'}}</td><td>{{r.evidence}}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
-<details><summary>Full graph evidence</summary><pre class="json">{{data|tojson(indent=2)}}</pre></details>
-<section class="lower"><h2>Recorded assessments</h2>{% for a in history %}<p><a href="/assessments/{{a.id}}">PR #{{a.pr}} · {{a.verdict}}</a>, graph revision {{a.graph_rev}}</p>{% else %}<p>No assessments recorded for this entity.</p>{% endfor %}</section>
-<section><h2>Sources</h2><ul class="sources">{% if data is mapping and data.sources %}{% for s in data.sources %}<li>{{s.id}} {% if s.url %}<a href="{{s.url.split('#')[0]}}#L{{s.line}}">{{s.path}}:{{s.line}}</a>{% else %}{{s.path}}:{{s.line}} (local checkout){% endif %}</li>{% endfor %}{% endif %}{% for s in sources %}<li>{% if s.url %}<a href="{{s.url.split('#')[0]}}#L{{s.line}}">{{s.path}}:{{s.line}}</a>{% else %}{{s.path}}:{{s.line}} (local checkout){% endif %}</li>{% endfor %}</ul></section>
+{% extends 'base.html' %}{% from '_ui.html' import icon, state as badge, source_link %}
+{% block title %}{{ id }} · Premise{% endblock %}
+{% block page %}page-entity{% endblock %}
+{% block content %}
+<a class="back" href="/">{{ icon('arrow-left') }}Company Brain</a>
+<header class="page-head with-plate entity-head">
+  <img class="head-plate tall" src="/static/img/plate-cortex-columns.webp" width="672" height="777" alt="Three of Cajal's drawings of the layered human cortex">
+  <div class="page-head-copy">
+    <h1 class="rise entity-id">{{ id }}</h1>
+    {% if data is mapping and data.decision %}<p class="statement rise">{{ data.decision.title }}</p>
+    <p class="meta rise"><span>{{ icon('layers') }}Lifecycle: {{ data.decision.status }}</span><span>{{ icon('users') }}Current reviewers: {{ data.reviewers|join(', ') or 'No active reviewer' }}</span></p>
+    {% elif data is mapping and data.guarantees is defined and data.guarantees %}<p class="statement rise">{{ data.guarantees[0].statement }}</p>
+    {% elif data is mapping and data.text %}<p class="statement rise">{{ data.text }}</p>{% endif %}
+    <p class="plate-note rise"><span class="fig">Fig. 1.</span> Santiago Ramón y Cajal, the layers of the human cortex drawn three ways.</p>
+  </div>
+</header>
+
+{% if data is mapping and data.decision %}
+<div class="pair">
+  <section aria-labelledby="paths-title">
+    <h2 id="paths-title" class="reveal">Reasoning paths</h2>
+    <ol class="paths">{% for p in data.paths %}<li class="reveal">
+      <span class="badge">{{ p.role|lower }}</span>
+      <p class="chain">{% for item in p.chain %}<a class="id" href="/entities/{{ item }}"><code>{{ item }}</code></a>{% if not loop.last %}<span class="arrow" aria-hidden="true">→</span>{% endif %}{% endfor %}</p>
+      <small>{{ p.facts|join(', ') }}</small>
+    </li>{% endfor %}</ol>
+  </section>
+  <section aria-labelledby="reviewer-title">
+    <h2 id="reviewer-title" class="reveal">Reviewer evidence</h2>
+    {% if data.unavailable %}<p class="warning">{{ icon('user-x') }}Unavailable accountable people: {{ data.unavailable|join(', ') }}</p>{% endif %}
+    <ul class="people">{% for c in data.candidates %}<li class="reveal"><span class="person">{{ c.person }}</span><span class="num">{{ c.evidence }}</span><small>recent authored sources</small></li>{% endfor %}</ul>
+    {% for s in data.supersession %}<p>{{ s.newer }} supersedes {{ s.id if s.newer == id else id }}</p>{% endfor %}
+  </section>
+</div>
+{% elif data is mapping and data.guarantees is defined %}
+<section aria-labelledby="health-title">
+  <h2 id="health-title" class="reveal">Current guarantee health</h2>
+  {% for g in data.guarantees %}<div class="evidence-line reveal">{{ badge(g.status) }}<p>{{ g.statement }}<small>{{ g.prerequisites|length }} prerequisites checked · {{ g.unverified }} unverified</small></p></div>{% endfor %}
+  <div class="table-wrap reveal"><table>
+    <thead><tr><th scope="col">Assumption</th><th scope="col">Health</th><th scope="col">Evidence</th></tr></thead>
+    <tbody>{% for a in data.assumptions %}<tr>
+      <td><a class="id" href="/entities/{{ a.id }}"><code>{{ a.id }}</code></a><small>{{ a.text }}</small></td>
+      <td data-label="Health">{{ badge(a.state) }}</td>
+      <td data-label="Evidence">{% if a.kind == 'predicate' %}<code class="predicate">{{ a.lv }} {{ a.op }} {{ a.rv }}</code>{% else %}Current attestation required{% endif %}</td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% elif data is sequence and data is not string %}
+<section aria-labelledby="owners-title">
+  <h2 id="owners-title" class="reveal">Ownership and expertise</h2>
+  <div class="table-wrap reveal"><table>
+    <thead><tr><th scope="col">Team</th><th scope="col">Active expert</th><th scope="col">Recent authored sources</th></tr></thead>
+    <tbody>{% for r in data %}<tr><td>{{ r.team_name }}</td><td data-label="Active expert">{{ r.name or 'No active member' }}</td><td data-label="Recent authored sources" class="num">{{ r.evidence }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endif %}
+
+<details class="raw"><summary>{{ icon('braces') }}Full graph evidence</summary><pre class="json">{{ data|tojson(indent=2) }}</pre></details>
+
+<div class="pair">
+  <section aria-labelledby="history-title">
+    <h2 id="history-title" class="reveal">Recorded assessments</h2>
+    <ul class="history">{% for a in history %}<li class="reveal"><a href="/assessments/{{ a.id }}">{{ icon('git-pull-request') }}PR #{{ a.pr }} · {{ a.verdict }}</a><small>graph revision {{ a.graph_rev }}</small></li>{% else %}<li class="quiet">No assessments recorded for this entity.</li>{% endfor %}</ul>
+  </section>
+  <section aria-labelledby="entity-sources-title">
+    <h2 id="entity-sources-title" class="reveal">Sources</h2>
+    <ul class="sources">{% if data is mapping and data.sources %}{% for s in data.sources %}<li>{{ icon('file-text') }}<span class="id"><code>{{ s.id }}</code></span> {{ source_link(s) }}</li>{% endfor %}{% endif %}{% for s in sources %}<li>{{ icon('file-text') }}{{ source_link(s) }}</li>{% endfor %}</ul>
+  </section>
+</div>
 {% endblock %}

@@ -1,4 +1,52 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% block title %}Premise · Company Brain{% endblock %}</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/static/style.css"></head>
-<body><header><a class="brand" href="/" aria-label="Premise home"><span class="mark" aria-hidden="true">P</span>Premise</a><nav aria-label="Main"><a href="/">Company Brain</a><a href="/what-if">What if</a><a href="/docs">API</a><a href="https://github.com/Razeefshaik/Premise">Source</a></nav><span class="workspace">Kestrel Platform <span class="fiction">fictional company</span></span></header>
-<main>{% block content %}{% endblock %}</main><footer>Every guarantee needs evidence. Every verdict has a path.<span>Powered by FalkorDB</span></footer>{% block scripts %}{% endblock %}</body></html>
+{% from '_ui.html' import icon %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0f0e0c">
+<title>{% block title %}Premise · Company Brain{% endblock %}</title>
+<link rel="icon" href="/static/mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400..700&family=Schibsted+Grotesk:wght@400..700&family=Geist+Mono:wght@400..500&display=swap">
+<link rel="stylesheet" href="/static/style.css">
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body class="{% block page %}{% endblock %}">
+<a class="skip" href="#main">Skip to content</a>
+{% set path = request.url.path %}
+<header class="bar">
+  <a class="brand" href="/" aria-label="Premise home">
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3v9M16 12l-5-5M16 12l5-6M13 4l-2 3M16 18l-9 9M16 18l9 9M12 23l-6-1M20 23l7 0"/><path class="soma" d="M16 11l5.5 9.5h-11z"/></svg>
+    <span>Premise</span>
+  </a>
+  <nav aria-label="Main">
+    <a href="/" {% if path == '/' %}aria-current="page"{% endif %}>{{ icon('network') }}<span>Company Brain</span></a>
+    <a href="/what-if" {% if path.startswith('/what-if') %}aria-current="page"{% endif %}>{{ icon('flask-conical') }}<span>What if</span></a>
+    <a href="/docs">{{ icon('braces') }}<span>API</span></a>
+    <a href="https://github.com/Razeefshaik/Premise">{{ icon('github') }}<span>Source</span></a>
+  </nav>
+  <p class="workspace">Kestrel Platform <span class="fiction">fictional company</span></p>
+</header>
+<main id="main">{% block content %}{% endblock %}</main>
+<footer class="close">
+  <div class="close-field" aria-hidden="true"><img src="/static/img/plate-purkinje-field.webp" width="1800" height="695" loading="lazy" alt=""></div>
+  <p class="close-word" aria-hidden="true">Premise</p>
+  <div class="close-row">
+    <p class="close-line">Every guarantee needs evidence. Every verdict has a path.</p>
+    <p class="close-power">{{ icon('database') }}Powered by FalkorDB</p>
+  </div>
+  <p class="credits">Plates: drawings by Santiago Ramón y Cajal, shown in negative.
+    <a href="https://commons.wikimedia.org/wiki/File:Santiago_Ramon_y_Cajal_nerve_cells_in_the_brain.jpg">Nerve cells in the brain</a>,
+    <a href="https://commons.wikimedia.org/wiki/File:CajalHippocampus_(modified).png">hippocampus (modified)</a>,
+    <a href="https://commons.wikimedia.org/wiki/File:PurkinjeCell.jpg">Purkinje cells</a>,
+    <a href="https://commons.wikimedia.org/wiki/File:Cajal_cortex_drawings.png">cortex drawings</a>,
+    <a href="https://commons.wikimedia.org/wiki/File:CajalMammalianRetina.tif">mammalian retina, 1901</a>: public domain, via Wikimedia Commons.
+    <a href="https://commons.wikimedia.org/wiki/File:Cerebral_cortex_in_a_child._Wellcome_L0002048.jpg">Cerebral cortex in a child</a>: Wellcome Collection, <a href="https://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>.
+    Icons: <a href="https://lucide.dev">Lucide</a>, ISC.</p>
+</footer>
+<script src="/static/premise.js" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

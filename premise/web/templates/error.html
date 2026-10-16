@@ -1,2 +1,14 @@
-{% extends 'base.html' %}{% block content %}<div class="heading"><div><h1>Assessment unavailable</h1><p class="intro">{{message}}</p></div><span class="badge error">Unavailable</span></div><pre>docker compose up -d falkordb
-premise ingest</pre>{% endblock %}
+{% extends 'base.html' %}{% from '_ui.html' import icon, state as badge %}
+{% block page %}page-error{% endblock %}
+{% block content %}
+<section class="dark-room">
+  <img class="dark-plate" src="/static/img/plate-purkinje-field.webp" width="1800" height="695" alt="Cajal's ink drawing of nerve cells in the brain, their fibres crossing in a dense field">
+  <div class="dark-copy">
+    {{ badge('error', 'Unavailable', 'large') }}
+    <h1>Assessment unavailable</h1>
+    <p class="statement">{{ message }}</p>
+    <pre class="command"><code>docker compose up -d falkordb
+premise ingest</code></pre>
+  </div>
+</section>
+{% endblock %}

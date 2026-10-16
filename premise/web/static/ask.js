@@ -5,6 +5,7 @@ form.addEventListener('submit', async event => {
   const box = document.getElementById('answer');
   button.disabled = true;
   box.replaceChildren();
+  box.classList.add('thinking');
   function append(tag, text) {
     const el = document.createElement(tag);
     el.textContent = text;
@@ -18,6 +19,7 @@ form.addEventListener('submit', async event => {
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'The graph could not answer this question.');
+    box.classList.remove('thinking');
     append('h3', result.outcome.replaceAll('_', ' '));
     append('p', result.answer_markdown);
     append('small', `Answer mode: ${result.mode} · provider: ${result.provider || result.mode}`);
@@ -49,8 +51,10 @@ form.addEventListener('submit', async event => {
       list.append(li);
     }
   } catch (error) {
+    box.classList.remove('thinking');
     append('p', error.message);
   } finally {
+    box.classList.remove('thinking');
     button.disabled = false;
   }
 });
