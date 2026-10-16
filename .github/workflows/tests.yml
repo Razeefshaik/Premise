@@ -27,5 +27,7 @@ jobs:
       - run: pip install -r requirements.lock
       - run: pip install --no-deps -e .
       - run: python -m pytest -q
+      - run: premise-v2 registry-check
+      - run: premise-v2 eval --gold
       - run: premise ingest
       - run: premise scenarios

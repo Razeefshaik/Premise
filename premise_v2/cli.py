@@ -51,6 +51,7 @@ def main(argv: list[str] | None = None) -> int:
     ev = sub.add_parser("eval")
     ev.add_argument("--fixtures", default="fixtures/v2")
     ev.add_argument("--write", default="docs/V2_EVAL.md")
+    ev.add_argument("--gold", action="store_true", help="replay the frozen synthetic gold set; never call a live model")
     sub.add_parser("reset", help="delete the v2 staging graph and stream (never the decision graph of v1)")
     args = ap.parse_args(argv)
 
@@ -99,6 +100,13 @@ def _execute(args: argparse.Namespace, s) -> int:
         print("v2 staging graph and stream deleted")
         return 0
     if args.cmd == "eval":
+        if args.gold:
+            from .gold import run_gold, write_markdown
+            report = run_gold(args.host, args.port, args.model, str(__import__("pathlib").Path(args.fixtures) / "gold"))
+            if args.write:
+                write_markdown(report, args.write)
+            print(json.dumps(report, indent=2, default=str))
+            return 1 if report["floor_failures"] else 0
         from .evaluate import run_eval
         report = run_eval(r, args.host, args.port, args.model, args.fixtures)
         if args.write:

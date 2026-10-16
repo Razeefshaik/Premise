@@ -1,0 +1,26 @@
+id: gold-054
+split: tune
+category: attestation_evidence
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:tune
+  native_id: GOLD:054
+  entity_key: slack:GOLD:054
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: Paylane no longer keeps the same event_id when it retries a webhook.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2: []
+  E3:
+  - quote: Paylane no longer keeps the same event_id when it retries a webhook.
+    assumption_id: A_STABLE_EVENT_ID
+    stance: contradicts
+    stance_words:
+    - no longer
+  K2: []
+  E1: []

@@ -11,6 +11,12 @@ are preserved. The design is [Premise_v2_Phase2_Design.md](Premise_v2_Phase2_Des
 | P2.2 | Account-based claims, reversible identity links, verified email, strict fuzzy proposals, bridge checks, shared proposal publication | **230 passed**, 1 existing warning, 145.42 s |
 | P2.3 | Extractor framework, local-only model selection, schema repair/cache/budget, E3 grounding, review challenges and optional private-safe issues | **241 passed**, 1 existing warning, 120.75 s |
 | P2.4 | Approved descriptive extraction, temporal knowledge proposals, unmatched mentions, explicit partners, isolated validated loader | **253 passed**, 1 existing warning, 152.23 s |
+| P2.5 | Frozen 80-snippet corpus, actual Codex recordings, strict offline replay, holdout floors and CI | **261 passed**, 1 existing warning, 159.69 s |
+
+P2.5 holdout: E2/E3/Kind 2 precision and recall 1.00; exact quotes 1.00; E3
+annotated-field accuracy 0.75; 0 grounded injection candidates; identity 4/4.
+The corpus remains pending Razeef review. Recorded inference used 23 model calls
+across both splits; the resolved backend model was not exposed by the adapter.
 
 Tests use real FalkorDB and synthetic fixtures. GitHub API behavior is exercised through a
 read-only extension of the existing FakeGitHub; no live GitHub or model calls occur in tests.

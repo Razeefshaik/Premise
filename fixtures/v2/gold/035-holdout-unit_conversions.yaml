@@ -1,0 +1,26 @@
+id: gold-035
+split: holdout
+category: unit_conversions
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:holdout
+  native_id: GOLD:035
+  entity_key: slack:GOLD:035
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: Webhookingress dedupe ttl is 2880 minutes.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2:
+  - fact: webhook.dedupe_ttl_hours
+    value: 48
+    status: asserted
+    previous: null
+    quote: Webhookingress dedupe ttl is 2880 minutes.
+  E3: []
+  K2: []
+  E1: []

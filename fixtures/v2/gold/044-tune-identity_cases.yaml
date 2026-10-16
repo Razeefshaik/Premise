@@ -1,0 +1,26 @@
+id: gold-044
+split: tune
+category: identity_cases
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:tune
+  native_id: GOLD:044
+  entity_key: slack:GOLD:044
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: 'Profile display name updated: Anika Ra.'
+  visibility: public
+  author:
+    source_user_id: GOLD_ALIAS_ANIKA
+    display_name: Anika Ra
+expected:
+  E2: []
+  E3: []
+  K2: []
+  E1: []
+expected_identity:
+  status: proposed
+  person: p_anika
+  bridge: true

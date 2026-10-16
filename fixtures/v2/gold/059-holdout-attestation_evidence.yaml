@@ -1,0 +1,26 @@
+id: gold-059
+split: holdout
+category: attestation_evidence
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:holdout
+  native_id: GOLD:059
+  entity_key: slack:GOLD:059
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: The Paylane webhook event_id is replaced on every retry.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2: []
+  E3:
+  - quote: The Paylane webhook event_id is replaced on every retry.
+    assumption_id: A_STABLE_EVENT_ID
+    stance: contradicts
+    stance_words:
+    - replaced
+  K2: []
+  E1: []

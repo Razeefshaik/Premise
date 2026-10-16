@@ -1,0 +1,26 @@
+id: gold-031
+split: holdout
+category: supersession
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:holdout
+  native_id: GOLD:031
+  entity_key: slack:GOLD:031
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: cartservice session ttl moved from 12 to 24 hours.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2:
+  - fact: cartservice.session_ttl_hours
+    value: 24
+    status: asserted
+    previous: 12
+    quote: cartservice session ttl moved from 12 to 24 hours.
+  E3: []
+  K2: []
+  E1: []

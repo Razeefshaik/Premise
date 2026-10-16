@@ -32,8 +32,9 @@ UNITS = {
 FACT_UNIT_SECONDS = {"ms": 0.001, "seconds": 1, "minutes": 60, "hours": 3600, "days": 86400}
 UNIT_ALT = "|".join(sorted(UNITS, key=len, reverse=True))
 NUMBER = re.compile(rf"(?<![\w.\-])(\d+(?:\.\d+)?)(?:\s*({UNIT_ALT}))?(?![\w])", re.I)
-FROM_TO = re.compile(rf"\bfrom\s+(\d+(?:\.\d+)?)\s*(?:{UNIT_ALT})?\s+to\s+(\d+(?:\.\d+)?)", re.I)
-SENTENCE = re.compile(r"[^.!?\n]+(?:[.!?]+|$)", re.M)
+FROM_TO = re.compile(rf"\bfrom\s+(?P<old>\d+(?:\.\d+)?)\s*(?P<old_unit>{UNIT_ALT})?\s+to\s+(?P<new>\d+(?:\.\d+)?)", re.I)
+# A decimal point is part of a number, not a sentence boundary.
+SENTENCE = re.compile(r"(?:[^.!?\n]|(?<=\d)\.(?=\d))+(?:[.!?]+|$)", re.M)
 
 INSTRUCTION = re.compile(r"\b(ignore (?:all |any )?(?:previous|prior|above) instructions|disregard|you must|system prompt)\b", re.I)
 HEDGE = re.compile(r"\b(imagine|maybe|might|could|would|perhaps|possibly|probably|rumou?r|suppose|lol|lmao|haha|jk|"
@@ -157,8 +158,8 @@ class FactClaimExtractor:
                 fact = facts[0]
                 value = convert(amount, unit, self.ext.units[fact])
                 previous = None
-                if from_to and nm.start(1) == from_to.start(2):
-                    previous = convert(_num(from_to.group(1)), unit, self.ext.units[fact])
+                if from_to and nm.start(1) == from_to.start("new"):
+                    previous = convert(_num(from_to.group("old")), from_to.group("old_unit") or unit, self.ext.units[fact])
                 cid = hashlib.sha256(f"{env.entity_key}|{env.sequence}|{fact}|{s_start + nm.start()}".encode()).hexdigest()[:20]
                 claims.append(Claim(
                     id=cid, fact=fact, value=value, unit=self.ext.units[fact], raw=nm.group(0).strip(),

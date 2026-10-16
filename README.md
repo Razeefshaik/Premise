@@ -383,6 +383,13 @@ premise-v2 run     # dry run; proposals land in .runtime/v2/proposals/
 premise-v2 eval
 ```
 
+Phase 2 on `v2/phase-2` adds source connectors, reversible identity links, grounded
+attestation evidence and approved descriptive relations. The frozen **40-snippet holdout**
+currently gives E2/E3/Kind 2 precision and recall of 1.00, with zero grounded injection
+outputs. E3 annotated-field accuracy is 0.75. These are small synthetic examples, **awaiting
+Razeef's hand review**, not production accuracy. Actual Codex responses are recorded and
+replayed offline; see [the complete evaluation](docs/V2_EVAL.md).
+
 ## Attribution and AI use
 
 Kestrel, its people and partners are fictional. Its service naming and selected call edges

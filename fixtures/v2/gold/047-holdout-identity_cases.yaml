@@ -1,0 +1,26 @@
+id: gold-047
+split: holdout
+category: identity_cases
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:holdout
+  native_id: GOLD:047
+  entity_key: slack:GOLD:047
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: 'Profile display name updated: Different Display.'
+  visibility: public
+  author:
+    source_user_id: U01JUN
+    display_name: Different Display
+expected:
+  E2: []
+  E3: []
+  K2: []
+  E1: []
+expected_identity:
+  status: auto
+  person: p_jun
+  bridge: false

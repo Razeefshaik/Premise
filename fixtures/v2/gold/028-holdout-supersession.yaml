@@ -1,0 +1,26 @@
+id: gold-028
+split: holdout
+category: supersession
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:holdout
+  native_id: GOLD:028
+  entity_key: slack:GOLD:028
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: emailservice retries were raised from 5 to 8 attempts.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2:
+  - fact: emailservice.retry_max_attempts
+    value: 8
+    status: asserted
+    previous: 5
+    quote: emailservice retries were raised from 5 to 8 attempts.
+  E3: []
+  K2: []
+  E1: []

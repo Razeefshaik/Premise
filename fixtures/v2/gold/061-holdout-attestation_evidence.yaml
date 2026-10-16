@@ -1,0 +1,26 @@
+id: gold-061
+split: holdout
+category: attestation_evidence
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:holdout
+  native_id: GOLD:061
+  entity_key: slack:GOLD:061
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: The rate provider has stopped publishing fresh rates every business day.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2: []
+  E3:
+  - quote: The rate provider has stopped publishing fresh rates every business day.
+    assumption_id: A_RATES_SOURCE
+    stance: contradicts
+    stance_words:
+    - stopped
+  K2: []
+  E1: []

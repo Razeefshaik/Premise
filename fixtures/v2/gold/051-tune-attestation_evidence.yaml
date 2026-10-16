@@ -1,0 +1,26 @@
+id: gold-051
+split: tune
+category: attestation_evidence
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:tune
+  native_id: GOLD:051
+  entity_key: slack:GOLD:051
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: Paylane preserves the same event_id on every webhook retry.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2: []
+  E3:
+  - quote: Paylane preserves the same event_id on every webhook retry.
+    assumption_id: A_STABLE_EVENT_ID
+    stance: supports
+    stance_words:
+    - same event_id
+  K2: []
+  E1: []

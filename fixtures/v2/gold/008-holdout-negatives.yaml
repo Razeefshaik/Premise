@@ -1,0 +1,21 @@
+id: gold-008
+split: holdout
+category: negatives
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:holdout
+  native_id: GOLD:008
+  entity_key: slack:GOLD:008
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: currencyservice refreshed 12 times.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2: []
+  E3: []
+  K2: []
+  E1: []

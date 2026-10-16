@@ -1,0 +1,28 @@
+id: gold-066
+split: tune
+category: kind2_relations
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:tune
+  native_id: GOLD:066
+  entity_key: slack:GOLD:066
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: Postbird is the provider for emailservice.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2: []
+  E3: []
+  K2:
+  - quote: Postbird is the provider for emailservice.
+    relation: VENDOR_FOR
+    from_id: emailprovider
+    from_mention: Postbird
+    to_id: emailservice
+    to_mention: emailservice
+    action: add
+  E1: []

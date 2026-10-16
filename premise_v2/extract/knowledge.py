@@ -34,7 +34,8 @@ class KnowledgeExtractor:
         self.catalog = EntityCatalog(decision, model_root)
         self.schema = create_model("ApprovedRelation", __base__=RelationCandidate,
                                    relation=(Literal[tuple(sorted(self.registry) + ["NONE"])], ...))
-        self.context = {"approved_relations": list(self.registry.values()), "entities": list(self.catalog.entities.values())}
+        self.context = {"approved_relations": sorted(self.registry.values(), key=lambda r: r["name"]),
+                        "entities": sorted(self.catalog.entities.values(), key=lambda e: e["id"])}
 
     def prefilter(self, item):
         return len(self.catalog.mentions(item["body"])) >= 2

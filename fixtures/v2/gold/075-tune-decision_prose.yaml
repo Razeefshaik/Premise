@@ -1,0 +1,46 @@
+id: gold-075
+split: tune
+category: decision_prose
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:tune
+  native_id: GOLD:075
+  entity_key: slack:GOLD:075
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: 'Decision: Cache adservice ads. Context: adservice must answer promptly. Chosen
+    approach: Keep the adservice cache ttl bounded to 60 seconds. Guarantee: adservice
+    has a cache ttl at most 60 seconds. Assumption: adservice cache ttl remains at
+    most 60 seconds.'
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2:
+  - fact: adservice.cache_ttl_seconds
+    value: 60
+    status: asserted
+    previous: null
+  E3: []
+  K2: []
+  E1:
+  - title: Cache adservice ads
+    governs:
+    - adservice
+    context_quote: adservice must answer promptly.
+    decision_quote: Keep the adservice cache ttl bounded to 60 seconds.
+    guarantees:
+    - statement_quote: adservice has a cache ttl at most 60 seconds.
+      about:
+      - adservice
+    assumptions:
+    - text_quote: adservice cache ttl remains at most 60 seconds.
+      check:
+        lhs_fact: adservice.cache_ttl_seconds
+        op: <=
+        value: 60
+    requires:
+    - guarantee_index: 0
+      assumption_index: 0

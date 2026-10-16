@@ -1,0 +1,26 @@
+id: gold-027
+split: tune
+category: supersession
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:tune
+  native_id: GOLD:027
+  entity_key: slack:GOLD:027
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: Redis max ttl moved from 24 to 72 hours.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2:
+  - fact: redis.max_ttl_hours
+    value: 72
+    status: asserted
+    previous: 24
+    quote: Redis max ttl moved from 24 to 72 hours.
+  E3: []
+  K2: []
+  E1: []

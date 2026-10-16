@@ -21,7 +21,7 @@ class AttestationExtractor:
 
     def __init__(self, decision):
         self.manual = {r["id"]: r["text"] for r in decision.read(
-            "MATCH (a:Assumption) WHERE a.check_kind='manual' AND a.retired_rev IS NULL RETURN a.id AS id, a.text AS text")}
+            "MATCH (a:Assumption) WHERE a.check_kind='manual' AND a.retired_rev IS NULL RETURN a.id AS id, a.text AS text ORDER BY id")}
         self.context = {"manual_assumptions": self.manual}
 
     def prefilter(self, item):

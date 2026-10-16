@@ -86,6 +86,10 @@ class IdentityDirectory:
                 {"rows": desired, "now": now_ms()})
         active = self.person_map()
         linked_by_source = {(key.split(":", 1)[0], person) for key, person in active.items()}
+        # Authoritative mappings count even before that account's first message.
+        linked_by_source.update((key.split(":", 1)[0], person) for key, person in explicit.items())
+        linked_by_source.update((key.split(":", 1)[0], person) for key, (person, status) in confirmed.items()
+                                if status == "confirmed")
         existing = {(r["account"], r["person"]): r["status"] for r in self.links()}
         for a in accounts:
             if a["key"] in active or not a.get("display"):

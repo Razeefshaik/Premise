@@ -39,6 +39,16 @@ def test_abbreviated_name_below_92_is_not_proposed(r, new_graph, stream_name):
     assert p.identities.person_map() == {}
 
 
+def test_bridge_counts_authoritative_account_before_first_message(r, new_graph, stream_name):
+    p = ready(r, new_graph, stream_name)
+    alias = env("Profile updated", user="UOMAR_ALIAS")
+    alias.author = AuthorRef(source_user_id="UOMAR_ALIAS", display_name="Omar Haddad")
+    p.handle(alias)
+    p.identities.sync()
+    assert p.identities.links()[0]["bridge"] is True
+    assert p.identities.person_map() == {}
+
+
 def test_changed_and_removed_mapping_recounts_without_reprocessing(r, new_graph, stream_name, repo_copy):
     p = ready(r, new_graph, stream_name, repo_copy)
     p.handle(env("Paylane now retries for 72 hours.", user="U01ANIKA"))

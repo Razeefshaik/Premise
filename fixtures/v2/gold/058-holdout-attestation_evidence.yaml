@@ -1,0 +1,26 @@
+id: gold-058
+split: holdout
+category: attestation_evidence
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:holdout
+  native_id: GOLD:058
+  entity_key: slack:GOLD:058
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: Paylane retries each webhook with the same event_id.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2: []
+  E3:
+  - quote: Paylane retries each webhook with the same event_id.
+    assumption_id: A_STABLE_EVENT_ID
+    stance: supports
+    stance_words:
+    - same event_id
+  K2: []
+  E1: []

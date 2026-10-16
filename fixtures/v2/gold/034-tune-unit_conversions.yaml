@@ -1,0 +1,26 @@
+id: gold-034
+split: tune
+category: unit_conversions
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:tune
+  native_id: GOLD:034
+  entity_key: slack:GOLD:034
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: Paylane changed webhook retries from 24 hours to 3 days.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2:
+  - fact: paylane.retry_window_hours
+    value: 72
+    status: asserted
+    previous: 24
+    quote: Paylane changed webhook retries from 24 hours to 3 days.
+  E3: []
+  K2: []
+  E1: []

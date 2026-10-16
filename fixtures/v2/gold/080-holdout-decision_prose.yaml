@@ -1,0 +1,46 @@
+id: gold-080
+split: holdout
+category: decision_prose
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:holdout
+  native_id: GOLD:080
+  entity_key: slack:GOLD:080
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: 'Decision: Bound checkoutservice waits. Context: checkoutservice must answer
+    promptly. Chosen approach: Keep the checkoutservice payment timeout bounded to
+    2500 ms. Guarantee: checkoutservice has a payment timeout at most 2500 ms. Assumption:
+    checkoutservice payment timeout remains at most 2500 ms.'
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2:
+  - fact: checkoutservice.payment_timeout_ms
+    value: 2500
+    status: asserted
+    previous: null
+  E3: []
+  K2: []
+  E1:
+  - title: Bound checkoutservice waits
+    governs:
+    - checkoutservice
+    context_quote: checkoutservice must answer promptly.
+    decision_quote: Keep the checkoutservice payment timeout bounded to 2500 ms.
+    guarantees:
+    - statement_quote: checkoutservice has a payment timeout at most 2500 ms.
+      about:
+      - checkoutservice
+    assumptions:
+    - text_quote: checkoutservice payment timeout remains at most 2500 ms.
+      check:
+        lhs_fact: checkoutservice.payment_timeout_ms
+        op: <=
+        value: 2500
+    requires:
+    - guarantee_index: 0
+      assumption_index: 0

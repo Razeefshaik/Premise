@@ -1,0 +1,26 @@
+id: gold-030
+split: holdout
+category: supersession
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:holdout
+  native_id: GOLD:030
+  entity_key: slack:GOLD:030
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: adservice cache ttl changed from 60 to 90 seconds.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2:
+  - fact: adservice.cache_ttl_seconds
+    value: 90
+    status: asserted
+    previous: 60
+    quote: adservice cache ttl changed from 60 to 90 seconds.
+  E3: []
+  K2: []
+  E1: []

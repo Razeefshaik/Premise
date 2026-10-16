@@ -1,0 +1,26 @@
+id: gold-019
+split: tune
+category: hedges_or_jokes
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:tune
+  native_id: GOLD:019
+  entity_key: slack:GOLD:019
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: Paylane does not retry for 96 hours.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2:
+  - fact: paylane.retry_window_hours
+    value: 96
+    status: negated
+    previous: null
+    quote: Paylane does not retry for 96 hours.
+  E3: []
+  K2: []
+  E1: []

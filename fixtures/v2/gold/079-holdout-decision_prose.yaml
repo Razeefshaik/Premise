@@ -1,0 +1,46 @@
+id: gold-079
+split: holdout
+category: decision_prose
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:holdout
+  native_id: GOLD:079
+  entity_key: slack:GOLD:079
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: 'Decision: Bound paymentservice charges. Context: paymentservice must answer
+    promptly. Chosen approach: Keep the paymentservice charge timeout bounded to 2000
+    ms. Guarantee: paymentservice has a charge timeout at most 2000 ms. Assumption:
+    paymentservice charge timeout remains at most 2000 ms.'
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2:
+  - fact: paymentservice.charge_timeout_ms
+    value: 2000
+    status: asserted
+    previous: null
+  E3: []
+  K2: []
+  E1:
+  - title: Bound paymentservice charges
+    governs:
+    - paymentservice
+    context_quote: paymentservice must answer promptly.
+    decision_quote: Keep the paymentservice charge timeout bounded to 2000 ms.
+    guarantees:
+    - statement_quote: paymentservice has a charge timeout at most 2000 ms.
+      about:
+      - paymentservice
+    assumptions:
+    - text_quote: paymentservice charge timeout remains at most 2000 ms.
+      check:
+        lhs_fact: paymentservice.charge_timeout_ms
+        op: <=
+        value: 2000
+    requires:
+    - guarantee_index: 0
+      assumption_index: 0

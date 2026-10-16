@@ -1,0 +1,21 @@
+id: gold-003
+split: tune
+category: negatives
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:tune
+  native_id: GOLD:003
+  entity_key: slack:GOLD:003
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: The ticket PAY-311 is waiting for review.
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2: []
+  E3: []
+  K2: []
+  E1: []

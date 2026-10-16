@@ -1,0 +1,46 @@
+id: gold-076
+split: tune
+category: decision_prose
+human_review: pending_razeef
+source:
+  source: slack
+  kind: message
+  scope: gold:tune
+  native_id: GOLD:076
+  entity_key: slack:GOLD:076
+  sequence: 1
+  time: '2026-10-17T00:00:00Z'
+  text: 'Decision: Cache currencyservice values. Context: currencyservice must answer
+    promptly. Chosen approach: Keep the currencyservice cache ttl bounded to 30 minutes.
+    Guarantee: currencyservice has a cache ttl at most 30 minutes. Assumption: currencyservice
+    cache ttl remains at most 30 minutes.'
+  visibility: public
+  author:
+    source_user_id: U01ANIKA
+expected:
+  E2:
+  - fact: currency.cache_ttl_minutes
+    value: 30
+    status: asserted
+    previous: null
+  E3: []
+  K2: []
+  E1:
+  - title: Cache currencyservice values
+    governs:
+    - currencyservice
+    context_quote: currencyservice must answer promptly.
+    decision_quote: Keep the currencyservice cache ttl bounded to 30 minutes.
+    guarantees:
+    - statement_quote: currencyservice has a cache ttl at most 30 minutes.
+      about:
+      - currencyservice
+    assumptions:
+    - text_quote: currencyservice cache ttl remains at most 30 minutes.
+      check:
+        lhs_fact: currency.cache_ttl_minutes
+        op: <=
+        value: 30
+    requires:
+    - guarantee_index: 0
+      assumption_index: 0
