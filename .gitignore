@@ -11,4 +11,5 @@ scratch/
 !.env.example
 .runtime/
 artifacts/
+.impeccable/review/
 

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Relations{% endblock %}
+{% block content %}
+<div class="heading"><div><h1>Descriptive relations</h1><p class="intro">Approved knowledge describes the company. It never decides a pull request verdict.</p></div></div>
+<section><h2>Relation registry</h2><div class="table-wrap" role="region" aria-label="Relation registry" tabindex="0"><table>
+<thead><tr><th scope="col">Relation</th><th scope="col">Status</th><th scope="col">Domain → range</th><th scope="col">Loaded rows</th></tr></thead>
+<tbody>{% for r in relations %}<tr><td><code>{{ r.name }}</code>{% for example in r.examples %}<p>{{ example }}</p>{% endfor %}</td><td>{{ r.status }}</td><td>{{ r.domain|join(', ') }} → {{ r.range|join(', ') }}</td><td>{{ r.usage }}</td></tr>{% endfor %}</tbody></table></div></section>
+<section><h2>Unmatched phrases</h2><p>Collected for review. No new relation types are proposed here.</p>
+{% if phrases %}<div class="table-wrap"><table><thead><tr><th scope="col">Phrase</th><th scope="col">Mentions</th></tr></thead><tbody>{% for phrase, count in phrases %}<tr><td>{{ phrase }}</td><td>{{ count }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty">No unmatched phrases have been collected.</p>{% endif %}</section>
+{% endblock %}

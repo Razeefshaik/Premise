@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="heading"><div><h1>Evidence to review</h1><p class="intro">Check what changed, follow its sources, and decide what belongs in the model.</p></div>
+<p class="revision">{{ count }} {{ 'item' if count == 1 else 'items' }} waiting</p></div>
+{% if not count %}<div class="empty"><h2>No evidence waiting for review</h2><p>Collect source updates with <code>premise-v2 run</code>, then reload this page.</p></div>{% endif %}
+{% for label, rows in groups %}{% if rows %}
+<section><div class="section-heading"><h2>{{ label }}</h2><span>{{ rows|length }} to review</span></div>
+<div class="table-wrap" role="region" aria-label="{{ label }}" tabindex="0"><table>
+<thead><tr><th scope="col">Finding</th><th scope="col">Support</th><th scope="col">Evidence</th><th scope="col">Age</th></tr></thead>
+<tbody>{% for item in rows %}<tr><td><a href="{{ item.url }}">{{ item.title }}</a>{% if item.private %}<small>Includes private evidence</small>{% endif %}</td>
+<td>{{ item.support }}</td><td><span class="badge {{ 'needs_review' if item.contested else '' }}">{{ 'Contested' if item.contested else 'No recorded disagreement' }}</span></td><td>{{ item.age }}</td></tr>{% endfor %}</tbody>
+</table></div></section>{% endif %}{% endfor %}
+{% endblock %}

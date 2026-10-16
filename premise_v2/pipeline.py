@@ -197,7 +197,13 @@ class Pipeline:
         self.summary.confirmations = len(confirmations)
         current = set()
         by_key = {d.key_id: d for d in drifts}
+        for old in self.staging.review_items("drift"):
+            if old["key"] not in by_key:
+                self.staging.upsert_review(old["key"], "drift", old["title"], old["data"], "withdrawn")
         for d in drifts:
+            self.staging.upsert_review(d.key_id, "drift", f"Review {d.fact}: {d.value} {d.unit}",
+                {"support": d.support, "contested": d.contested, "origins": d.origins,
+                 "evidence": d.supporting + d.disagreeing + d.weak})
             p = self.writer.write(d)
             if p.state in {"created", "updated", "unchanged"}:
                 current.add(p.key)

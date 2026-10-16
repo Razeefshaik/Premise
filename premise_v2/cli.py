@@ -52,6 +52,9 @@ def main(argv: list[str] | None = None) -> int:
     ev.add_argument("--fixtures", default="fixtures/v2")
     ev.add_argument("--write", default="docs/V2_EVAL.md")
     ev.add_argument("--gold", action="store_true", help="replay the frozen synthetic gold set; never call a live model")
+    serve = sub.add_parser("serve", help="local evidence review page; no model or GitHub calls")
+    serve.add_argument("--bind", default="127.0.0.1")
+    serve.add_argument("--port", dest="web_port", type=int, default=8002)
     sub.add_parser("reset", help="delete the v2 staging graph and stream (never the decision graph of v1)")
     args = ap.parse_args(argv)
 
@@ -82,6 +85,14 @@ def _execute(args: argparse.Namespace, s) -> int:
     r = redis.Redis(host=args.host, port=args.port)
     staging = GraphClient(args.host, args.port, args.staging_graph)
     decision = GraphClient(args.host, args.port, args.decision_graph)
+    if args.cmd == "serve":
+        import uvicorn
+        from .staging import Staging
+        from .web import create_app
+        app = create_app(Staging(staging), decision, GraphClient(args.host, args.port, args.knowledge_graph),
+                         args.model, bind=args.bind)
+        uvicorn.run(app, host=args.bind, port=args.web_port, proxy_headers=False)
+        return 0
     if args.cmd == "load-knowledge":
         from premise.ingest.run import ingest
         from .knowledge import load_knowledge, require_merged_model

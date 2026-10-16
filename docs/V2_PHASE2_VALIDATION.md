@@ -12,6 +12,14 @@ are preserved. The design is [Premise_v2_Phase2_Design.md](Premise_v2_Phase2_Des
 | P2.3 | Extractor framework, local-only model selection, schema repair/cache/budget, E3 grounding, review challenges and optional private-safe issues | **241 passed**, 1 existing warning, 120.75 s |
 | P2.4 | Approved descriptive extraction, temporal knowledge proposals, unmatched mentions, explicit partners, isolated validated loader | **253 passed**, 1 existing warning, 152.23 s |
 | P2.5 | Frozen 80-snippet corpus, actual Codex recordings, strict offline replay, holdout floors and CI | **261 passed**, 1 existing warning, 159.69 s |
+| P2.6 | Local read-only review queue, private-safe details, registry counts and CSRF-protected staging-only dismissal | **269 passed**, 1 existing warning, 218.28 s |
+
+P2.6 browser checks: queue, detail and relations at 1440x1000 and 390x844, no document
+overflow, no page errors; Dismiss removes the finding. Screenshots are local ignored artifacts.
+An independent finish review found no material visual defect and confirmed the copied v1
+stylesheet and documented palette/type system. A real-browser failure exposed that
+`Referrer-Policy: no-referrer` made the form's origin null and withheld its cookie; the
+tested `same-origin` policy fixes this while withholding external referrers.
 
 P2.5 holdout: E2/E3/Kind 2 precision and recall 1.00; exact quotes 1.00; E3
 annotated-field accuracy 0.75; 0 grounded injection candidates; identity 4/4.

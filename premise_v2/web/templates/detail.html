@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ item.title }}{% endblock %}
+{% block content %}
+<a class="back" href="/">Back to review queue</a>
+<div class="heading"><div><h1>{{ item.title }}</h1><div class="meta"><span>{{ item.support }}</span><span>{{ 'Contested' if item.contested else 'No recorded disagreement' }}</span><span>{{ item.age }}</span></div></div></div>
+<div class="split"><div>
+<section><h2>Source evidence</h2>{% for e in evidence %}<blockquote>{{ e.quote }}</blockquote><p class="meta"><span>{{ e.account }}</span><code>{{ e.item }}</code></p>
+{% else %}<p class="empty">No quoted evidence is attached to this proposal.</p>{% endfor %}</section>
+<section><h2>Independent origin groups</h2>{% for origin in origins %}<pre>{{ origin|tojson(indent=2) }}</pre>{% else %}<p>Origin groups are not recorded for this item.</p>{% endfor %}</section>
+<section><h2>Proposed change</h2>{% if diff %}<pre class="reason-panel">{{ diff }}</pre>{% else %}<p>No file diff is available.</p>{% endif %}</section>
+{% if body %}<details><summary>Proposal notes</summary><pre>{{ body }}</pre></details>{% endif %}
+</div><aside class="analyst"><h2>Review this finding</h2><p>Premise v1 preview</p><strong class="badge large {{ preview|lower }}">{{ preview }}</strong>
+{% if pr_url %}<p><a href="{{ pr_url }}" rel="noreferrer">Open published proposal</a></p>{% else %}<p>This item has not been published.</p>{% endif %}
+<p>Dismiss remembers your decision and removes this finding from the review queue.</p>
+<form action="{{ item.url }}/dismiss" method="post"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit">Dismiss finding</button></form></aside></div>
+{% endblock %}

@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}Review evidence{% endblock %} · Premise v2</title>
+<link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/review.css"></head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header><a class="brand" href="/"><span class="mark" aria-hidden="true">P</span>Premise <small>v2</small></a>
+<nav aria-label="Main navigation"><a href="/">Review queue</a><a href="/relations">Relations</a></nav>
+<span class="workspace">Evidence review<small>Human approval required</small></span></header>
+<main id="content">{% block content %}{% endblock %}</main>
+<footer><span>Proposals take effect through human review and merge.</span><span>Private quotes: {{ 'visible on this local connection' if local else 'withheld' }}</span></footer>
+</body></html>

@@ -1,0 +1,10 @@
+/* The copied v1 sheet remains intact; these rules fit the evidence-review surface. */
+main{max-width:1280px}h1{font-size:2.25rem;letter-spacing:-.025em;overflow-wrap:anywhere}
+nav a:last-child{display:inline}.brand small{font-size:13px}td{font-variant-numeric:tabular-nums}
+td:last-child{white-space:nowrap}section{margin-bottom:36px}.split>div{min-width:0}
+blockquote{margin:14px 0 10px;padding:18px 22px;background:var(--paper);border:1px solid var(--line);border-radius:8px;max-width:72ch;overflow-wrap:anywhere}
+::selection{background:#c9dfef;color:var(--ink)}button:hover{background:#103f5d}button:active{background:#203447}
+.skip{position:absolute;top:-80px;left:16px;background:var(--paper);padding:10px;z-index:5}.skip:focus{top:8px}
+.table-wrap:focus-visible{outline:3px solid #d98e1f;outline-offset:4px}
+footer{gap:16px}footer span{max-width:72ch}
+@media(max-width:600px){h1{font-size:1.8rem}.brand{gap:8px}header{gap:16px}nav{gap:12px}.revision{margin-top:18px}.table-wrap table{min-width:590px}.meta{gap:12px}}
