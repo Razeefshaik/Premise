@@ -66,7 +66,7 @@ class Question(BaseModel):
     question: str = Field(min_length=1,max_length=2000)
 
 
-def create_app(client=None, config=None):
+def create_app(client=None, config=None, *, graph_api_at_ms=None, graph_node_cap=300):
     s = config or get_settings()
     graph = client or GraphClient(s.falkordb_host,s.falkordb_port,s.graph_name)
     tools, store = GraphTools(graph), Store(graph)
@@ -90,6 +90,8 @@ def create_app(client=None, config=None):
             github.close()
 
     app = FastAPI(title="Premise", lifespan=lifespan)
+    from .graph_api import create_graph_router
+    app.include_router(create_graph_router(graph, at_ms=graph_api_at_ms, node_cap=graph_node_cap))
     app.mount("/static",StaticFiles(directory=str(ROOT/"static")),name="static")
 
     @app.exception_handler(GraphUnavailable)
