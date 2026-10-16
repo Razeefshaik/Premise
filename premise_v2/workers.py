@@ -19,6 +19,7 @@ from .envelope import AuthorRef, Envelope
 
 class SourceWorker(Protocol):
     name: str
+    scope: str
 
     def fetch(self, cursor: str | None) -> Generator[Envelope, None, str | None]: ...
 
@@ -48,6 +49,10 @@ class SlackFixtureWorker:
     def _key(self, channel: dict, ts: str) -> str:
         return f"slack:{channel['id']}:{ts}"
 
+    @property
+    def scope(self) -> str:
+        return f"slack:{self._load()[0]['id']}"
+
     def list_keys(self) -> set[str]:
         channel, _, messages = self._load()
         return {self._key(channel, m["ts"]) for m in messages if m.get("type") == "message"}
@@ -66,7 +71,7 @@ class SlackFixtureWorker:
             user = users.get(m.get("user"), {})
             thread = m.get("thread_ts")
             yield Envelope(
-                entity_key=self._key(channel, m["ts"]), source="slack", kind="message",
+                entity_key=self._key(channel, m["ts"]), source="slack", scope=f"slack:{channel['id']}", kind="message",
                 native_id=f"{channel['id']}:{m['ts']}", sequence=int(changed * 1_000_000),
                 url=f"{self.base}/archives/{channel['id']}/p{m['ts'].replace('.', '')}",
                 author=AuthorRef(source_user_id=m.get("user"), display_name=user.get("real_name"),
@@ -88,6 +93,10 @@ class JiraFixtureWorker:
 
     def _issues(self):
         return json.loads(self.path.read_text(encoding="utf-8")).get("issues", [])
+
+    @property
+    def scope(self) -> str:
+        return f"jira:{self.path.stem}"
 
     def list_keys(self) -> set[str]:
         keys = set()
@@ -113,7 +122,7 @@ class JiraFixtureWorker:
                     continue
                 high = max(high, when) if high else when
                 yield Envelope(
-                    entity_key=f"jira:{native}", source="jira", kind=kind, native_id=native,
+                    entity_key=f"jira:{native}", source="jira", scope=self.scope, kind=kind, native_id=native,
                     sequence=int(when.timestamp() * 1000),
                     url=f"{self.base}/browse/{issue['key']}" + (f"?focusedCommentId={native.split('#')[1]}" if parent else ""),
                     author=AuthorRef(source_user_id=person.get("accountId"), display_name=person.get("displayName"),

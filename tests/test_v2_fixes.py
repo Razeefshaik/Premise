@@ -11,7 +11,7 @@ from premise_v2 import cli
 from premise_v2.propose import render_body
 from premise_v2.reconcile import reconcile
 from premise_v2.pipeline import fixture_workers
-from test_v2_pipeline import FakeGitHub, env, pipeline, r, stream_name
+from test_v2_pipeline import FIXTURES, FakeGitHub, env, pipeline, r, stream_name
 
 
 @pytest.mark.parametrize("command,collision", [
@@ -86,3 +86,39 @@ def test_slack_root_and_reply_are_one_origin(r, new_graph, stream_name):
     assert s.drifts[0]["support"] == "observed"
     assert s.drifts[0]["origins"] == [[root, "slack:C1:2.0"]]
     assert s.proposals[0]["state"] == "skipped"
+
+
+@pytest.mark.parametrize("newer_first", [False, True])
+def test_connector_scopes_own_cursors_and_deletions(r, new_graph, stream_name, tmp_path, newer_first):
+    root = tmp_path / "fixtures"
+    (root / "slack").mkdir(parents=True)
+    times = ["1792130820.000000", "1792130700.000000"] if newer_first else ["1792130700.000000", "1792130820.000000"]
+    for n, ts in enumerate(times):
+        data = {"channel": {"id": f"C{n}", "name": f"channel{n}"}, "users": [], "messages": [
+            {"type": "message", "ts": ts, "user": ["U01ANIKA", "U01JUN"][n],
+             "text": "Paylane now retries for 72 hours."}]}
+        (root / "slack" / f"{n}.json").write_text(json.dumps(data), encoding="utf-8")
+    p = pipeline(r, new_graph, stream_name, fixtures=root)
+    p.run()
+    live = lambda: {row["k"] for row in p.staging.c.read("MATCH (i:Item) WHERE NOT i.deleted RETURN i.key AS k")}
+    expected = {f"slack:C{n}:{ts}" for n, ts in enumerate(times)}
+    assert live() == expected
+    p.workers = fixture_workers(root)
+    assert p.run(load_decision=False).tombstones == 0
+    assert live() == expected
+    (root / "slack/0.json").write_text(json.dumps({"channel": {"id": "C0"}, "messages": []}), encoding="utf-8")
+    p.workers = fixture_workers(root)
+    assert p.run(load_decision=False).tombstones == 1
+    assert live() == {f"slack:C1:{times[1]}"}
+    deleted = p.staging.item(f"slack:C0:{times[0]}")
+    assert deleted["scope"] == "slack:C0"
+    assert p.staging.live_keys("slack:C1") == live()
+
+
+def test_workers_emit_connector_scopes(r, new_graph, stream_name):
+    p = pipeline(r, new_graph, stream_name)
+    p.run()
+    for w in fixture_workers(FIXTURES):
+        envelopes = list(w.fetch(None))
+        assert envelopes and all(e.scope == w.scope for e in envelopes)
+        assert p.staging.live_keys(w.scope) == w.list_keys()

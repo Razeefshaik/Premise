@@ -49,22 +49,27 @@ class Staging:
         self.c.write(
             "MERGE (i:Item {key:$key}) SET i.sequence=$seq, i.hash=$hash, i.deleted=false, i.source=$source, "
             "i.kind=$kind, i.url=$url, i.time_ms=$time, i.title=$title, i.text=$text, i.thread=$thread, "
-            "i.container=$container, i.visibility=$vis, i.cls=$cls, i.in_scope=$scope, i.person=$person, "
+            "i.container=$container, i.visibility=$vis, i.cls=$cls, i.in_scope=$in_scope, i.scope=$scope, i.person=$person, "
             "i.link_method=$method, i.redactions_json=$red, i.kif_json=$kif, i.updated_ms=$now",
             {"key": env.entity_key, "seq": env.sequence, "hash": env.content_hash, "source": env.source,
              "kind": env.kind, "url": env.url, "time": int(env.time.timestamp() * 1000), "title": env.title,
              "text": env.text, "thread": env.thread, "container": env.container, "vis": env.visibility,
-             "cls": cls, "scope": in_scope, "person": person, "method": link_method,
+             "cls": cls, "in_scope": in_scope, "scope": env.scope, "person": person, "method": link_method,
              "red": json.dumps(redactions), "kif": json.dumps(kif), "now": now_ms()})
 
     def tombstone(self, env: Envelope) -> None:
         self.c.write("MERGE (i:Item {key:$k}) SET i.deleted=true, i.sequence=$seq, i.hash=$hash, i.text='', "
-                     "i.updated_ms=$now, i.processed_seq=$seq", {"k": env.entity_key, "seq": env.sequence, "hash": env.content_hash, "now": now_ms()})
+                     "i.scope=coalesce($scope, i.scope), i.updated_ms=$now, i.processed_seq=$seq",
+                     {"k": env.entity_key, "seq": env.sequence, "hash": env.content_hash, "scope": env.scope, "now": now_ms()})
         self.retract_claims(env.entity_key, "source_deleted")
 
-    def live_keys(self, source: str) -> set[str]:
-        rows = self.c.read("MATCH (i:Item) WHERE i.source=$s AND NOT i.deleted RETURN i.key AS k", {"s": source})
+    def live_keys(self, scope: str) -> set[str]:
+        rows = self.c.read("MATCH (i:Item) WHERE i.scope=$s AND NOT i.deleted RETURN i.key AS k", {"s": scope})
         return {r["k"] for r in rows}
+
+    def adopt_scope(self, key: str, scope: str) -> None:
+        """Backfill ownership when pre-scope evidence is replayed by its connector."""
+        self.c.write("MATCH (i:Item {key:$k}) WHERE i.scope IS NULL SET i.scope=$s", {"k": key, "s": scope})
 
     def item(self, key: str) -> dict | None:
         rows = self.c.read("MATCH (i:Item {key:$k}) RETURN properties(i) AS p", {"k": key})

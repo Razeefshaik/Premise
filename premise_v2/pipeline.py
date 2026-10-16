@@ -74,7 +74,7 @@ class Pipeline:
     def collect(self) -> None:
         for w in self.workers:
             source = w.name
-            gen = w.fetch(self.staging.cursor(source))
+            gen = w.fetch(self.staging.cursor(w.scope))
             n = 0
             while True:
                 try:
@@ -85,22 +85,24 @@ class Pipeline:
                 self.stream.produce(env)
                 n += 1
             # Tombstones: items we hold that the source no longer lists.
-            gone = self.staging.live_keys(source) - w.list_keys()
+            gone = self.staging.live_keys(w.scope) - w.list_keys()
             for key in sorted(gone):
                 latest = self.staging.latest_version(key) or {"sequence": 0}
                 native = key.split(":", 1)[1]
                 item = self.staging.item(key) or {}
-                self.stream.produce(Envelope(entity_key=key, source=source, kind=item.get("kind", "message"),
+                self.stream.produce(Envelope(entity_key=key, source=source, scope=w.scope, kind=item.get("kind", "message"),
                                              native_id=native, sequence=latest["sequence"] + 1, op="delete",
                                              time=datetime.now(timezone.utc)))
                 self.summary.tombstones += 1
             # The cursor is saved only after every envelope is in the stream.
-            self.staging.save_cursor(source, new_cursor)
+            self.staging.save_cursor(w.scope, new_cursor)
             self.summary.produced[source] = self.summary.produced.get(source, 0) + n
 
     def handle(self, env: Envelope) -> None:
         res = self.gateway.process(env)
         self.summary.gateway[res.action] = self.summary.gateway.get(res.action, 0) + 1
+        if res.action == "duplicate" and env.scope:
+            self.staging.adopt_scope(env.entity_key, env.scope)
         if res.action in {"duplicate", "stale"}:
             return
         if res.action == "deleted":
