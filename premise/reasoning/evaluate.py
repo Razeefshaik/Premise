@@ -54,10 +54,10 @@ def overlay_param(overlay: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def evaluate_assumptions(client: GraphClient, ids: list[str], overlay: dict[str, Any], now_ms: int,
-                         touched: set[str] | None = None) -> dict[str, AssumptionResult]:
+                         touched: set[str] | None = None, gone: list[str] | None = None) -> dict[str, AssumptionResult]:
     if not ids:
         return {}
-    rows = client.named("evaluate_assumptions", {"ids": sorted(ids), "overlay": overlay_param(overlay), "now": now_ms})
+    rows = client.named("evaluate_assumptions", {"ids": sorted(ids), "overlay": overlay_param(overlay), "now": now_ms, "gone": gone or []})
     out: dict[str, AssumptionResult] = {}
     for r in rows:
         holds = r["holds"]

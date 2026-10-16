@@ -56,8 +56,9 @@ def terms(query):
 
 
 class GraphTools:
-    def __init__(self, client, at_ms=None, since_days=180):
+    def __init__(self, client, at_ms=None, since_days=180, *, gone=None):
         self.client, self.at_ms, self.since_days = client, at_ms, since_days
+        self.gone = list(gone or [])
 
     @property
     def now(self):
@@ -94,7 +95,7 @@ class GraphTools:
             return {"outcome":"unknown_entity","id":id,"guarantees":[],"assumptions":[],"sources":[],"now_ms":self.now}
         pairs = self.client.named("guarantee_assumption_pairs", {"assumptions": None, "guarantees": gids}) if gids else []
         aids = sorted({r["assumption"] for r in pairs})
-        assumptions = evaluate_assumptions(self.client, aids, {}, self.now)
+        assumptions = evaluate_assumptions(self.client, aids, {}, self.now, gone=self.gone)
         statuses = rollup(self.client, gids, assumptions)
         ranks = {r["guarantee"]:r["score"] for r in self.load_bearing_guarantees(30)}
         coverage = {g: [r["assumption"] for r in pairs if r["guarantee"] == g] for g in gids}
@@ -109,7 +110,7 @@ class GraphTools:
             return {"outcome":"unknown_entity", "id":id}
         paths = self.client.named("decision_lineage", {"id":id})
         supersedes = self.client.read("MATCH (d:Decision {id:$id})-[r:SUPERSEDES]-(s:Decision) RETURN s.id AS id, startNode(r).id AS newer", {"id":id})
-        active, gone, candidates = _route(self.client, id, self.now-self.since_days*DAY_MS)
+        active, gone, candidates = _route(self.client, id, self.now-self.since_days*DAY_MS, gone=self.gone)
         ids = [id] + [x for p in paths for x in [*p["chain"],*p["facts"]]]
         return {"decision":entity[0]["decision"], "paths":paths, "supersession":supersedes,
                 "active_accountable":active, "unavailable":gone, "candidates":[c.model_dump() for c in candidates],

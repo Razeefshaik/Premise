@@ -93,6 +93,8 @@ def create_app(client=None, config=None, *, graph_api_at_ms=None, graph_node_cap
     app = FastAPI(title="Premise", lifespan=lifespan)
     from .graph_api import create_graph_router
     app.include_router(create_graph_router(graph, at_ms=graph_api_at_ms, node_cap=graph_node_cap))
+    from .continuity import create_continuity_router
+    app.include_router(create_continuity_router(graph, at_ms=graph_api_at_ms))
     app.mount("/static",StaticFiles(directory=str(ROOT/"static")),name="static")
 
     @app.exception_handler(GraphUnavailable)
@@ -165,6 +167,10 @@ def create_app(client=None, config=None, *, graph_api_at_ms=None, graph_node_cap
     @app.get('/benchmark', response_class=HTMLResponse)
     def benchmark(request: Request):
         return templates.TemplateResponse(request=request,name='benchmark.html',context={})
+
+    @app.get('/continuity', response_class=HTMLResponse)
+    def continuity(request: Request):
+        return templates.TemplateResponse(request=request,name='continuity.html',context={})
 
     @app.get('/api/benchmark/questions')
     def benchmark_questions():

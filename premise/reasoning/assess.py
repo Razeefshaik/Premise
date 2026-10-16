@@ -36,8 +36,8 @@ def graph_ready(client: GraphClient) -> tuple[bool, int | None, str]:
     return True, rows[0]["rev"], "ready"
 
 
-def _route(client: GraphClient, decision_id: str, since_ms: int) -> tuple[list[str], list[str], list[Candidate]]:
-    rows = client.named("route_decision", {"decision_id": decision_id, "since": since_ms})
+def _route(client: GraphClient, decision_id: str, since_ms: int, gone: list[str] | None = None) -> tuple[list[str], list[str], list[Candidate]]:
+    rows = client.named("route_decision", {"decision_id": decision_id, "since": since_ms, "gone": gone or []})
     if not rows:
         return [], [], []
     r = rows[0]

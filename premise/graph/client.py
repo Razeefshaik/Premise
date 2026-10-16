@@ -68,6 +68,8 @@ class GraphClient:
             raise
 
     def named(self, name: str, params: dict | None = None) -> list[dict[str, Any]]:
+        if name in {'evaluate_assumptions', 'route_decision'}:
+            params = {'gone': [], **(params or {})}
         return self.read(query_text(name), params)
 
     def delete_graph(self) -> None:

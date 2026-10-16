@@ -19,7 +19,7 @@ WITH a, l, r, atts,
 WITH a, l, r, atts, lv, rv,
      ((typeOf(lv) IN ['Integer', 'Float'] AND typeOf(rv) IN ['Integer', 'Float'])
       OR (typeOf(lv) = 'String' AND typeOf(rv) = 'String' AND a.op = '==')) AS comparable,
-     any(x IN atts WHERE x.status = 'active' AND x.on <= $now
+     any(x IN atts WHERE x.status = 'active' AND NOT x.person IN $gone AND x.on <= $now
                      AND (x.review_by IS NULL OR x.review_by >= $now)) AS attested
 RETURN a.id AS id, a.check_kind AS kind, a.text AS text,
        l.id AS lhs_fact, lv, a.op AS op, r.id AS rhs_fact, rv, atts,

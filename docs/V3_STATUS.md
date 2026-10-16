@@ -10,7 +10,7 @@ Each phase has its own branch and local commits. No V3 merge or push has been pe
 | V3.3 Live consequences | Complete and batch verified | `v3/live-consequences` |
 | V3.4 Benchmark | Complete and batch verified | `v3/benchmark` |
 | V3.5 Red team | Implemented; 35/35 focused attacks passed | `v3/red-team` |
-| V3.6 Continuity | Pending | `v3/continuity` (planned) |
+| V3.6 Continuity | Implemented; focused checks passed | `v3/continuity` |
 | V3.7 Time machine | Pending | `v3/time-machine` (planned) |
 | V3.8 Public replay | Pending | `v3/public-replay` (planned) |
 
@@ -143,3 +143,15 @@ Bare-link and depth/alias regressions failed before the fixes and pass afterward
 Untrusted links are neutralized, mentions remain full-width, and company YAML is limited
 to 200 KB, depth 64 and 20,000 parse events, with aliases explicitly unsupported.
 The focused run passed **35/35**; full regression follows after V3.7.
+
+## V3.6 implementation
+
+`/continuity` simulates departure through optional `gone=[]` attestation/routing inputs.
+Default arguments preserve existing behavior, including direct named-query callers.
+The API reports newly orphaned accountability separately from decisions affected by
+unknown guarantees: Anika leaving affects ADR-007 without falsely declaring it orphaned.
+Native betweenness and WCC run on an owned, temporary bidirectional Person–Service–Decision
+projection; it is deleted after the call. Team ownership connects current members to
+services for descriptive analysis only. Algorithm scores do not change engine verdicts.
+Focused tests: **2 passed**, including all twelve scenarios compared with explicit
+`gone=[]`, source graph isolation, projection cleanup and Jun's replacement reviewers.
