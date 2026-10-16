@@ -17,7 +17,7 @@ The authoritative design is [Revision 2](docs/Premise_Implementation_Spec.md).
 [Publishing handoff](docs/PUBLISH.md) · [Three-minute demo](docs/DEMO.md) ·
 [Actual validation](docs/VALIDATION.md)
 
-On branch `feat/local-codex-cli`, the optional [local Codex provider](docs/LOCAL_CODEX.md)
+The optional [local Codex provider](docs/LOCAL_CODEX.md), now merged into `main`,
 uses your installed, signed-in CLI. The existing Anthropic/Docker setup remains the default.
 
 ## Pre-flight checks for coding agents

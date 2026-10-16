@@ -2,7 +2,18 @@
 
 Run date: October 16, 2026 (IST). Initial build checks and subsequent live checks are distinguished below.
 
-## F1 preflight feature merge gate
+## Main feature merge gates
+
+Final audit after all three features: **153 tests passed** on Windows (72.99 s),
+**153 passed** in the rebuilt standalone Python 3.12 image (42.05 s), **12/12 CLI
+scenarios passed**, and the extended desktop/mobile browser check passed. Final host
+gate evidence is in `artifacts/final-verified/`. The Docker run used real FalkorDB,
+no host source mount, no model login, no polling and no live GitHub writes.
+
+A final regression ensures retired fact IDs cannot establish current preflight scope:
+both fact and file proposals require review for those historical entries. The historical
+queries remain intact. The protected evaluator, repair engine, result models, original
+Cypher query files and scenario expectations are unchanged from `383e610`.
 
 F3 knowledge steward passed **152 tests** (58.79 s), **12/12 CLI scenarios**, and
 the extended desktop/mobile browser script (`artifacts/f3/`). Real FalkorDB and

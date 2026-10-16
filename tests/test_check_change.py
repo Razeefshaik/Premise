@@ -72,6 +72,17 @@ def test_not_ready_guard(new_graph):
         GraphTools(new_graph()).call('check_change',{'changes':S1})
 
 
+def test_retired_fact_is_untracked(new_graph):
+    from premise.ingest.run import ingest
+    c=new_graph(); ingest(c,SANDBOX)
+    c.write("MATCH (f:Fact {id:'emailservice.retry_max_attempts'}) SET f.retired_rev=2")
+    result=GraphTools(c,NOW).call('check_change',{'changes':[{'fact':'emailservice.retry_max_attempts','value':8}]})
+    assert result['verdict']=='NEEDS_REVIEW' and result['reasons'][0]['code']=='R_UNTRACKED'
+    text=(SANDBOX/'config/emailservice.yaml').read_text().replace('max_attempts: 5','max_attempts: 8')
+    result=GraphTools(c,NOW).call('check_files',{'files':{'config/emailservice.yaml':text}})
+    assert result['verdict']=='NEEDS_REVIEW' and result['reasons'][0]['code']=='R_UNTRACKED'
+
+
 @pytest.mark.parametrize('args',[
     {'changes':[]}, {'changes':S1*21}, {'changes':S1,'extra':True},
     {'changes':[{'fact':'x','value':None}]}, {'changes':[{'fact':'x','value':float('nan')}]},

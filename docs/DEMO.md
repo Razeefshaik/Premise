@@ -10,9 +10,9 @@ Without an Anthropic key, show deterministic mode and MCP graph tools honestly.
 If `PUBLIC_BASE_URL` is localhost, explicitly say the assessment page runs locally;
 GitHub's Details link will only open it on the machine running Premise.
 
-On `feat/local-codex-cli`, a real Codex-backed API and fix-controller rehearsal has now
-passed. Follow [LOCAL_CODEX.md](LOCAL_CODEX.md) to launch the host app on port 8001.
-That branch can demonstrate Codex answers and a graph-verified Codex repair; it does not
+The Codex provider, now merged into `main`, passed a real API and fix-controller rehearsal.
+Follow [LOCAL_CODEX.md](LOCAL_CODEX.md) to launch the host app on port 8001.
+Main can demonstrate Codex answers and a graph-verified Codex repair; it does not
 establish a live Anthropic call, an external MCP-client rehearsal, or a Codex-authored remote
 fix PR. Keep those claims separate when recording.
 
@@ -27,8 +27,6 @@ fix PR. Keep those claims separate when recording.
 | 2:20–2:50 | MCP client / Brain | Ask the questions below. Show expired currency attestation and live ownership evidence. |
 | 2:50–3:00 | Product / repositories | Premise checks each change against the guarantees your decisions depend on. Show the public source and tracks. |
 
-Three questions:
-
 Additional main-branch demonstrations:
 
 - Preflight: an agent calls `check_files` before editing Kestrel configuration; the unsafe
@@ -40,6 +38,8 @@ Additional main-branch demonstrations:
 - Optional steward: show the dry-run plan for the expired rates attestation and orphaned
   ADR-012. Show a real GitHub issue only after deliberately executing the reviewed plan;
   mocked issue tests are not evidence of a live issue.
+
+Three questions:
 
 1. Which guarantees are load bearing, and which rest on unverified assumptions?
 2. Why does ADR-012 skip idempotency, and who owns that decision now?

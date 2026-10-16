@@ -1,6 +1,6 @@
 # Local Codex CLI provider
 
-This branch adds an optional provider for the locally authenticated Codex CLI. It does not
+Main includes an optional provider for the locally authenticated Codex CLI. It does not
 require an Anthropic key. The existing Anthropic provider remains the default; `LLM_MODEL`
 still applies only to Anthropic. Set `LLM_PROVIDER=none` to force deterministic mode.
 
@@ -18,7 +18,7 @@ The existing Docker app can keep serving port 8000.
 From the Premise workspace:
 
 ```powershell
-git switch feat/local-codex-cli
+git switch main
 docker compose up -d falkordb
 codex login status
 .\scripts\run_local_codex.ps1
@@ -70,7 +70,7 @@ when a particular model is required. Account usage limits still apply.
   replay; changed rows or timestamps change the next request key. No inference cache files
   are persisted on disk. Temporary transport/schema files are removed after the run.
 
-This is an explicit branch-specific provider change from the implementation spec's
+This is an explicit optional provider change from the implementation spec's
 Anthropic-only choice. The graph schema, deterministic verdict policy, repair verifier,
 human merge control and existing Anthropic request rules remain in place.
 

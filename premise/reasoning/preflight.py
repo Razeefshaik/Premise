@@ -78,12 +78,26 @@ def check_proposal(client, *, changes=None, files=None, include_fixes=True, at_m
     if files is not None:
         args = FileArgs(files=files, include_fixes=include_fixes)
         found, paths, model_change = overlay_from_files(client, args.files, issues=issues)
-        merged.update({c.fact: c for c in found})
+        active = {row['id'] for row in client.read(
+            'MATCH (f:Fact) WHERE f.id IN $ids AND f.retired_rev IS NULL RETURN f.id AS id',
+            {'ids':[c.fact for c in found]})}
+        for c in found:
+            if c.fact in active:
+                merged[c.fact] = c
+            else:
+                issues.append(Reason(code='R_UNTRACKED',detail=f'{c.fact} is not a tracked fact; Premise has no evidence about its impact'))
     if changes is not None:
         args = ChangeArgs(changes=changes, include_fixes=include_fixes)
+        # facts_by_id also serves historical assessments. Only current registry facts
+        # may establish the scope of a new hypothetical proposal.
+        active = {row['id'] for row in client.read(
+            'MATCH (f:Fact) WHERE f.id IN $ids AND f.retired_rev IS NULL RETURN f.id AS id',
+            {'ids': [item.fact for item in args.changes if item.fact]})}
         seen = set()
         for item in args.changes:
-            rows = client.named('facts_by_id', {'ids': [item.fact]}) if item.fact else client.named(
+            rows = client.named('facts_by_id', {'ids': [item.fact]}) if item.fact in active else []
+            if not item.fact:
+                rows = client.named(
                 'facts_by_file_key', {'file': item.file, 'key': item.key})
             if not rows:
                 label = item.fact or f'{item.file}:{item.key}'
