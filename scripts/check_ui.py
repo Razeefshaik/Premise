@@ -102,6 +102,12 @@ def main():
         page.locator('#time-label').filter(has_text='Forecast').wait_for()
         page.locator('#time-live').click()
         page.wait_for_function('window.premiseExplorer?.cy.getElementById("G_DEDUPE").data("health")==="holds"')
+        page.goto(base+'/',wait_until='networkidle')
+        page.locator('#time-date').fill('2027-03-02')
+        page.locator('#time-date').dispatch_event('change')
+        page.locator('[data-guarantee="G_DEDUPE"] .badge').filter(has_text='unknown').wait_for()
+        page.locator('#time-live').click()
+        page.locator('[data-guarantee="G_DEDUPE"] .badge').filter(has_text='holds').wait_for()
         browser.close()
         report={'page_errors':errors,'console_errors':console_errors,'mermaid_svg_rendered':graph,'desktop':[1440,1050],'mobile':[390,844]}
         (artifact/'ui-check.json').write_text(json.dumps(report,indent=2))

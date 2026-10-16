@@ -9,10 +9,10 @@ Each phase has its own branch and local commits. No V3 merge or push has been pe
 | V3.2 Decision Explorer | Complete and batch verified | `v3/decision-explorer` |
 | V3.3 Live consequences | Complete and batch verified | `v3/live-consequences` |
 | V3.4 Benchmark | Complete and batch verified | `v3/benchmark` |
-| V3.5 Red team | Implemented; 35/35 focused attacks passed | `v3/red-team` |
-| V3.6 Continuity | Implemented; focused checks passed | `v3/continuity` |
-| V3.7 Time machine | Implemented; forecast test passed | `v3/time-machine` |
-| V3.8 Public replay | Built and browser verified locally; deployment pending | `v3/public-replay` |
+| V3.5 Red team | Complete and verified locally | `v3/red-team` |
+| V3.6 Continuity | Complete and verified locally | `v3/continuity` |
+| V3.7 Time machine | Complete and verified locally | `v3/time-machine` |
+| V3.8 Public replay | Complete and verified locally; public deployment pending | `v3/public-replay` |
 
 ## V3.1 implementation
 
@@ -142,7 +142,7 @@ to [REDTEAM.md](REDTEAM.md); failures fail CI. GitHub and model output use exist
 Bare-link and depth/alias regressions failed before the fixes and pass afterward.
 Untrusted links are neutralized, mentions remain full-width, and company YAML is limited
 to 200 KB, depth 64 and 20,000 parse events, with aliases explicitly unsupported.
-The focused run passed **35/35**; full regression follows after V3.7.
+The focused run passed **35/35**; full regression was batched with V3.6–V3.7.
 
 ## V3.6 implementation
 
@@ -166,7 +166,7 @@ forecast, not reconstruction of old revisions. Fact-change controls resume on Li
 so current-time hypothetical results cannot overwrite forecast health. No snapshots enabled.
 Focused check passed: G_DEDUPE holds on 2026-10-16 and is unknown on 2027-03-02, with at
 least four unknown guarantees; malformed dates return traced 422 responses and reads cannot
-write. Full V3.5–V3.7 batch validation is running.
+write. Batch and final validation results are recorded below.
 
 ### Second batch checkpoint
 
@@ -201,20 +201,54 @@ stylesheet-resolution limitation, not a blanket accessibility certification.
 
 [REPLAY.md](REPLAY.md) explains local inspection and later publishing. The Pages workflow
 follows GitHub's official starter and runs on main pushes/manual dispatch. **No push, merge
-or public deployment has been performed.** Final full regression/Docker verification are
-still running; their actual results will be recorded below.
+or public deployment has been performed.** Final verification results are recorded below.
 
 ### Final verification follow-up
 
 The first all-V3 suite completed **340 passed, 1 failed in 666.25 seconds** while browser,
 export and Docker activity overlapped. The sole failure was an actual database socket
 timeout in the clear CLI test, which correctly returned ERROR rather than granting clear.
-All three CLI exit cases passed when rerun (**3 passed in 7.28 seconds**). A final full
-run is being performed without overlapping heavy checks.
+All three CLI exit cases passed when rerun (**3 passed in 7.28 seconds**). An isolated
+full rerun followed without overlapping heavy checks.
 
 The v2 relation registry check passed; the replayed v2 gold evaluation reported no floor
 failures, and its markdown report is identical to the pre-V3 committed evaluation.
 Docker's initial package probe found that an outside entry script imported the installed
 wheel and looked outside `/app` for the authored benchmark files. The image now explicitly
-sets `PYTHONPATH=/app`, consistently using its copied checkout and data. Container probe
-and final suite results follow after completion. No environment file is copied into the image.
+sets `PYTHONPATH=/app`, consistently using its copied checkout and data. No environment
+file is copied into the image.
+
+## Final local gate — October 17, 2026 (IST)
+
+All eight required V3 phases are implemented on the stacked local branch
+`v3/public-replay`. The following checks completed against the final implementation:
+
+- **341 tests passed, zero failures/errors/skips**, in **684.64 seconds** including
+  collection/startup. JUnit execution time was 642.749 seconds. The replay export/file
+  integrity test took 150.21 seconds; MCP stdio and Windows CLI discovery were other
+  material costs. The earlier socket timeout did not recur in the isolated full run.
+- **12/12 independent CLI scenarios passed** in the latest live scenario/browser run.
+  Continuity also compares all twelve scenarios with explicit `gone=[]` in the suite.
+- Live browser checks passed desktop 1440×1050 and mobile 390×844, with no page or
+  console errors. The additional focused home-board check verified future unknown health
+  and Live today reset at both widths, with no errors or page overflow.
+- Static replay browser checks passed both widths with **131 local requests and zero
+  external requests**, including S1 red → verified fix green, forecast, benchmark and
+  Anika's departure. Every exported response reference/hash is checked by the suite.
+- **35/35 red-team cases passed** in both the report run and final suite. v2 registry
+  validation passed, and the frozen v2 gold report matched its committed pre-V3 report,
+  with no floor failures. No live model calls were made.
+- `docker build -t premise:v3-validation .` succeeded. A container probe passed the
+  benchmark page, all 60 questions, 420 result rows, continuity page and vendored graph
+  library, and confirmed `/app/.env` absent. This is a packaging probe, not a claim that
+  the entire pytest suite ran inside the container.
+- Fresh UI finish review scored its three material corrections resolved, disposition
+  **ship** for those fixes. Documentation check is in [V3_UI_REVIEW.md](V3_UI_REVIEW.md).
+- The final audit found **no remaining temporary V3 benchmark/projection/replay/validation
+  graphs**. The user's application graphs and Docker volumes were preserved.
+
+Evidence is local and ignored: `.runtime/v3-final.xml`, `.runtime/v3-verification.json`,
+`.runtime/v3-validation/`, `.runtime/v3-replay/` and `.impeccable/review/v3/`.
+The [walkthrough](DEMO_V3.md) and [publishing handoff](REPLAY.md) explain how to demonstrate
+and publish the result. Public Pages deployment and human review of authored benchmark
+labels remain pending; neither is represented as completed. `main` remains at `6fb78aa`.

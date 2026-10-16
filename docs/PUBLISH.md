@@ -1,5 +1,16 @@
 # Morning publishing handoff
 
+## V3 local build
+
+The full V3 code is stacked on `v3/public-replay`, including the earlier V3 phase commits.
+Review that branch as a single change against main; there is no need to merge eight
+separate branches. No V3 merge, push or public deployment was performed by the agent.
+[V3_STATUS.md](V3_STATUS.md) records actual checks. [REPLAY.md](REPLAY.md) explains
+the generated static site and the Pages workflow that runs after a main push or manual
+dispatch. [DEMO_V3.md](DEMO_V3.md) is the walkthrough, not a completed video.
+
+The earlier repository/PR publishing instructions below describe the v1 rehearsal.
+
 The user asked to keep commits local and pushes manually. Since the initial build, the user
 published both repos and completed the live PR rehearsal: fix PR #2 was merged into PR #1's
 branch, and PRs #1 and #3 reported success. Later local fixes must still be pushed.

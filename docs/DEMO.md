@@ -1,5 +1,8 @@
 # Three-minute demonstration
 
+For the new Explorer, consequences, forecast, continuity and benchmark, use the separate
+[V3 walkthrough](DEMO_V3.md). Its public replay remains a deployment handoff.
+
 Use `docs/PUBLISH.md` to publish and run the sandbox rehearsal first. This is a script, not
 evidence that a live GitHub rehearsal or video recording has already happened.
 

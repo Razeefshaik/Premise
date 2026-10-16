@@ -1,5 +1,9 @@
 # Validation record
 
+V3's separate local branch build, batch runs, browser checks, benchmark and security
+reports are recorded in [V3_STATUS.md](V3_STATUS.md). The earlier main-branch runs below
+are historical records; V3 has not been merged or pushed.
+
 Run date: October 16, 2026 (IST). Initial build checks and subsequent live checks are distinguished below.
 
 ## Main feature merge gates
