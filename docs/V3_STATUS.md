@@ -203,3 +203,18 @@ stylesheet-resolution limitation, not a blanket accessibility certification.
 follows GitHub's official starter and runs on main pushes/manual dispatch. **No push, merge
 or public deployment has been performed.** Final full regression/Docker verification are
 still running; their actual results will be recorded below.
+
+### Final verification follow-up
+
+The first all-V3 suite completed **340 passed, 1 failed in 666.25 seconds** while browser,
+export and Docker activity overlapped. The sole failure was an actual database socket
+timeout in the clear CLI test, which correctly returned ERROR rather than granting clear.
+All three CLI exit cases passed when rerun (**3 passed in 7.28 seconds**). A final full
+run is being performed without overlapping heavy checks.
+
+The v2 relation registry check passed; the replayed v2 gold evaluation reported no floor
+failures, and its markdown report is identical to the pre-V3 committed evaluation.
+Docker's initial package probe found that an outside entry script imported the installed
+wheel and looked outside `/app` for the authored benchmark files. The image now explicitly
+sets `PYTHONPATH=/app`, consistently using its copied checkout and data. Container probe
+and final suite results follow after completion. No environment file is copied into the image.

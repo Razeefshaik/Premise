@@ -16,5 +16,6 @@ COPY docs ./docs
 COPY tests ./tests
 RUN useradd --create-home premise && chown -R premise:premise /app
 USER premise
+ENV PYTHONPATH=/app
 EXPOSE 8000
 CMD ["python", "-m", "premise.bootstrap"]
