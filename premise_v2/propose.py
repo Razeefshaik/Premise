@@ -147,18 +147,23 @@ class ProposalWriter:
         if self.out:
             self.out.mkdir(parents=True, exist_ok=True)
             (self.out / f"{branch.replace('/', '_')}.md").write_text(f"# {title}\n\n{body}\n\n```diff\n{p.diff}```\n", encoding="utf-8")
-        if self.github is not None and state != "unchanged":
-            p.pr_url = self._open_pr(p)
+        needs_publish = self.github is not None and (
+            not existing or not existing.get("pr_url") or existing.get("status") != "open"
+            or existing.get("remote_state") != "open" or existing.get("published_hash") != digest)
+        published = {}
+        if needs_publish:
+            pr = self._open_pr(p)
+            p.pr_url = pr["html_url"]
+            published = {"pr_url": p.pr_url, "pr_number": pr["number"], "published_hash": digest, "remote_state": "open"}
         self.staging.upsert_proposal(key, {"fact": d.fact, "value": d.value, "branch": branch, "status": "open",
-                                           "body_hash": digest, "verdict_preview": prev["verdict"],
-                                           **({"pr_url": p.pr_url} if p.pr_url else {})})
+                                           "body_hash": digest, "verdict_preview": prev["verdict"], **published})
         return p
 
     # ---- live mode ---------------------------------------------------------------------------------
     def _path(self, rel: str) -> str:
         return f"{self.prefix}/{rel}" if self.prefix else rel
 
-    def _open_pr(self, p: Proposal) -> str:
+    def _open_pr(self, p: Proposal) -> dict:
         gh = self.github
         owner = gh.repo.split("/")[0]
         base_sha = gh.json("GET", f"git/ref/heads/{self.base}")["object"]["sha"]
@@ -176,7 +181,7 @@ class ProposalWriter:
             pr = gh.json("PATCH", f"pulls/{existing[0]['number']}", json={"body": p.body, "title": p.title})
         else:
             pr = gh.json("POST", "pulls", json={"title": p.title, "head": p.branch, "base": self.base, "body": p.body})
-        return pr["html_url"]
+        return pr
 
     def sync_outcomes(self) -> list[dict]:
         """Closed without merge -> rejection memory. Merged -> recorded. Needs a GitHub client."""
@@ -191,6 +196,6 @@ class ProposalWriter:
                 status = "merged" if pr.get("merged_at") else "rejected"
                 if status == "rejected":
                     self.staging.reject(p["key"], p["fact"], p["value"], "closed without merge")
-                self.staging.upsert_proposal(p["key"], {"status": status})
+                self.staging.upsert_proposal(p["key"], {"status": status, "remote_state": "closed"})
                 out.append({"key": p["key"], "status": status})
         return out

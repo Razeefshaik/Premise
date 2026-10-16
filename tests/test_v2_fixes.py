@@ -12,7 +12,7 @@ from premise_v2.propose import render_body
 from premise_v2.reconcile import reconcile
 from premise_v2.pipeline import fixture_workers
 from premise_v2.stream import EnvelopeStream
-from test_v2_pipeline import FIXTURES, FakeGitHub, env, pipeline, r, stream_name
+from test_v2_pipeline import DRIFT, FIXTURES, FakeGitHub, env, pipeline, r, stream_name
 
 
 @pytest.mark.parametrize("command,collision", [
@@ -188,3 +188,20 @@ def test_pending_stream_prevents_proposals_until_caught_up(r, new_graph, stream_
     s = p.run(load_decision=False)
     assert s.caught_up and s.stream["pending_after"] == 0
     assert len(gh.prs) == 1
+
+
+def test_dry_then_live_publishes_once_and_tracks_remote_document(r, new_graph, stream_name):
+    p = pipeline(r, new_graph, stream_name)
+    p.run()
+    stored = p.staging.proposal(DRIFT)
+    assert not any(stored.get(k) for k in ("pr_url", "pr_number", "published_hash"))
+    gh = FakeGitHub()
+    p.writer.github = gh
+    s = p.run(load_decision=False)
+    assert len(gh.prs) == 1 and s.proposals[0]["pr_url"].endswith("/pull/1")
+    stored = p.staging.proposal(DRIFT)
+    assert stored["pr_number"] == 1 and stored["published_hash"] == stored["body_hash"]
+    assert stored["remote_state"] == "open"
+    gh.calls.clear()
+    p.run(load_decision=False)
+    assert not gh.calls and len(gh.prs) == 1

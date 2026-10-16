@@ -305,7 +305,7 @@ def test_live_mode_opens_one_pr_updates_it_and_learns_from_close(r, new_graph, s
     s = p.run()
     assert s.proposals[0]["pr_url"].endswith("/pull/1") and len(gh.prs) == 1
     assert ("POST", "git/trees") in gh.calls and ("POST", "git/refs") in gh.calls
-    p.staging.upsert_proposal(DRIFT, {"body_hash": "stale"})            # force a body update on the next run
+    p.staging.upsert_proposal(DRIFT, {"published_hash": "stale"})       # force publication on the next run
     again = Pipeline(r, p.staging.c, p.decision, SANDBOX, fixture_workers(FIXTURES), github=gh, stream_name=stream_name)
     again.run(load_decision=False)
     assert len(gh.prs) == 1 and ("PATCH", "pulls/1") in gh.calls                 # updated, not duplicated
