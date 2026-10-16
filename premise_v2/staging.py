@@ -118,6 +118,39 @@ class Staging:
         if value is not None:
             self.c.write("MERGE (c:Cursor {source:$s}) SET c.value=$v, c.updated_ms=$now", {"s": source, "v": value, "now": now_ms()})
 
+    def checkpoint(self, scope: str) -> dict | None:
+        raw = self.cursor(scope)
+        if raw is None:
+            return None
+        try:
+            value = json.loads(raw)
+            return value if isinstance(value, dict) else {"cursor": raw}
+        except (ValueError, TypeError):
+            return {"cursor": raw}
+
+    def save_checkpoint(self, scope: str, value: dict) -> None:
+        self.save_cursor(scope, json.dumps(value, sort_keys=True))
+
+    def connector_failure(self, failure) -> None:
+        key = f"{failure.scope}|{failure.native_id or '*'}"
+        self.c.write("MERGE (f:ConnectorFailure {key:$k}) SET f.scope=$s, f.native_id=$id, f.error=$e, "
+                     "f.retryable=$r, f.status='pending', f.updated_ms=$now",
+                     {"k": key, "s": failure.scope, "id": failure.native_id, "e": failure.error,
+                      "r": failure.retryable, "now": now_ms()})
+
+    def connector_recovered(self, scope: str) -> None:
+        self.c.write("MATCH (f:ConnectorFailure {scope:$s}) SET f.status='resolved', f.updated_ms=$now",
+                     {"s": scope, "now": now_ms()})
+
+    def store_ownership(self, env: Envelope) -> None:
+        """CODEOWNERS remains descriptive evidence, never a reasoning edge."""
+        self.c.write("MATCH (o:Ownership {item:$k}) DELETE o", {"k": env.entity_key})
+        for line in env.text.splitlines():
+            parts = line.split('#', 1)[0].split()
+            if len(parts) >= 2:
+                self.c.write("CREATE (:Ownership {item:$k, pattern:$p, owners:$owners, visibility:$v})",
+                             {"k": env.entity_key, "p": parts[0], "owners": parts[1:], "v": env.visibility})
+
     # ---- proposals and rejection memory ------------------------------------------------------------
     def proposal(self, key: str) -> dict | None:
         rows = self.c.read("MATCH (p:Proposal {key:$k}) RETURN properties(p) AS p", {"k": key})

@@ -39,6 +39,8 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--out", default=".runtime/v2/proposals")
     run.add_argument("--open-prs", action="store_true", help="open PRs on SANDBOX_REPO (needs V2_OPEN_PRS=true)")
     run.add_argument("--model-prefix", default="", help="path of the model repo inside the GitHub repo")
+    run.add_argument("--github-source", action="append", default=[], metavar="OWNER/REPO", help="read-only GitHub evidence source")
+    run.add_argument("--pages", action="append", default=[], metavar="FOLDER", help="read markdown exports")
     sub.add_parser("registry-check")
     ev = sub.add_parser("eval")
     ev.add_argument("--fixtures", default="fixtures/v2")
@@ -88,8 +90,19 @@ def _execute(args: argparse.Namespace, s) -> int:
             return 1
         from premise.github.api import GitHub
         github = GitHub(s.sandbox_repo, s.github_token)
-    summary = Pipeline(r, staging, decision, args.model, fixture_workers(args.fixtures), args.out, github,
-                       model_prefix=args.model_prefix).run()
+    from .connectors import GitHubConnector, PagesConnector
+    from premise.github.api import GitHub
+    sources = [GitHub(repo, s.github_token) for repo in args.github_source]
+    workers = fixture_workers(args.fixtures) + [GitHubConnector(repo, github=client) for repo, client in zip(args.github_source, sources)]
+    workers += [PagesConnector(path) for path in args.pages]
+    try:
+        summary = Pipeline(r, staging, decision, args.model, workers, args.out, github,
+                           model_prefix=args.model_prefix).run()
+    finally:
+        for client in sources:
+            client.close()
+        if github is not None:
+            github.close()
     print(json.dumps(summary.__dict__, indent=2, default=str))
     return 1 if summary.registry_errors else 0
 

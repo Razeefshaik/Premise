@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
+import json
 
 import redis
 
@@ -24,6 +25,7 @@ from .registry import Ext, check_relations
 from .staging import Staging
 from .stream import EnvelopeStream
 from .workers import JiraFixtureWorker, SlackFixtureWorker
+from .connectors import ConnectorFailure, GitHubConnector, PagesConnector
 
 EXTRACT_CLASSES = {"chat", "ticket", "ticket_comment", "doc"}
 
@@ -44,12 +46,17 @@ class RunSummary:
     registry_errors: list = field(default_factory=list)
     caught_up: bool = True
     proposal_skip_reason: str = ""
+    connector_failures: list = field(default_factory=list)
 
 
 def fixture_workers(fixtures: str | Path) -> list:
     root = Path(fixtures)
     workers = [SlackFixtureWorker(p) for p in sorted((root / "slack").glob("*.json"))]
     workers += [JiraFixtureWorker(p) for p in sorted((root / "jira").glob("*.json"))]
+    workers += [GitHubConnector(json.loads(p.read_text(encoding="utf-8"))["repository"]["full_name"], fixture=p)
+                for p in sorted((root / "github").glob("*.json"))]
+    if (root / "pages").is_dir():
+        workers.append(PagesConnector(root / "pages"))
     return workers
 
 
@@ -77,18 +84,37 @@ class Pipeline:
     def collect(self) -> None:
         for w in self.workers:
             source = w.name
-            gen = w.fetch(self.staging.cursor(w.scope))
+            gen = w.load(self.staging.checkpoint(w.scope))
             n = 0
+            failures = []
             while True:
                 try:
                     env = next(gen)
                 except StopIteration as done:
                     new_cursor = done.value
                     break
+                if isinstance(env, ConnectorFailure):
+                    self.staging.connector_failure(env)
+                    failures.append(env)
+                    self.summary.connector_failures.append(env.model_dump())
+                    continue
                 self.stream.produce(env)
                 n += 1
+            self.summary.produced[source] = self.summary.produced.get(source, 0) + n
+            # A partial listing must never manufacture deletions. Retain the checkpoint
+            # on retryable failures, replaying successful items safely next time.
+            if failures:
+                if not any(f.retryable for f in failures):
+                    self.staging.save_checkpoint(w.scope, new_cursor)
+                continue
             # Tombstones: items we hold that the source no longer lists.
-            gone = self.staging.live_keys(w.scope) - w.list_keys()
+            try:
+                gone = self.staging.live_keys(w.scope) - w.list_keys()
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                failure = ConnectorFailure(scope=w.scope, error=f"listing unavailable ({type(exc).__name__})")
+                self.staging.connector_failure(failure)
+                self.summary.connector_failures.append(failure.model_dump())
+                continue
             for key in sorted(gone):
                 latest = self.staging.latest_version(key) or {"sequence": 0}
                 native = key.split(":", 1)[1]
@@ -98,8 +124,8 @@ class Pipeline:
                                              time=datetime.now(timezone.utc)))
                 self.summary.tombstones += 1
             # The cursor is saved only after every envelope is in the stream.
-            self.staging.save_cursor(w.scope, new_cursor)
-            self.summary.produced[source] = self.summary.produced.get(source, 0) + n
+            self.staging.save_checkpoint(w.scope, new_cursor)
+            self.staging.connector_recovered(w.scope)
 
     def handle(self, env: Envelope) -> None:
         res = self.gateway.process(env)
@@ -126,6 +152,8 @@ class Pipeline:
                 self.summary.claims[c.status] = self.summary.claims.get(c.status, 0) + 1
                 if not ok:
                     self.summary.rejected_by_grounding.append({"claim": c.id, "reason": why})
+        if clean.kind == "file" and clean.source == "github" and clean.native_id.endswith("CODEOWNERS"):
+            self.staging.store_ownership(clean)
         self.staging.mark_processed(clean.entity_key, clean.sequence)
 
     def run(self, *, load_decision: bool = True, consumer: str = "gateway-1") -> RunSummary:

@@ -30,6 +30,9 @@ CLASS_RULES = {
     ("jira", "comment"): "ticket_comment",
     ("github", "issue"): "ticket",
     ("github", "pull_request"): "ticket",
+    ("github", "comment"): "ticket_comment",
+    ("github", "page"): "doc",
+    ("github", "file"): "ownership",
     ("pages", "page"): "doc",
     ("config", "file"): "config_file",
 }

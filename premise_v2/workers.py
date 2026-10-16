@@ -38,6 +38,10 @@ class SlackFixtureWorker:
     """Reads a conversations.history style export: {channel, users, messages}."""
     name = "slack"
 
+    def load(self, checkpoint=None):
+        from .connectors.base import load_fixture
+        return (yield from load_fixture(self, checkpoint))
+
     def __init__(self, path: str | Path, workspace_url: str = "https://kestrel.slack.example"):
         self.path, self.base = Path(path), workspace_url.rstrip("/")
 
@@ -87,6 +91,10 @@ class SlackFixtureWorker:
 class JiraFixtureWorker:
     """Reads a /rest/api/3/search style response: {issues: [{key, fields}]}. Comments are separate items."""
     name = "jira"
+
+    def load(self, checkpoint=None):
+        from .connectors.base import load_fixture
+        return (yield from load_fixture(self, checkpoint))
 
     def __init__(self, path: str | Path, site_url: str = "https://kestrel.atlassian.example"):
         self.path, self.base = Path(path), site_url.rstrip("/")
