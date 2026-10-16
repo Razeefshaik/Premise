@@ -77,6 +77,10 @@ def preview(decision: GraphClient, rel: str, new_text: str) -> dict:
             "graph_rev": result.graph_rev}
 
 
+def quote_of(e: dict) -> str:
+    return safe(e["quote"]) if e.get("visibility") == "public" else "(private source; quote withheld)"
+
+
 def render_body(d: Drift, prev: dict, names: dict[str, str]) -> str:
     who = lambda p: safe(names.get(p, p))
     out = [f"## Premise v2: `{safe(d.fact)}` may have changed from {safe(d.model_value)} to {safe(d.value)} {safe(d.unit)}", "",
@@ -85,14 +89,13 @@ def render_body(d: Drift, prev: dict, names: dict[str, str]) -> str:
            f"**Model value last changed:** {_when(d.model_as_of_ms)}" + (" (unknown; evidence time not compared)" if d.as_of_unknown else ""),
            "", "### Supporting evidence", ""]
     for e in d.supporting:
-        quote = safe(e["quote"]) if e.get("visibility") == "public" else "(private source; quote withheld)"
-        out.append(f"- {who(e['person'])}, {safe(e.get('container') or e['source'])}, {_when(e['as_of_ms'])}: \"{quote}\" ({safe(e['envelope_key'])})")
+        out.append(f"- {who(e['person'])}, {safe(e.get('container') or e['source'])}, {_when(e['as_of_ms'])}: \"{quote_of(e)}\" ({safe(e['envelope_key'])})")
     if d.disagreeing:
         out += ["", "### Disagreeing evidence", ""]
-        out += [f"- {who(e['person'])}, {safe(e.get('container') or e['source'])}, {_when(e['as_of_ms'])}: \"{safe(e['quote'])}\" ({e['status']})" for e in d.disagreeing]
+        out += [f"- {who(e['person'])}, {safe(e.get('container') or e['source'])}, {_when(e['as_of_ms'])}: \"{quote_of(e)}\" ({e['status']})" for e in d.disagreeing]
     if d.weak:
         out += ["", "### Ignored as weak evidence", ""]
-        out += [f"- {who(e['person'])}: \"{safe(e['quote'])}\" ({e['status']})" for e in d.weak]
+        out += [f"- {who(e['person'])}: \"{quote_of(e)}\" ({e['status']})" for e in d.weak]
     out += ["", "### What Premise v1 says about this change", "",
             f"Verdict preview: **{prev['verdict']}**."]
     out += [f"- `{g['id']}` is {g['status']} via {' -> '.join(g['chain'])}" for g in prev["not_holding"]]
