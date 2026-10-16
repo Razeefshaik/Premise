@@ -1,0 +1,47 @@
+# Relation registry. registry_version is bumped on every merged change.
+# kind: reasoning  -> Kind 1. Drives verdicts. Must equal premise_v2.registry.REASONING_RELATIONS. Humans only.
+# kind: knowledge  -> Kind 2. Describes the company. Never read by verdict code. May grow through reviewed PRs.
+registry_version: 1
+relations:
+  - name: REQUIRES
+    kind: reasoning
+    status: approved
+    locked: true
+    domain: [Guarantee]
+    range: [Assumption, Guarantee]
+    description: A guarantee holds only while everything it requires holds.
+  - name: PROVIDES
+    kind: reasoning
+    status: approved
+    locked: true
+    domain: [Decision]
+    range: [Guarantee]
+    description: A decision promises this guarantee.
+  - name: RELIES_ON
+    kind: reasoning
+    status: approved
+    locked: true
+    domain: [Decision]
+    range: [Guarantee]
+    description: A decision is only safe while this guarantee holds.
+  - name: ON_CALL_FOR
+    kind: knowledge
+    status: approved
+    domain: [Person]
+    range: [Service]
+    temporal: required
+    description: Person currently answering pages for a service.
+    aliases: ["on call for", "pager for", "has the pager for"]
+    examples:
+      positive: ["Jun is on call for paymentservice this week", "Ravi has the pager for webhookingress tonight"]
+      negative: ["Jun fixed a paymentservice bug"]
+  - name: VENDOR_FOR
+    kind: knowledge
+    status: approved
+    domain: [Partner]
+    range: [Service]
+    description: External company whose product a service depends on.
+    aliases: ["vendor for", "provider for"]
+    examples:
+      positive: ["Paylane is the payment vendor for webhookingress", "Postbird is our email provider for emailservice"]
+      negative: ["Paylane sent us an invoice"]

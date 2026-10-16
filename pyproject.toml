@@ -22,13 +22,14 @@ lite = ["falkordblite>=0.10; sys_platform == 'linux'"]
 
 [project.scripts]
 premise = "premise.cli:main"
+premise-v2 = "premise_v2.cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["premise*"]
+include = ["premise*", "premise_v2*"]
 
 [tool.setuptools.package-data]
 "premise.graph" = ["queries/*.cypher"]

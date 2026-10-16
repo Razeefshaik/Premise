@@ -1,0 +1,9 @@
+# Explicit account links. Only these (and exact emails below) link automatically.
+people:
+  p_anika: {email: anika@kestrel.example, slack: U01ANIKA, jira: 5f10anika}
+  p_jun: {email: jun@kestrel.example, slack: U01JUN, jira: 5f10jun}
+  p_ravi: {email: ravi@kestrel.example, slack: U01RAVI, jira: 5f10ravi}
+  p_tess: {email: tess@kestrel.example, slack: U01TESS, jira: 5f10tess}
+  p_omar: {email: omar@kestrel.example, slack: U01OMAR}
+  p_sofia: {email: sofia@kestrel.example, slack: U01SOFIA}
+  p_kim: {email: kim@kestrel.example, slack: U01KIM}

@@ -1,0 +1,38 @@
+# A sentence mentions a fact when it contains one entity word AND one term word
+# within a few words of a number whose unit has the fact's dimension.
+paylane.retry_window_hours:
+  entity: [paylane]
+  terms: [retry, retries, retried, retrying, redeliver, redelivers, redelivery, redeliveries]
+paylane.delivery_timeout_ms:
+  entity: [paylane]
+  terms: [timeout, "gives up", "give up"]
+webhook.dedupe_ttl_hours:
+  entity: [webhookingress, ingress, dedupe]
+  terms: [dedupe, ttl, retention, keep, keeps]
+webhook.ack_timeout_ms:
+  entity: [webhookingress, ingress]
+  terms: [ack, acknowledge, acknowledges]
+redis.max_ttl_hours:
+  entity: [redis, shared-cache]
+  terms: [ttl, expiry, expire, expires, "max ttl"]
+paymentservice.charge_timeout_ms:
+  entity: [paymentservice]
+  terms: [charge, timeout]
+checkoutservice.payment_timeout_ms:
+  entity: [checkoutservice, checkout]
+  terms: [payment, timeout]
+emailservice.retry_max_attempts:
+  entity: [emailservice]
+  terms: [attempts, retries, retry]
+emailprovider.max_retries:
+  entity: [postbird, emailprovider]
+  terms: [retries, retry]
+currency.cache_ttl_minutes:
+  entity: [currencyservice, currency]
+  terms: [cache, ttl]
+adservice.cache_ttl_seconds:
+  entity: [adservice]
+  terms: [cache, ttl]
+cartservice.session_ttl_hours:
+  entity: [cartservice, cart]
+  terms: [session, ttl]

@@ -371,6 +371,18 @@ Share tracked source with `git archive --format=zip --output premise-source.zip 
 do not zip the workspace. `.env` is ignored by Git but ordinary folder ZIPs still include it.
 Any credential included in a previously shared ZIP must be revoked and replaced by its owner.
 
+## Experimental v2: a brain that keeps itself current
+
+Branch `v2/self-maintaining-brain` adds `premise_v2/`, which reads Slack and Jira (fixtures in Phase 1), finds claims
+such as "Paylane now retries webhooks for 72 hours", verifies every quote in code, counts independent sources, and
+proposes a model update as a pull request that v1 then checks. v2 never writes the decision graph and never decides
+a verdict. See [docs/V2.md](docs/V2.md) and [docs/V2_EVAL.md](docs/V2_EVAL.md).
+
+```bash
+premise-v2 run     # dry run; proposals land in .runtime/v2/proposals/
+premise-v2 eval
+```
+
 ## Attribution and AI use
 
 Kestrel, its people and partners are fictional. Its service naming and selected call edges
@@ -385,3 +397,6 @@ and two runbooks. Those examples were checked against the authored model and sho
 reviewed by the project author before demonstration. Deterministic parsing builds the graph;
 no LLM extracts production facts or decides verdicts. Synthetic data and automated test
 evidence should be reviewed before the public demonstration.
+
+The experimental v2 branch (`premise_v2/`, its fixtures, tests and docs) was written with Claude, from a design
+and research report produced with Claude and reviewed by the project author.

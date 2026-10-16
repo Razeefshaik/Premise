@@ -1,0 +1,50 @@
+{
+  "issues": [
+    {
+      "key": "PAY-311",
+      "fields": {
+        "summary": "Paylane extended webhook retries",
+        "description": "Paylane changed webhook retries from 24 to 72 hours according to their changelog.",
+        "reporter": {
+          "accountId": "5f10jun",
+          "displayName": "Jun Park",
+          "emailAddress": "jun@kestrel.example"
+        },
+        "created": "2026-10-16T06:40:00.000+0000",
+        "updated": "2026-10-16T06:45:00.000+0000",
+        "comment": {
+          "comments": [
+            {
+              "id": "10001",
+              "author": {
+                "accountId": "5f10anika",
+                "displayName": "Anika Rao",
+                "emailAddress": "anika@kestrel.example"
+              },
+              "body": "Confirmed with Paylane support.",
+              "created": "2026-10-16T06:45:00.000+0000",
+              "updated": "2026-10-16T06:45:00.000+0000"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "PAY-312",
+      "fields": {
+        "summary": "emailservice retry policy",
+        "description": "emailservice makes 5 attempts per message before giving up.",
+        "reporter": {
+          "accountId": "5f10ravi",
+          "displayName": "Ravi Menon",
+          "emailAddress": "ravi@kestrel.example"
+        },
+        "created": "2026-10-16T05:00:00.000+0000",
+        "updated": "2026-10-16T05:00:00.000+0000",
+        "comment": {
+          "comments": []
+        }
+      }
+    }
+  ]
+}

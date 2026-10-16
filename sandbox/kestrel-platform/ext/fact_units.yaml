@@ -1,0 +1,13 @@
+# Unit of each registered fact. Dimensions: time or count.
+paylane.retry_window_hours: hours
+paylane.delivery_timeout_ms: ms
+webhook.dedupe_ttl_hours: hours
+webhook.ack_timeout_ms: ms
+redis.max_ttl_hours: hours
+paymentservice.charge_timeout_ms: ms
+checkoutservice.payment_timeout_ms: ms
+emailservice.retry_max_attempts: count
+emailprovider.max_retries: count
+currency.cache_ttl_minutes: minutes
+adservice.cache_ttl_seconds: seconds
+cartservice.session_ttl_hours: hours
