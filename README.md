@@ -2,6 +2,17 @@
 
 **Every change checked against the guarantees your engineering decisions depend on.**
 
+[V3 recorded replay](https://razeefshaik.github.io/Premise/) **(deployment pending)** ·
+[V3 build and checks](docs/V3_STATUS.md) · [Replay instructions](docs/REPLAY.md)
+
+![Actual Explorer browser captures: healthy, S1 blocked, verified repair healthy](docs/media/explorer.gif)
+
+Authored synthetic test macro F1: **graph 0.789**, keyword **0.178–0.247**, vector
+**0.206–0.297** across k=3,5,10. [Full results and limitations](docs/BENCHMARK.md).
+[Red team](docs/REDTEAM.md): **35/35** expected safe outcomes. Human review of benchmark
+labels remains pending; these are structured synthetic-company results, not general QA claims.
+V3 is on local branches; the replay URL becomes usable only after a successful Pages deployment.
+
 Premise connects architecture decisions to explicit guarantees, guarantees to their
 prerequisites, and prerequisites to current facts and human attestations. A pull request
 changes a fact; FalkorDB traces the consequences, routes review, and verifies remedies

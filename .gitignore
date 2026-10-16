@@ -12,5 +12,6 @@ scratch/
 .runtime/
 artifacts/
 bench/cache/
+site/
 .impeccable/review/
 

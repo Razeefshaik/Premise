@@ -72,15 +72,23 @@ def main():
             page.locator('#node-details').filter(has_text='Each Paylane webhook').wait_for(timeout=8000)
             page.locator('#cypher-drawer summary').click()
             assert page.locator('#cypher-queries section').count()>0
+            page.locator('#cypher-drawer summary').click()
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             page.evaluate('window.scrollTo(0,0)')
             page.screenshot(path=str(artifact/f"explorer-{size['width']}.png"),full_page=True)
+            if size['width']==1440:
+                page.locator('#explorer-canvas').screenshot(path=str(artifact/'explorer-green.png'))
+            page.get_by_role('tab',name='What if',exact=True).click()
             page.locator('[data-explorer-preset="S1"]').click()
             page.locator('#explorer-verdict').filter(has_text='BLOCKED').wait_for()
             assert page.evaluate('window.premiseExplorer.cy.nodes(".broken").length')==4
+            if size['width']==1440:
+                page.locator('#explorer-canvas').screenshot(path=str(artifact/'explorer-red.png'))
             page.get_by_role('button',name='Apply verified fix').first.click()
             page.locator('#explorer-verdict').filter(has_text='CLEAR').wait_for()
             assert page.evaluate('window.premiseExplorer.cy.nodes(".broken").length')==0
+            if size['width']==1440:
+                page.locator('#explorer-canvas').screenshot(path=str(artifact/'explorer-fixed.png'))
         page.goto(base+'/benchmark',wait_until='networkidle')
         page.locator('#benchmark-chart svg').wait_for()
         assert page.locator('#benchmark-rows tr').count()==21

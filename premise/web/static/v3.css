@@ -3,3 +3,7 @@
 .v3-controls label{min-width:0;max-width:100%}.v3-controls select{display:block;width:100%;max-width:100%;min-width:0;background:#10121d;color:#eee;border:1px solid #565c77;padding:10px;font:inherit}.v3-controls form{min-width:0;max-width:100%}
 
 .v3-controls form{display:block}.v3-inline button{width:auto;margin:0}.v3-detail button,.v3-tabs button,.v3-cypher button,.v3-page button{background:#202639;color:#edf0ff;border:1px solid #626c8c;border-radius:7px;padding:8px 12px;font:inherit;cursor:pointer}.v3-detail button:hover,.v3-tabs button:hover,.v3-cypher button:hover{background:#323d5b}.v3-detail button:disabled{opacity:.5;cursor:default}.v3-detail h2{margin-top:24px}.v3-detail>h2:first-child{margin-top:0}.v3-controls input[type=range],.v3-fact input[type=range]{padding:0;accent-color:#a9b7ff}.v3-page td,.v3-page th{font-variant-numeric:tabular-nums}.v3-app .bar nav{min-width:0}.v3-app .v3-head{padding-top:22px}
+
+.v3-detail [role=tabpanel]{max-height:680px;overflow:auto;padding-right:6px}.v3-tabs [aria-selected=true]{border-color:#b2c0ff;background:#323d5b}@media(max-width:900px){.v3-detail [role=tabpanel]{max-height:none}}
+
+.v3-chart-scroll{overflow-x:auto;margin:20px 0 36px}.v3-chart-scroll svg{display:block;width:100%;min-width:820px}.v3-app .bar nav{overflow-x:auto}

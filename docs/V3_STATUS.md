@@ -12,7 +12,7 @@ Each phase has its own branch and local commits. No V3 merge or push has been pe
 | V3.5 Red team | Implemented; 35/35 focused attacks passed | `v3/red-team` |
 | V3.6 Continuity | Implemented; focused checks passed | `v3/continuity` |
 | V3.7 Time machine | Implemented; forecast test passed | `v3/time-machine` |
-| V3.8 Public replay | Pending | `v3/public-replay` (planned) |
+| V3.8 Public replay | Built and browser verified locally; deployment pending | `v3/public-replay` |
 
 ## V3.1 implementation
 
@@ -176,3 +176,30 @@ isolation assertion used an unnecessary node×edge Cartesian count and hit the c
 assertions were updated to expect the newly neutralized URL protocol; their escaping
 checks remain strict. The focused rerun passed **29 tests**. Browser validation and all
 12 scenarios passed, with no page or console errors. A final full suite follows V3.8.
+
+## V3.8 implementation
+
+[export_replay.py](../scripts/export_replay.py) records actual API results from a fresh
+isolated ingest: the local export produced **3,064 responses across seven recorded dates**.
+It includes entity evidence, neighborhoods, reasoning-node paths, presets and verified
+repairs, benchmark data, and three departure analyses. The index has request keys, response
+hashes, recording/evaluation times and a model hash. Generated `site/` is ignored and can be
+rebuilt. UI-only corrections can refresh assets with `--render-only`, retaining the dated
+recordings. The exporter deletes its owned temporary graph afterward.
+
+Live and replay share modules. Replay clearly identifies saved results, restricts controls
+to recorded choices and reports unsupported views honestly. There is no live API fallback.
+Static browser checks passed desktop/mobile, no console/page errors and **zero external
+requests**. The latest confirmation made 131 local requests. Live scenario/browser checks
+also passed after adding evidence/what-if tabs. The GIF contains three actual browser
+captures (healthy, S1 blocked, verified repair healthy), not a fabricated animation.
+
+The finish reviewer scored all three requested corrections resolved: visible metric/subset
+label, readable scrolling mobile chart, and corrected depth-range copy. Its `ship`
+disposition covers those fixes. The detector exited 0 with palette advisories and a Jinja
+stylesheet-resolution limitation, not a blanket accessibility certification.
+
+[REPLAY.md](REPLAY.md) explains local inspection and later publishing. The Pages workflow
+follows GitHub's official starter and runs on main pushes/manual dispatch. **No push, merge
+or public deployment has been performed.** Final full regression/Docker verification are
+still running; their actual results will be recorded below.

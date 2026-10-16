@@ -1,4 +1,4 @@
-import {source,el,showQueries} from './source.js';
+import {source,el,showQueries,replay} from './source.js';
 const date=document.getElementById('time-date'),slider=document.getElementById('time-range'),label=document.getElementById('time-label');
 const day=86400000;let sequence=0;
 try{const data=await source.request('/api/graph/timeline'),start=Date.parse(data.start+'T00:00:00Z');date.min=data.start;date.max=data.end;date.value=new URL(location.href).searchParams.get('at')||data.today;slider.value=Math.round((Date.parse(date.value+'T00:00:00Z')-start)/day);
@@ -8,7 +8,8 @@ try{const data=await source.request('/api/graph/timeline'),start=Date.parse(data
  if(window.premiseExplorer){document.dispatchEvent(new CustomEvent('premise:time'));return;}
  const result=await source.request('/api/graph/overview',{at:date.value});if(token!==sequence)return;showQueries(result);for(const n of result.nodes){if(n.label!=='Guarantee')continue;const card=document.querySelector(`[data-guarantee="${n.id}"]`);if(!card)continue;card.classList.remove('is-holds','is-broken','is-unknown');card.classList.add('is-'+n.health);const badge=card.querySelector('.badge');if(badge){badge.textContent=n.health;badge.className='badge '+n.health;}card.href='/explore?focus='+encodeURIComponent(n.id)+'&at='+date.value;for(const p of card.querySelectorAll('.prereq,.dots,.g-foot'))p.hidden=true;}
  }
- date.onchange=()=>change().catch(e=>label.textContent=e.message);slider.oninput=()=>{date.value=new Date(start+Number(slider.value)*day).toISOString().slice(0,10);date.onchange();};
- document.getElementById('time-live').onclick=()=>{const url=new URL(location.href);url.searchParams.delete('at');history.replaceState(null,'',url);date.value=data.today;slider.value=180;label.textContent='Live today';if(window.premiseExplorer)document.dispatchEvent(new CustomEvent('premise:time'));else location.reload();};
+ if(replay){date.readOnly=true;document.getElementById('time-live').textContent='Recorded baseline';el(document.querySelector('[aria-label="Time machine"]'),'p','Replay slider snaps to recorded dates. Run locally for any date.');}
+ date.onchange=()=>change().catch(e=>label.textContent=e.message);slider.oninput=()=>{let instant=start+Number(slider.value)*day;if(replay)instant=source.index.dates.map(d=>Date.parse(d+'T00:00:00Z')).reduce((best,d)=>Math.abs(d-instant)<Math.abs(best-instant)?d:best);date.value=new Date(instant).toISOString().slice(0,10);date.onchange();};
+ document.getElementById('time-live').onclick=()=>{const url=new URL(location.href);url.searchParams.delete('at');history.replaceState(null,'',url);date.value=data.today;slider.value=180;label.textContent=replay?'Recorded baseline':'Live today';if(window.premiseExplorer)document.dispatchEvent(new CustomEvent('premise:time'));else location.reload();};
  if(new URL(location.href).searchParams.has('at'))await change();
 }catch(error){label.textContent=error.message;}

@@ -1,7 +1,7 @@
-import {source,el,showQueries} from './source.js';
+import {source,el,showQueries,replay} from './source.js';
 const picker=document.getElementById('departure-person'),status=document.getElementById('continuity-status');let sequence=0,cy;
 async function load(){const token=++sequence,person=picker.value||new URL(location.href).searchParams.get('person')||'p_jun';status.textContent='Checking continuity…';try{const data=await source.request('/api/continuity',{person});if(token!==sequence)return;
- if(!picker.options.length)for(const p of data.people)el(picker,'option',p.name+' · '+p.status).value=p.id;picker.value=person;const url=new URL(location.href);url.searchParams.set('person',person);history.replaceState(null,'',url);
+ if(!picker.options.length)for(const p of data.people.filter(p=>!replay||source.index.people.includes(p.id)))el(picker,'option',p.name+' · '+p.status).value=p.id;picker.value=person;const url=new URL(location.href);url.searchParams.set('person',person);history.replaceState(null,'',url);
  const fill=(id,rows,none)=>{const root=document.getElementById(id);root.replaceChildren();for(const row of rows.length?rows:[none])el(root,'p',row);};
  fill('continuity-orphans',data.orphaned_decisions,'No new accountability gaps.');
  fill('continuity-promises',[...data.unverified_assumptions.map(a=>a.id+' becomes unverified'),...data.changed_guarantees.map(g=>g.id+': '+g.before+' → '+g.status)],'No guarantee health changes.');
