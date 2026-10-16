@@ -11,7 +11,7 @@ Each phase has its own branch and local commits. No V3 merge or push has been pe
 | V3.4 Benchmark | Complete and batch verified | `v3/benchmark` |
 | V3.5 Red team | Implemented; 35/35 focused attacks passed | `v3/red-team` |
 | V3.6 Continuity | Implemented; focused checks passed | `v3/continuity` |
-| V3.7 Time machine | Pending | `v3/time-machine` (planned) |
+| V3.7 Time machine | Implemented; forecast test passed | `v3/time-machine` |
 | V3.8 Public replay | Pending | `v3/public-replay` (planned) |
 
 ## V3.1 implementation
@@ -155,3 +155,15 @@ projection; it is deleted after the call. Team ownership connects current member
 services for descriptive analysis only. Algorithm scores do not change engine verdicts.
 Focused tests: **2 passed**, including all twelve scenarios compared with explicit
 `gone=[]`, source graph isolation, projection cleanup and Jun's replacement reviewers.
+
+## V3.7 implementation
+
+The home guarantee board and Explorer have a date slider, date picker, real attestation
+marks and a live-today reset. Read APIs accept ISO `at` dates and use the existing engine
+at UTC midnight. A bounded cache isolates each date; no shared evaluation clock is mutated.
+The dated view uses the current graph revision and is labelled historical evaluation or
+forecast, not reconstruction of old revisions. Fact-change controls resume on Live today,
+so current-time hypothetical results cannot overwrite forecast health. No snapshots enabled.
+Focused check passed: G_DEDUPE holds on 2026-10-16 and is unknown on 2027-03-02, with at
+least four unknown guarantees; malformed dates return traced 422 responses and reads cannot
+write. Full V3.5–V3.7 batch validation is running.

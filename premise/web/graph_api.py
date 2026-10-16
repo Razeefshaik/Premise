@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import datetime as dt
+from functools import lru_cache
 from threading import RLock
 
 from fastapi import APIRouter, Query, Path
@@ -181,9 +183,39 @@ def create_graph_router(client, at_ms=None, node_cap=300):
     router = APIRouter(prefix="/api/graph", tags=["graph"], route_class=GraphRoute)
     explorer = GraphExplorer(client, at_ms=at_ms, node_cap=node_cap)
 
+    @lru_cache(maxsize=16)
+    def at_date(at):
+        if at is None:
+            return explorer
+        try:
+            if len(at) != 10:
+                raise ValueError()
+            date = dt.date.fromisoformat(at)
+        except ValueError:
+            raise RequestValidationError([{'loc':('query','at'),'type':'invalid_date'}])
+        instant = int(dt.datetime.combine(date,dt.time(),dt.timezone.utc).timestamp()*1000)
+        return GraphExplorer(client, at_ms=instant, node_cap=node_cap)
+
+    @router.get('/timeline')
+    def timeline():
+        def collect(health):
+            today = dt.datetime.now(dt.timezone.utc).date()
+            marks = []
+            for a in health['assumptions'].values():
+                for att in a['attestations']:
+                    for key in ('on','review_by'):
+                        if att.get(key) is not None:
+                            marks.append({'date':dt.datetime.fromtimestamp(att[key]/1000,dt.timezone.utc).date().isoformat(),
+                                          'assumption':a['id'],'person':att['person'],'kind':key})
+            return {'nodes':[],'edges':[],'truncated':False,'today':today.isoformat(),
+                    'start':(today-dt.timedelta(days=180)).isoformat(),
+                    'end':(today+dt.timedelta(days=365)).isoformat(),'marks':marks}
+        return explorer.execute(collect)
+
     @router.get("/overview")
-    def overview():
-        return explorer.execute(explorer.overview)
+    def overview(at: str | None = Query(None,max_length=10)):
+        view=at_date(at)
+        return view.execute(view.overview)
 
     @router.get('/facts')
     def facts():
@@ -198,16 +230,19 @@ def create_graph_router(client, at_ms=None, node_cap=300):
 
     @router.get("/neighborhood")
     def neighborhood(focus: str = Query(min_length=1, max_length=160), depth: int = Query(1, ge=1, le=4),
-                     kinds: str = Query("reasoning,people,services,facts", max_length=100)):
-        return explorer.execute(lambda health: explorer.neighborhood(focus, depth, kinds, health))
+                     kinds: str = Query("reasoning,people,services,facts", max_length=100), at: str | None = Query(None,max_length=10)):
+        view=at_date(at)
+        return view.execute(lambda health: view.neighborhood(focus, depth, kinds, health))
 
     @router.get("/path")
     def path(from_id: str = Query(alias="from", min_length=1, max_length=160),
-             to_id: str = Query(alias="to", min_length=1, max_length=160)):
-        return explorer.execute(lambda health: explorer.path(from_id, to_id, health))
+             to_id: str = Query(alias="to", min_length=1, max_length=160), at: str | None = Query(None,max_length=10)):
+        view=at_date(at)
+        return view.execute(lambda health: view.path(from_id, to_id, health))
 
     @router.get("/node/{id}")
-    def node(id: str = Path(min_length=1, max_length=160)):
-        return explorer.execute(lambda health: explorer.node(id, health))
+    def node(id: str = Path(min_length=1, max_length=160), at: str | None = Query(None,max_length=10)):
+        view=at_date(at)
+        return view.execute(lambda health: view.node(id, health))
 
     return router

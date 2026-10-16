@@ -85,6 +85,15 @@ def main():
         page.locator('#benchmark-chart svg').wait_for()
         assert page.locator('#benchmark-rows tr').count()==21
         page.screenshot(path=str(artifact/'benchmark-mobile.png'),full_page=True)
+        page.goto(base+'/continuity?person=p_anika',wait_until='networkidle')
+        page.locator('#continuity-promises').filter(has_text='A_STABLE_EVENT_ID').wait_for()
+        page.locator('#continuity-canvas canvas').first.wait_for()
+        page.screenshot(path=str(artifact/'continuity-mobile.png'),full_page=True)
+        page.goto(base+'/explore?at=2027-03-02',wait_until='networkidle')
+        page.wait_for_function('window.premiseExplorer?.cy.getElementById("G_DEDUPE").data("health")==="unknown"')
+        page.locator('#time-label').filter(has_text='Forecast').wait_for()
+        page.locator('#time-live').click()
+        page.wait_for_function('window.premiseExplorer?.cy.getElementById("G_DEDUPE").data("health")==="holds"')
         browser.close()
         report={'page_errors':errors,'console_errors':console_errors,'mermaid_svg_rendered':graph,'desktop':[1440,1050],'mobile':[390,844]}
         (artifact/'ui-check.json').write_text(json.dumps(report,indent=2))

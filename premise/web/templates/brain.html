@@ -54,6 +54,8 @@
 </section>
 
 <section aria-labelledby="guarantees-title">
+  {% include '_time.html' %}
+  <link rel="stylesheet" href="/static/v3.css">
   <div class="section-head reveal"><h2 id="guarantees-title">Guarantees</h2><p>Ordered by graph PageRank</p></div>
   <div class="bento">
     {% for g in health.guarantees %}<a class="card g-card reveal is-{{ g.status }}" href="/entities/{{ g.id }}" data-guarantee="{{ g.id }}">
@@ -100,6 +102,7 @@
 {% endblock %}
 {% block scripts %}
 <script src="/static/ask.js" defer></script>
+<script type="module" src="/static/time.js"></script>
 <script src="/static/fire.js" defer></script>
 <script src="/static/plate.js" defer></script>
 <script type="importmap">{"imports": {"three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
