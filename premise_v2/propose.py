@@ -25,7 +25,7 @@ from premise.reasoning.assess import assess
 from premise.reasoning.intake import overlay_from_files
 
 from .reconcile import Drift
-from .staging import Staging
+from .staging import Staging, now_ms
 
 MARKER = "<!-- premise:v2:drift:{key} -->"
 
@@ -160,6 +160,28 @@ class ProposalWriter:
         return p
 
     # ---- live mode ---------------------------------------------------------------------------------
+    def withdraw(self, key: str, reason: str) -> dict | None:
+        existing = self.staging.proposal(key)
+        if not existing or existing["status"] not in {"open", "withdrawn"}:
+            return None
+        props = {"status": "withdrawn", "withdrawn_reason": reason,
+                 "withdrawn_ms": existing.get("withdrawn_ms") or now_ms()}
+        if existing.get("pr_url") and existing.get("remote_state") != "closed":
+            props["remote_state"] = "withdrawal_pending"
+        # Record the agent's intent before closing remotely, so a restart cannot mistake
+        # its own closure for a human rejection. Pending closures are retried at sync.
+        self.staging.upsert_proposal(key, props)
+        if props.get("remote_state") == "withdrawal_pending" and self.github is not None:
+            number = existing.get("pr_number") or int(existing["pr_url"].rstrip("/").split("/")[-1])
+            pr = self.github.pull(number)
+            body = pr.get("body") or ""
+            if body.startswith("> **Withdrawn by Premise v2:**"):
+                body = body.partition("\n\n")[2]
+            banner = f"> **Withdrawn by Premise v2:** {safe(reason)}. The evidence listed below is no longer current."
+            self.github.json("PATCH", f"pulls/{number}", json={"body": banner + "\n\n" + body, "state": "closed"})
+            self.staging.upsert_proposal(key, {"remote_state": "closed"})
+        return {"key": key, "state": "withdrawn", "reason": reason, "pr_url": existing.get("pr_url")}
+
     def _path(self, rel: str) -> str:
         return f"{self.prefix}/{rel}" if self.prefix else rel
 
@@ -188,9 +210,12 @@ class ProposalWriter:
         if self.github is None:
             return []
         out = []
-        rows = self.staging.c.read("MATCH (p:Proposal) WHERE p.status='open' AND p.pr_url IS NOT NULL RETURN properties(p) AS p")
-        for row in rows:
-            p = row["p"]
+        for p in self.staging.proposals("withdrawn"):
+            if p.get("remote_state") == "withdrawal_pending":
+                self.withdraw(p["key"], p["withdrawn_reason"])
+        for p in self.staging.proposals():
+            if not p.get("pr_url"):
+                continue
             pr = self.github.pull(int(p["pr_url"].rstrip("/").split("/")[-1]))
             if pr["state"] == "closed":
                 status = "merged" if pr.get("merged_at") else "rejected"

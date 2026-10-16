@@ -123,6 +123,10 @@ class Staging:
         rows = self.c.read("MATCH (p:Proposal {key:$k}) RETURN properties(p) AS p", {"k": key})
         return rows[0]["p"] if rows else None
 
+    def proposals(self, status: str = "open") -> list[dict]:
+        rows = self.c.read("MATCH (p:Proposal) WHERE p.status=$s RETURN properties(p) AS p", {"s": status})
+        return [r["p"] for r in rows]
+
     def upsert_proposal(self, key: str, props: dict) -> None:
         self.c.write("MERGE (p:Proposal {key:$k}) ON CREATE SET p.created_ms=$now SET p += $p, p.updated_ms=$now",
                      {"k": key, "p": props, "now": now_ms()})

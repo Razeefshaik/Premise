@@ -40,6 +40,7 @@ class RunSummary:
     drifts: list = field(default_factory=list)
     confirmations: int = 0
     proposals: list = field(default_factory=list)
+    withdrawals: list = field(default_factory=list)
     registry_errors: list = field(default_factory=list)
     caught_up: bool = True
     proposal_skip_reason: str = ""
@@ -145,12 +146,26 @@ class Pipeline:
         self.writer.sync_outcomes()
         drifts, confirmations = reconcile(self.staging, self.decision, self.model_root)
         self.summary.confirmations = len(confirmations)
+        current = set()
+        by_key = {d.key_id: d for d in drifts}
         for d in drifts:
             p = self.writer.write(d)
+            if p.state in {"created", "updated", "unchanged"}:
+                current.add(p.key)
             self.summary.drifts.append({"fact": d.fact, "from": d.model_value, "to": d.value, "support": d.support,
                                         "contested": d.contested, "origins": d.origins,
                                         "supporting": len(d.supporting), "disagreeing": len(d.disagreeing),
                                         "weak": len(d.weak), "as_of_unknown": d.as_of_unknown})
             self.summary.proposals.append({"key": p.key, "branch": p.branch, "state": p.state, "reason": p.reason,
                                            "verdict_preview": p.preview.get("verdict"), "pr_url": p.pr_url})
+        for existing in self.staging.proposals():
+            if existing["key"] in current:
+                continue
+            d = by_key.get(existing["key"])
+            reason = "no remaining evidence" if d is None else (
+                "evidence now has only one independent origin" if d.support == "observed"
+                else "evidence no longer supports a valid model update")
+            withdrawn = self.writer.withdraw(existing["key"], reason)
+            if withdrawn:
+                self.summary.withdrawals.append(withdrawn)
         return self.summary

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 import json
+from datetime import datetime, timezone
 
 import pytest
 
@@ -12,6 +13,7 @@ from premise_v2.propose import render_body
 from premise_v2.reconcile import reconcile
 from premise_v2.pipeline import fixture_workers
 from premise_v2.stream import EnvelopeStream
+from premise_v2.envelope import Envelope
 from test_v2_pipeline import DRIFT, FIXTURES, FakeGitHub, env, pipeline, r, stream_name
 
 
@@ -205,3 +207,87 @@ def test_dry_then_live_publishes_once_and_tracks_remote_document(r, new_graph, s
     gh.calls.clear()
     p.run(load_decision=False)
     assert not gh.calls and len(gh.prs) == 1
+
+
+def delete_support(p, *, anika_only=False):
+    d = reconcile(p.staging, p.decision, p.model_root)[0][0]
+    keys = {e["envelope_key"] for e in d.supporting if not anika_only or e["person"] == "p_anika"}
+    for key in keys:
+        item = p.staging.item(key)
+        p.stream.produce(Envelope(entity_key=key, source=item["source"], kind=item["kind"],
+                                  native_id=key.split(":", 1)[1], sequence=item["sequence"] + 1,
+                                  scope=item.get("scope"), op="delete", time=datetime.now(timezone.utc)))
+
+
+@pytest.mark.parametrize("anika_only", [False, True])
+def test_evidence_loss_withdraws_pr_without_human_rejection(r, new_graph, stream_name, anika_only):
+    gh = FakeGitHub()
+    p = pipeline(r, new_graph, stream_name, github=gh)
+    p.run()
+    delete_support(p, anika_only=anika_only)
+    s = p.run(load_decision=False)
+    if anika_only:
+        assert s.drifts[0]["support"] == "observed"
+    else:
+        assert s.drifts == []
+    stored = p.staging.proposal(DRIFT)
+    assert stored["status"] == "withdrawn"
+    reason = "evidence now has only one independent origin" if anika_only else "no remaining evidence"
+    assert stored["withdrawn_reason"] == reason and stored["withdrawn_ms"] > 0
+    assert gh.prs[1]["state"] == "closed"
+    assert gh.prs[1]["body"].startswith("> **Withdrawn by Premise v2:** " + reason)
+    assert not p.staging.rejection(DRIFT)
+    p.run(load_decision=False)
+    assert not p.staging.rejection(DRIFT)
+
+    # A fresh version of the source evidence restores eligibility and opens PR #2.
+    for w in fixture_workers(FIXTURES):
+        for e in w.fetch(None):
+            latest = p.staging.latest_version(e.entity_key)
+            data = e.model_dump(by_alias=True)
+            data.update(sequence=latest["sequence"] + 1, event_id="")
+            p.stream.produce(Envelope.model_validate(data))
+    p.run(load_decision=False)
+    assert len(gh.prs) == 2 and gh.prs[1]["state"] == "closed" and gh.prs[2]["state"] == "open"
+    stored = p.staging.proposal(DRIFT)
+    assert stored["status"] == "open" and stored["pr_number"] == 2
+    assert not p.staging.rejection(DRIFT)
+
+
+def test_dry_run_withdrawal_stays_local(r, new_graph, stream_name):
+    p = pipeline(r, new_graph, stream_name)
+    p.run()
+    delete_support(p)
+    p.run(load_decision=False)
+    stored = p.staging.proposal(DRIFT)
+    assert stored["status"] == "withdrawn" and not stored.get("pr_url")
+    assert p.writer.github is None and not p.staging.rejection(DRIFT)
+
+
+@pytest.mark.parametrize("deferred", ["dry", "interrupted"])
+def test_deferred_remote_withdrawal_is_retried_without_rejection(r, new_graph, stream_name, deferred):
+    gh = FakeGitHub()
+    p = pipeline(r, new_graph, stream_name, github=gh)
+    p.run()
+    delete_support(p)
+    original = gh.json
+    if deferred == "dry":
+        p.writer.github = None
+        p.run(load_decision=False)
+        p.writer.github = gh
+    else:
+        def fail_patch(method, path, json=None):
+            if method == "PATCH" and path.startswith("pulls/"):
+                raise RuntimeError("interrupted closure")
+            return original(method, path, json=json)
+        gh.json = fail_patch
+        with pytest.raises(RuntimeError, match="interrupted closure"):
+            p.run(load_decision=False)
+        gh.json = original
+    assert gh.prs[1]["state"] == "open"
+    assert p.staging.proposal(DRIFT)["status"] == "withdrawn"
+    assert p.staging.proposal(DRIFT)["remote_state"] == "withdrawal_pending"
+    p.run(load_decision=False)
+    assert gh.prs[1]["state"] == "closed"
+    assert p.staging.proposal(DRIFT)["remote_state"] == "closed"
+    assert not p.staging.rejection(DRIFT)
