@@ -144,6 +144,11 @@ def create_app(client=None, config=None, *, graph_api_at_ms=None, graph_node_cap
         facts, presets = scenario_presets(graph)
         return templates.TemplateResponse(request=request,name='whatif.html',context={'facts':facts,'presets':presets})
 
+    @app.get('/explore', response_class=HTMLResponse)
+    def explore(request: Request):
+        tools.guard()
+        return templates.TemplateResponse(request=request,name='explore.html',context={})
+
     @app.get("/api/health")
     def health():
         return tools.call("guarantee_health",{})

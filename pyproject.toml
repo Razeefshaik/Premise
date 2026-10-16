@@ -34,7 +34,7 @@ include = ["premise*", "premise_v2*"]
 
 [tool.setuptools.package-data]
 "premise.graph" = ["queries/*.cypher"]
-"premise.web" = ["templates/*.html", "static/*", "static/fonts/*.woff2", "static/models/*.bin"]
+"premise.web" = ["templates/*.html", "static/*", "static/fonts/*.woff2", "static/models/*.bin", "static/vendor/*"]
 "premise_v2.web" = ["templates/*.html", "static/*", "static/fonts/*.woff2"]
 
 [tool.pytest.ini_options]

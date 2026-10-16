@@ -60,6 +60,18 @@ def main():
         for preset,expected in [('S6','NEEDS_REVIEW'),('S12','NEEDS_REVIEW')]:
             page.locator(f'[data-preset="{preset}"]').click()
             page.locator('#check-verdict').filter(has_text=expected).wait_for()
+        for size in [{'width':1440,'height':1050},{'width':390,'height':844}]:
+            page.set_viewport_size(size)
+            page.goto(base+'/explore?focus=G_DEDUPE&depth=2',wait_until='networkidle')
+            page.wait_for_function('window.premiseExplorer?.cy.nodes().length >= 5')
+            position=page.evaluate("window.premiseExplorer.cy.getElementById('G_DEDUPE').renderedPosition()")
+            box=page.locator('#explorer-canvas').bounding_box()
+            page.mouse.click(box['x']+position['x'],box['y']+position['y'])
+            page.locator('#node-details').filter(has_text='Each Paylane webhook').wait_for()
+            page.locator('#cypher-drawer summary').click()
+            assert page.locator('#cypher-queries section').count()>0
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            page.screenshot(path=str(artifact/f"explorer-{size['width']}.png"),full_page=True)
         browser.close()
         report={'page_errors':errors,'console_errors':console_errors,'mermaid_svg_rendered':graph,'desktop':[1440,1050],'mobile':[390,844]}
         (artifact/'ui-check.json').write_text(json.dumps(report,indent=2))
