@@ -1,9 +1,18 @@
-"""The sole provider adapter. Bounded append-only tool loops and graph-backed replay cache."""
+"""Provider selection and the Anthropic adapter; verdicts never depend on either provider."""
 from __future__ import annotations
 
 import hashlib
 import json
 from anthropic import Anthropic
+
+
+def make_adapter(settings, graph=None):
+    if settings.llm_provider == "codex-cli":
+        from .codex_cli import CodexAdapter
+        return CodexAdapter(settings.codex_binary, settings.codex_model, graph, settings.codex_timeout_seconds)
+    if settings.llm_provider == "anthropic" and settings.anthropic_api_key:
+        return Adapter(settings.anthropic_api_key, settings.llm_model, graph)
+    raise ValueError("No model provider configured")
 
 
 def request(model, system, messages, tools=None):

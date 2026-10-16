@@ -20,7 +20,8 @@ form.addEventListener('submit', async event => {
     if (!response.ok) throw new Error(result.error || 'The graph could not answer this question.');
     append('h3', result.outcome.replaceAll('_', ' '));
     append('p', result.answer_markdown);
-    append('small', `Answer mode: ${result.mode}`);
+    append('small', `Answer mode: ${result.mode} · provider: ${result.provider || result.mode}`);
+    if (result.provider_error) append('p', `Model provider unavailable (${result.provider_error}); showing graph results.`);
     append('p', result.verification);
     for (const call of result.tool_results) {
       const details = append('details', '');

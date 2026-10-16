@@ -81,7 +81,7 @@ def create_app(client=None, config=None):
         import json
         return templates.TemplateResponse(request=request,name="brain.html",context={"health":health,"state":state,
             "orphaned":tools.call("orphaned_decisions",{}),"recent":store.recent(),
-            "warnings":json.loads(state["warnings_json"] or "[]"),"llm":bool(s.anthropic_api_key)})
+            "warnings":json.loads(state["warnings_json"] or "[]"),"llm":s.llm_enabled,"provider":s.llm_provider})
 
     @app.post("/api/ask")
     def ask(payload:Question):
