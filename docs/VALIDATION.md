@@ -5,12 +5,22 @@ Run date: October 16, 2026 (IST). Initial build checks and subsequent live check
 ## Leader review follow-up
 
 - The five supplied probes reproduced all five original behaviours before fixes: **5 passed**, 4.95 s.
-- Full host suite after the corrections: **95 passed**, 44.30 s, against real FalkorDB 4.18.3.
+- Final host suite: **96 passed**, 69.59 s, against real FalkorDB 4.18.3.
+- Final standalone Python 3.12 image suite: **96 passed**, 18.42 s, without a host source mount or `.env`.
+- Fresh-graph container startup and desktop/mobile browser rehearsal passed on a temporary local port
+  with polling disabled and no GitHub/provider credentials. Mermaid rendered; no page errors or
+  document overflow. Attestation names/dates and the derived lexical comparison were inspected.
 - Standalone scenario CLI in an isolated graph: **12/12 passed**; 275 nodes and 488 authored edges ingested.
 - Regressions cover merge-base selection, YAML review reasons and source locations, persistent error
   backoff, main-sync outage backoff, exception tracebacks, grounding limits, Markdown escaping,
   controller/executor revert guards and the URL ban. Web tests cover derived lexical terms and readable attestations.
+- The fresh-start rehearsal caught an empty-key `RO_QUERY` error after narrowing exception handling.
+  That specific server response is now treated as an uninitialized graph; other query errors still surface.
+  The additional bootstrap regression accounts for test 96. Earlier intermediate runs passed 95 tests
+  on the host (44.30 s) and Python 3.12 image (19.42 s).
 - Anthropic live calls remain untested: no provider key is configured. Token rotation remains a user action.
+- The existing app on port 8000 was not recreated with the exposed token. Replace the token and
+  run `docker compose up --build -d` to activate the final changes in that long-running app.
 
 Detailed finding dispositions are in [REVIEW_FIXES.md](REVIEW_FIXES.md).
 
