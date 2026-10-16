@@ -27,6 +27,7 @@ class ConsumeStats:
     failed: int = 0
     dead: int = 0
     reclaimed: int = 0
+    pending_after: int = 0
     errors: list[str] = field(default_factory=list)
 
 
@@ -46,14 +47,22 @@ class EnvelopeStream:
         return self.r.xadd(self.stream, {"envelope": env.to_json()})
 
     def _batches(self, consumer: str, count: int, min_idle_ms: int, stats: ConsumeStats):
-        own = self.r.xreadgroup(self.group, consumer, {self.stream: "0"}, count=count)
-        if own and own[0][1]:
+        after = "0"
+        while True:
+            own = self.r.xreadgroup(self.group, consumer, {self.stream: after}, count=count)
+            if not own or not own[0][1]:
+                break
+            after = own[0][1][-1][0]
             yield [e for e in own[0][1] if e[1]]
-        _, claimed, *_ = self.r.xautoclaim(self.stream, self.group, consumer, min_idle_ms, "0-0", count=count)
-        claimed = [e for e in claimed if e and e[1]]
-        if claimed:
-            stats.reclaimed += len(claimed)
-            yield claimed
+        cursor = "0-0"
+        while True:
+            cursor, claimed, *_ = self.r.xautoclaim(self.stream, self.group, consumer, min_idle_ms, cursor, count=count)
+            claimed = [e for e in claimed if e and e[1]]
+            if claimed:
+                stats.reclaimed += len(claimed)
+                yield claimed
+            if cursor in ("0-0", b"0-0"):
+                break
         while True:
             fresh = self.r.xreadgroup(self.group, consumer, {self.stream: ">"}, count=count)
             if not fresh or not fresh[0][1]:
@@ -64,8 +73,12 @@ class EnvelopeStream:
                 min_idle_ms: int = 60_000, max_failures: int = 3) -> ConsumeStats:
         self.ensure_group()
         stats = ConsumeStats()
+        tried = set()
         for batch in self._batches(consumer, count, min_idle_ms, stats):
             for entry_id, fields in batch:
+                if entry_id in tried:
+                    continue
+                tried.add(entry_id)
                 raw = fields.get(b"envelope") or fields.get("envelope")
                 try:
                     env = Envelope.from_json(raw)
@@ -84,6 +97,7 @@ class EnvelopeStream:
                 self.r.xack(self.stream, self.group, entry_id)
                 self.r.hdel(self.failures, entry_id)
                 stats.processed += 1
+        stats.pending_after = self.pending()
         return stats
 
     def _dead(self, entry_id, raw, reason: str, stats: ConsumeStats) -> None:

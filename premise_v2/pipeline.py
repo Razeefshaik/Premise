@@ -41,6 +41,8 @@ class RunSummary:
     confirmations: int = 0
     proposals: list = field(default_factory=list)
     registry_errors: list = field(default_factory=list)
+    caught_up: bool = True
+    proposal_skip_reason: str = ""
 
 
 def fixture_workers(fixtures: str | Path) -> list:
@@ -126,6 +128,7 @@ class Pipeline:
         self.staging.mark_processed(clean.entity_key, clean.sequence)
 
     def run(self, *, load_decision: bool = True, consumer: str = "gateway-1") -> RunSummary:
+        self.summary = RunSummary()
         self.summary.registry_errors = check_relations(self.ext.relations)
         if self.summary.registry_errors:
             return self.summary          # never run on a registry that breaks the Kind 1 lock
@@ -135,6 +138,10 @@ class Pipeline:
         self.collect()
         stats = self.stream.consume(consumer, self.handle)
         self.summary.stream = asdict(stats)
+        self.summary.caught_up = stats.pending_after == 0
+        if not self.summary.caught_up:
+            self.summary.proposal_skip_reason = "stream not caught up"
+            return self.summary
         self.writer.sync_outcomes()
         drifts, confirmations = reconcile(self.staging, self.decision, self.model_root)
         self.summary.confirmations = len(confirmations)

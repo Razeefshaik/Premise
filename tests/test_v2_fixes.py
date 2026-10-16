@@ -11,6 +11,7 @@ from premise_v2 import cli
 from premise_v2.propose import render_body
 from premise_v2.reconcile import reconcile
 from premise_v2.pipeline import fixture_workers
+from premise_v2.stream import EnvelopeStream
 from test_v2_pipeline import FIXTURES, FakeGitHub, env, pipeline, r, stream_name
 
 
@@ -135,3 +136,55 @@ def test_noop_edit_advances_version_before_late_older_edit(r, new_graph, stream_
     assert latest["sequence"] == 3 and latest["processed"]
     claims = p.staging.active_claims()
     assert [(c["value"], c["sequence"]) for c in claims] == [(72, 1)]
+
+
+@pytest.mark.parametrize("consumer", ["A", "B"])
+def test_recovery_drains_all_pending_pages(r, stream_name, consumer):
+    s = EnvelopeStream(r, stream=stream_name, dead=f"{stream_name}:dead", failures=f"{stream_name}:failures")
+    s.ensure_group()
+    for n in range(201):
+        s.produce(env("entry", key=f"slack:C1:{n}.0"))
+    r.xreadgroup(s.group, "A", {stream_name: ">"}, count=201)
+    seen = []
+    stats = s.consume(consumer, lambda e: seen.append(e.entity_key), count=100, min_idle_ms=0)
+    assert len(seen) == len(set(seen)) == stats.processed == 201
+    assert stats.pending_after == s.pending() == 0
+    if consumer == "B":
+        assert stats.reclaimed == 201
+
+
+def test_poison_is_tried_once_per_run_while_good_entries_complete(r, stream_name):
+    s = EnvelopeStream(r, stream=stream_name, dead=f"{stream_name}:dead", failures=f"{stream_name}:failures")
+    s.produce(env("poison"))
+    for n in range(50):
+        s.produce(env("good", key=f"slack:GOOD:{n}.0"))
+    attempts, good = [], []
+
+    def handle(e):
+        if e.text == "poison":
+            attempts.append(e.entity_key)
+            raise RuntimeError("poison")
+        good.append(e.entity_key)
+
+    for run in range(3):
+        stats = s.consume("A", handle, count=10, min_idle_ms=0)
+        assert len(attempts) == run + 1
+        assert stats.failed == 1 and len(good) == 50
+        assert stats.pending_after == (0 if run == 2 else 1)
+    assert r.xlen(s.dead) == 1
+
+
+def test_pending_stream_prevents_proposals_until_caught_up(r, new_graph, stream_name):
+    gh = FakeGitHub()
+    p = pipeline(r, new_graph, stream_name, github=gh)
+    p.stream.ensure_group()
+    p.stream.produce(env("temporarily unavailable item"))
+    r.xreadgroup(p.stream.group, "other-consumer", {stream_name: ">"}, count=1)
+    s = p.run()
+    assert s.proposals == [] and not gh.calls and not gh.prs
+    assert not s.caught_up and s.stream["pending_after"] == 1
+    assert s.proposal_skip_reason == "stream not caught up"
+    p.stream.consume("other-consumer", p.handle)
+    s = p.run(load_decision=False)
+    assert s.caught_up and s.stream["pending_after"] == 0
+    assert len(gh.prs) == 1
