@@ -10,6 +10,12 @@ Without an Anthropic key, show deterministic mode and MCP graph tools honestly.
 If `PUBLIC_BASE_URL` is localhost, explicitly say the assessment page runs locally;
 GitHub's Details link will only open it on the machine running Premise.
 
+On `feat/local-codex-cli`, a real Codex-backed API and fix-controller rehearsal has now
+passed. Follow [LOCAL_CODEX.md](LOCAL_CODEX.md) to launch the host app on port 8001.
+That branch can demonstrate Codex answers and a graph-verified Codex repair; it does not
+establish a live Anthropic call, an external MCP-client rehearsal, or a Codex-authored remote
+fix PR. Keep those claims separate when recording.
+
 | Time | Show | Say / do |
 | --- | --- | --- |
 | 0:00–0:15 | ADR-007 source | Decisions promise guarantees; guarantees need assumptions. Show G_DEDUPE and the current attestation. |

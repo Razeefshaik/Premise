@@ -2,6 +2,44 @@
 
 Run date: October 16, 2026 (IST). Initial build checks and subsequent live checks are distinguished below.
 
+## Optional local Codex branch
+
+Branch `feat/local-codex-cli` starts from `main` commit `8bf6202`. The native CLI provider
+is opt-in; the default Anthropic provider and its request rules are preserved.
+
+| Check | Actual result |
+| --- | --- |
+| Full Windows host suite | **117 passed**, 50.30 s |
+| Standalone Python 3.12 image, real FalkorDB | **117 passed**, 23.05 s; no host source mount or login required |
+| Deterministic CLI scenarios, separate graph | **12/12 passed** |
+| Native CLI used for live calls | **codex-cli 0.162.0-alpha.17.2**, resolved from the installed executable on PATH |
+| Live `/api/ask` health question | **llm / codex-cli**, load-bearing and guarantee-health tools, cited sources; 28.67 s |
+| Live `/api/ask` decision question | **llm / codex-cli**, resolution, lineage and evidence search, cited sources; 36.34 s |
+| Live `/api/ask` expertise question | **llm / codex-cli**, resolution and ownership evidence, cited sources; 28.39 s |
+| Live S1 fix controller | Called `violation_context`, then `test_fix`; TTL 72 plus Redis max 72 returned **all_hold=true** and was accepted as **verified / llm** |
+| Full live rehearsal | **success=true**, 121.28 s; fresh isolated graph, no replayed model steps or GitHub writes |
+| Windows launcher / actual browser | Host app on port 8001 with a separate graph; accepted answer displayed **provider: codex-cli**. Desktop 1440x1050 and mobile 390x844 passed, no page errors or overflow, Mermaid rendered |
+
+The live repair prompt excluded the existing deterministic fix candidates. The controller
+accepted only the identical changes map actually tested in that session. Raw tool rows and
+provider usage events were real; no model identity beyond the requested CLI default is claimed.
+Exact-request replay remains distinct from provider-side cached input tokens.
+
+The first rehearsal correctly fell back when prose did not pass the conservative verifier.
+Inspection found a false rejection of a guarantee *depending on an unverified assumption*.
+The verifier now checks that assumption state against the assumption, while still rejecting
+an explicit claim that a holding guarantee is unverified. Three regression cases cover the
+distinction; health wording is also constrained in the prompt. The final full rehearsal above
+passed with all three answers accepted, rather than counting fallback as model success.
+
+Evidence files are ignored artifacts: `codex-rehearsal.json`,
+`codex-rehearsal-before-health-fix.json`, `codex-diagnose.json`, `codex-ui-check.json`,
+and `codex-*.png`. Tests for process timeout/output bounds, secret-free child environments,
+tool allowlists/budgets, exact replay, rejected outputs and provider fallback need no Codex login.
+The local CLI is not bundled into Docker. Live Anthropic compatibility, interactive external
+MCP client setup and a Codex-backed remote GitHub PR write were not tested by this rehearsal.
+See [LOCAL_CODEX.md](LOCAL_CODEX.md) to run the branch locally.
+
 ## Leader review follow-up
 
 - The five supplied probes reproduced all five original behaviours before fixes: **5 passed**, 4.95 s.

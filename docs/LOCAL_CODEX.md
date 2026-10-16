@@ -86,6 +86,13 @@ deletes an isolated graph, makes no GitHub writes, and saves evidence in ignored
 `artifacts/codex-rehearsal.json`. A deterministic fallback does not count as a passing
 live model test. The normal test suite never starts Codex or requires a model login.
 
+The October 16 rehearsal passed all three model-backed API answers and a complete S1
+repair through the real CLI and FalkorDB. The CLI used was `0.162.0-alpha.17.2`, resolved
+from the installed native binary; an optional `CODEX_BINARY` can pin a different executable.
+The model was the CLI default, not an asserted specific model identity. Full Windows and
+Python 3.12 container suites both passed 117 tests. See [VALIDATION.md](VALIDATION.md)
+for exact timings and the initial verifier false rejection found during live testing.
+
 To exercise real GitHub polling with this provider later, first stop the Docker app's
 poller, replace any previously exposed token and deliberately run the launcher with
 `-PollGitHub`. That option enables real statuses/comments and verified fix PRs using
