@@ -8,7 +8,8 @@ changes a fact; FalkorDB traces the consequences, routes review, and verifies re
 before any fix PR can be opened.
 
 Built for WeMakeDevs × FalkorDB Graph Hacks: **Track 1, Agents That Act on Connected Data**,
-and **Track 3, Company Brain**. If only one track is allowed, use Track 1.
+and **Track 3, Company Brain**. Name both tracks when submitting; the
+[official rules](https://www.wemakedevs.org/hackathons/falkordb/rules) allow entering multiple tracks.
 The authoritative design is [Revision 2](docs/Premise_Implementation_Spec.md).
 
 [Product repository](https://github.com/Razeefshaik/Premise) ·
@@ -140,6 +141,8 @@ FalkorDB holds domain data, graph revisions, PR cursors, assessments, action his
 LLM replay cache. Git checkouts and deployment configuration are files, not a second
 application database. The replay cache lives in FalkorDB to honor locked decision D6;
 this deliberately resolves the spec's later suggestion of a disk cache in favor of D6.
+It is an exact-request replay cache: the payload includes the assessment's `now_ms`, so
+new assessments normally have different keys. It does not guarantee repeatable model prose.
 If the graph is unavailable or ingesting, assessment is ERROR, the commit status is
 `error`, and no comment or fix PR is permitted.
 
@@ -223,7 +226,10 @@ require an actual provider call with your key. No such successful call is claime
 
 Analyst outcomes distinguish sourced answers, assessment memory, unknown entities and
 topics absent from the graph. IDs must exist in tool results; model-authored links are
-rejected and citations come from server rows. The deterministic fallback shows the graph
+rejected and citations come from server rows. A model answer requires its own tool calls;
+fallback reads cannot validate it. Explicit health words are checked conservatively against
+returned states. Other prose claims are not verified, and the UI labels that limit.
+The deterministic fallback shows the graph
 evidence and its limitations. Source text is quoted untrusted data, never tool instructions.
 
 The nine shared read tools are `resolve`, `decision_lineage`, `guarantee_health`,
@@ -284,11 +290,22 @@ The local web interface has no authentication and binds to loopback through Comp
 public deployment needs an access-control boundary. Mermaid uses a pinned CDN version,
 with readable graph text available if offline. Hosted status links require a public URL.
 
-Live GitHub red-to-green testing, branch protection, provider calls, Claude Desktop UI,
-recording/uploading the demo, and submission remain explicit external rehearsal steps.
+The real GitHub red-to-green rehearsal succeeded: the user merged fix PR #2 into PR #1's
+branch, and PRs #1 and #3 reported success. Branch protection, live provider calls,
+interactive MCP client setup, recording/uploading the demo, and submission remain pending.
 The local reset command deliberately does not force-reset remote scenario branches.
 The fictional dataset includes 20 tickets, 40 chat messages and four runbooks. The added
 text preserves the flagship decision lexical gap and the original reviewer-evidence counts.
+
+PR intake selects edits by comparing fact values at the PR head and merge base, then applies
+only those edits to the current main facts. Malformed YAML produces `R_UNPARSEABLE` and
+requires review, with a source location. Other files can still be assessed, but no fix is
+offered for incomplete intake. Unexpected failures retain tracebacks in application logs;
+error cursors retry after 60 seconds with exponential backoff capped at 15 minutes.
+
+Share tracked source with `git archive --format=zip --output premise-source.zip HEAD`;
+do not zip the workspace. `.env` is ignored by Git but ordinary folder ZIPs still include it.
+Any credential included in a previously shared ZIP must be revoked and replaced by its owner.
 
 ## Attribution and AI use
 

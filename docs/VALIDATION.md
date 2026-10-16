@@ -2,6 +2,18 @@
 
 Run date: October 16, 2026 (IST). Initial build checks and subsequent live checks are distinguished below.
 
+## Leader review follow-up
+
+- The five supplied probes reproduced all five original behaviours before fixes: **5 passed**, 4.95 s.
+- Full host suite after the corrections: **95 passed**, 44.30 s, against real FalkorDB 4.18.3.
+- Standalone scenario CLI in an isolated graph: **12/12 passed**; 275 nodes and 488 authored edges ingested.
+- Regressions cover merge-base selection, YAML review reasons and source locations, persistent error
+  backoff, main-sync outage backoff, exception tracebacks, grounding limits, Markdown escaping,
+  controller/executor revert guards and the URL ban. Web tests cover derived lexical terms and readable attestations.
+- Anthropic live calls remain untested: no provider key is configured. Token rotation remains a user action.
+
+Detailed finding dispositions are in [REVIEW_FIXES.md](REVIEW_FIXES.md).
+
 ## Live follow-up: repeated assessment status repair
 
 The live PR #3 assessment correctly returned CLEAR_WITHIN_SCOPE, but GitHub remained
@@ -33,7 +45,7 @@ The initial build record below predates those user-run live rehearsals.
 | Scenario CLI | **12/12 passed** |
 | FalkorDB module | `MODULE LIST` and startup logs confirm **4.18.3** |
 | GitHub account and both repositories | Authenticated GET requests succeeded; account `Razeefshaik`, both repo lookups HTTP 200 |
-| Remote writes / pushes | **None**, per user's instruction to push manually |
+| Remote writes / pushes during initial build | **None**; subsequent real rehearsal is documented above; the user pushes manually |
 | Anthropic live calls | **Not run**; no provider key configured |
 | Video / hackathon submission | **Not recorded or submitted** |
 
@@ -75,8 +87,7 @@ supersede that interrupted run. No passing claim is made from the interrupted ex
 
 Still required after manual publication:
 
-1. S1 real PR failure, exact comment evidence, one real stacked fix PR, manual merge and
-   original PR success; S2 real PR success (T20).
+1. Revoke and replace the token exposed in the shared workspace ZIP; push the local fixes.
 2. Required `premise/decisions` status configured on sandbox `main`, if the token/account
    has administration access.
 3. Live model/API compatibility with the configured model and key; deterministic mode

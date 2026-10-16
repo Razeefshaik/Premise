@@ -170,6 +170,23 @@ def test_unexpected_reasoning_error_logs_traceback(kestrel,monkeypatch,caplog):
     assert any(record.exc_info for record in caplog.records)
 
 
+def test_fresh_graph_bootstraps_without_hiding_query_bugs(new_graph,monkeypatch):
+    from premise import bootstrap
+    from premise.reasoning.assess import graph_ready
+    from redis.exceptions import ResponseError
+    client=new_graph()
+    assert graph_ready(client)[0] is False
+    monkeypatch.setattr(bootstrap,'GraphClient',lambda *args:client)
+    monkeypatch.setattr(bootstrap,'settings',lambda:replace(Settings(),poll_enabled=False,
+        sandbox_dir=str(SANDBOX),anthropic_api_key=''))
+    starts=[]
+    monkeypatch.setattr(bootstrap.uvicorn,'run',lambda *args,**kwargs:starts.append(kwargs))
+    bootstrap.main()
+    assert graph_ready(client)[0] and starts[0]['port']==8000
+    with pytest.raises(ResponseError):
+        client.read('THIS IS NOT CYPHER')
+
+
 @pytest.mark.parametrize('text,valid',[
     ('G_DEDUPE holds.',True),
     ('G_DEDUPE is broken.',False),

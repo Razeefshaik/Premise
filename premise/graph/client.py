@@ -12,6 +12,7 @@ from typing import Any
 from falkordb import FalkorDB
 from redis.exceptions import ConnectionError as RedisConnectionError
 from redis.exceptions import TimeoutError as RedisTimeoutError
+from redis.exceptions import ResponseError as RedisResponseError
 
 QUERY_DIR = Path(__file__).parent / "queries"
 _OUTAGE = (RedisConnectionError, RedisTimeoutError, ConnectionError, TimeoutError, OSError)
@@ -59,6 +60,12 @@ class GraphClient:
             return self._to_dicts(self.graph.ro_query(cypher, params or {}))
         except _OUTAGE as exc:
             raise GraphUnavailable(str(exc)) from exc
+        except RedisResponseError as exc:
+            # RO_QUERY cannot create a missing graph. This is an expected fresh-start
+            # condition, unlike a malformed query or other unexpected server error.
+            if str(exc) == "Invalid graph operation on empty key":
+                raise GraphUnavailable("Graph has not been initialized") from exc
+            raise
 
     def named(self, name: str, params: dict | None = None) -> list[dict[str, Any]]:
         return self.read(query_text(name), params)

@@ -19,3 +19,9 @@ The implemented board avoids a generic grid of KPI cards because scores are not 
 the verdict model. PageRank orders the guarantees but never replaces prerequisite health.
 Forms have labels, loading and error feedback, keyboard focus styles, and no automatic
 motion. Mermaid's readable text remains available when its CDN is unavailable.
+
+Analyst responses label model summaries separately from deterministic prose. Model IDs and
+explicit health words are checked against tool rows; other prose claims are not verified.
+Manual attestation evidence displays the person's name and UTC dates rather than epoch
+milliseconds. The lexical comparison derives its query terms from changed fact identifiers,
+so it applies beyond the flagship S1 demonstration.

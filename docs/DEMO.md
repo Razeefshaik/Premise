@@ -3,6 +3,13 @@
 Use `docs/PUBLISH.md` to publish and run the sandbox rehearsal first. This is a script, not
 evidence that a live GitHub rehearsal or video recording has already happened.
 
+The first live GitHub rehearsal has since succeeded (see `VALIDATION.md`), but no video
+has been recorded. The demonstrated repair used deterministic graph-verified search.
+Do not say that Claude proposed it unless a real provider run has been completed.
+Without an Anthropic key, show deterministic mode and MCP graph tools honestly.
+If `PUBLIC_BASE_URL` is localhost, explicitly say the assessment page runs locally;
+GitHub's Details link will only open it on the machine running Premise.
+
 | Time | Show | Say / do |
 | --- | --- | --- |
 | 0:00–0:15 | ADR-007 source | Decisions promise guarantees; guarantees need assumptions. Show G_DEDUPE and the current attestation. |

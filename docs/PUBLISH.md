@@ -1,8 +1,24 @@
 # Morning publishing handoff
 
-The user asked to keep commits local and will push manually. No remote push, sandbox PR,
-status, comment, branch protection change, or fix PR was executed during this build.
-Read-only GitHub authentication confirmed the `Razeefshaik` account and access to both repos.
+The user asked to keep commits local and pushes manually. Since the initial build, the user
+published both repos and completed the live PR rehearsal: fix PR #2 was merged into PR #1's
+branch, and PRs #1 and #3 reported success. Later local fixes must still be pushed.
+Branch protection is not confirmed. See `VALIDATION.md` for dated evidence.
+
+## Replace the exposed token and package safely
+
+A previously shared workspace ZIP included `.env`. Revoke that GitHub token in your account
+settings and create a replacement scoped to the sandbox permissions below. Update local
+`.env`, then recreate the app so it receives the replacement. Git ignore does not protect
+credentials when you ZIP the whole folder. Token rotation has not been performed by the agent.
+
+After committing, produce an archive containing tracked source only:
+
+```powershell
+git archive --format=zip --output ../premise-source.zip HEAD
+```
+
+This excludes `.env`, `.venv`, runtime clones, screenshots, package metadata and test caches.
 
 ## 1. Push the product
 
@@ -75,5 +91,5 @@ may restrict this. No successful configuration is assumed.
 - Record the real red-to-green demonstration, at most three minutes; follow `docs/DEMO.md`.
 - Verify the video plays while logged out. No recorded video is included in this repository.
 - Configure the MCP server in your client and try the three demo questions.
-- Confirm track eligibility with the organizers; the spec chooses Track 1 if only one is allowed.
+- Name both Track 1 and Track 3; the [official rules](https://www.wemakedevs.org/hackathons/falkordb/rules) allow multiple tracks, superseding the spec's D11 contingency.
 - Submit the entry yourself. The agent has not registered a team or submitted anything.
