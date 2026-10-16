@@ -20,6 +20,9 @@ from .extract import FactClaimExtractor, body_of, ground
 from .gateway import Gateway
 from .normalize import to_kif
 from .identity import IdentityDirectory
+from .extract.base import ExtractionRunner
+from .extract.attestation import AttestationExtractor
+from .challenges import ChallengeWriter
 from .propose import ProposalWriter
 from .reconcile import reconcile
 from .registry import Ext, check_relations
@@ -49,6 +52,8 @@ class RunSummary:
     proposal_skip_reason: str = ""
     connector_failures: list = field(default_factory=list)
     identity_proposals: list = field(default_factory=list)
+    extraction: dict = field(default_factory=dict)
+    challenges: list = field(default_factory=list)
 
 
 def fixture_workers(fixtures: str | Path) -> list:
@@ -65,7 +70,7 @@ def fixture_workers(fixtures: str | Path) -> list:
 class Pipeline:
     def __init__(self, r: redis.Redis, staging: GraphClient, decision: GraphClient, model_root: str | Path,
                  workers: list, out_dir: str | Path | None = None, github=None, model_prefix: str = "",
-                 stream_name: str = "premise:v2:raw"):
+                 stream_name: str = "premise:v2:raw", adapter=None, llm_provider="none", model_budget=40, issue_github=None):
         self.model_root = Path(model_root)
         self.ext = Ext.load(self.model_root)
         self.staging = Staging(staging)
@@ -77,6 +82,8 @@ class Pipeline:
         self.extractor = FactClaimExtractor(self.ext)
         self.writer = ProposalWriter(self.staging, decision, self.model_root, out_dir, github, model_prefix=model_prefix)
         self.summary = RunSummary()
+        self.adapter, self.llm_provider, self.model_budget = adapter, llm_provider, model_budget
+        self.issue_github = issue_github
 
     # ---- stages ------------------------------------------------------------------------------------
     def load_decision_graph(self, commit_sha: str = "local") -> None:
@@ -175,6 +182,12 @@ class Pipeline:
         if not self.summary.caught_up:
             self.summary.proposal_skip_reason = "stream not caught up"
             return self.summary
+        runner = ExtractionRunner(self.staging, [AttestationExtractor(self.decision)], self.adapter,
+                                  self.llm_provider, self.model_budget)
+        self.summary.extraction = runner.run(self.staging.items())
+        challenges = ChallengeWriter(self.staging, self.decision, self.model_root, self.writer.out, self.issue_github).run()
+        self.summary.challenges = [{k: c[k] for k in ("key", "assumption", "support", "contested", "origins", "reviewers", "issue_url") if k in c}
+                                   for c in challenges]
         self.writer.sync_outcomes()
         drifts, confirmations = reconcile(self.staging, self.decision, self.model_root)
         self.summary.confirmations = len(confirmations)

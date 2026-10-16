@@ -18,8 +18,8 @@ import hashlib
 import re
 from dataclasses import asdict, dataclass
 
-from .envelope import Envelope
-from .registry import Ext
+from ..envelope import Envelope
+from ..registry import Ext
 
 UNITS = {
     "ms": ("time", 0.001), "millisecond": ("time", 0.001), "milliseconds": ("time", 0.001),

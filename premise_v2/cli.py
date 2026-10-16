@@ -41,6 +41,9 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--model-prefix", default="", help="path of the model repo inside the GitHub repo")
     run.add_argument("--github-source", action="append", default=[], metavar="OWNER/REPO", help="read-only GitHub evidence source")
     run.add_argument("--pages", action="append", default=[], metavar="FOLDER", help="read markdown exports")
+    run.add_argument("--llm-provider", choices=["none", "codex-cli"], default=s.llm_provider if s.llm_provider == "codex-cli" else "none")
+    run.add_argument("--model-budget", type=int, default=40)
+    run.add_argument("--open-challenges", action="store_true", help="publish attestation issues (requires V2_OPEN_ISSUES=true)")
     sub.add_parser("registry-check")
     ev = sub.add_parser("eval")
     ev.add_argument("--fixtures", default="fixtures/v2")
@@ -90,6 +93,18 @@ def _execute(args: argparse.Namespace, s) -> int:
             return 1
         from premise.github.api import GitHub
         github = GitHub(s.sandbox_repo, s.github_token)
+    issue_github = None
+    if args.open_challenges:
+        if os.getenv("V2_OPEN_ISSUES", "false").lower() != "true" or not s.github_token:
+            print("live issues need V2_OPEN_ISSUES=true and GITHUB_TOKEN", file=sys.stderr)
+            return 1
+        from premise.github.api import GitHub
+        issue_github = GitHub(s.sandbox_repo, s.github_token)
+    adapter = None
+    if args.llm_provider == "codex-cli":
+        from dataclasses import replace
+        from premise.agent.llm import make_adapter
+        adapter = make_adapter(replace(s, llm_provider="codex-cli"))
     from .connectors import GitHubConnector, PagesConnector
     from premise.github.api import GitHub
     sources = [GitHub(repo, s.github_token) for repo in args.github_source]
@@ -97,12 +112,15 @@ def _execute(args: argparse.Namespace, s) -> int:
     workers += [PagesConnector(path) for path in args.pages]
     try:
         summary = Pipeline(r, staging, decision, args.model, workers, args.out, github,
-                           model_prefix=args.model_prefix).run()
+                           model_prefix=args.model_prefix, adapter=adapter, llm_provider=args.llm_provider,
+                           model_budget=args.model_budget, issue_github=issue_github).run()
     finally:
         for client in sources:
             client.close()
         if github is not None:
             github.close()
+        if issue_github is not None:
+            issue_github.close()
     print(json.dumps(summary.__dict__, indent=2, default=str))
     return 1 if summary.registry_errors else 0
 

@@ -80,6 +80,40 @@ class Staging:
         rows = self.c.read("MATCH (i:Item {key:$k}) RETURN properties(i) AS p", {"k": key})
         return rows[0]["p"] if rows else None
 
+    def items(self) -> list[dict]:
+        rows = self.c.read("MATCH (i:Item) WHERE NOT i.deleted RETURN properties(i) AS p ORDER BY i.key")
+        items = []
+        for row in rows:
+            item = dict(row["p"])
+            item["body"] = f"{item['title']}\n{item['text']}" if item.get("title") else item.get("text", "")
+            item["account"] = item.get("account") or item.get("person")
+            items.append(item)
+        return items
+
+    def extractions(self, extractor: str) -> list[dict]:
+        rows = self.c.read("MATCH (e:Extraction)-[:CITES]->(i:Item) WHERE e.extractor=$name AND e.grounded "
+                           "AND NOT i.deleted AND e.sequence=i.sequence RETURN properties(e) AS e, properties(i) AS i",
+                           {"name": extractor})
+        out = []
+        for row in rows:
+            c = dict(row["e"])
+            item = row["i"]
+            c.update(data=json.loads(c["data_json"]), envelope_key=item["key"], item_thread=item.get("thread"),
+                     item_text=(f"{item['title']}\n" if item.get("title") else "") + item.get("text", ""),
+                     source=item.get("source"), container=item.get("container"), visibility=item.get("visibility"), url=item.get("url"))
+            out.append(c)
+        return out
+
+    def upsert_review(self, key: str, kind: str, title: str, data: dict, status="open") -> None:
+        self.c.write("MERGE (r:ReviewItem {key:$k}) ON CREATE SET r.created_ms=$now "
+                     "SET r.kind=$kind, r.title=$title, r.data_json=$data, r.status=$status, r.updated_ms=$now",
+                     {"k": key, "kind": kind, "title": title, "data": json.dumps(data), "status": status, "now": now_ms()})
+
+    def review_items(self, kind: str | None = None, status: str = "open") -> list[dict]:
+        rows = self.c.read("MATCH (r:ReviewItem) WHERE r.status=$status AND ($kind IS NULL OR r.kind=$kind) "
+                           "RETURN properties(r) AS r ORDER BY r.key", {"kind": kind, "status": status})
+        return [dict(row["r"], data=json.loads(row["r"]["data_json"])) for row in rows]
+
     # ---- claims ------------------------------------------------------------------------------------
     def retract_claims(self, key: str, reason: str, below_sequence: int | None = None) -> None:
         self.c.write("MATCH (c:Claim {envelope_key:$k}) WHERE c.retracted IS NULL AND ($seq IS NULL OR c.sequence < $seq) "
