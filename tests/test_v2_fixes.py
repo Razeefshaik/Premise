@@ -71,3 +71,18 @@ def test_private_quotes_withheld_in_every_section(r, new_graph, stream_name, tmp
         body = render_body(d, prev, {})
         assert not any(marker in body for marker in ("PrivateSupportSentinel", "PrivateDenialSentinel", "PrivateWeakSentinel"))
         assert body.count("(private source; quote withheld)") == 3
+
+
+def test_slack_root_and_reply_are_one_origin(r, new_graph, stream_name):
+    p = pipeline(r, new_graph, stream_name)
+    p.workers = []
+    p.staging.setup()
+    p.load_decision_graph()
+    root = "slack:C1:1.0"
+    p.handle(env("Paylane now retries for 72 hours.", key=root, user="U01ANIKA"))
+    p.handle(env("Yes, Paylane retries for 72 hours.", key="slack:C1:2.0", user="U01RAVI", thread=root))
+    assert len(p.staging.active_claims()) == 2
+    s = p.run(load_decision=False)
+    assert s.drifts[0]["support"] == "observed"
+    assert s.drifts[0]["origins"] == [[root, "slack:C1:2.0"]]
+    assert s.proposals[0]["state"] == "skipped"

@@ -88,8 +88,7 @@ def _origins(claims: list[dict], items_by_ref: dict[str, str]) -> list[list[str]
         k = c["envelope_key"]
         uf.find(k)
         uf.union(k, f"person:{c['person']}")
-        if c.get("item_thread"):
-            uf.union(k, f"thread:{c['item_thread']}")
+        uf.union(k, f"thread:{c.get('item_thread') or k}")
         for ref in TICKET_REF.findall(c.get("item_text") or ""):
             target = items_by_ref.get(ref)
             if target and target != k:
