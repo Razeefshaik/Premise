@@ -50,6 +50,11 @@ the corresponding proposed file values in memory. HTTP `POST /api/check` accepts
 `{changes:[...]}` or `{files:{...}}`; invalid/untracked HTTP requests return 422, with
 untracked proposals still represented as NEEDS_REVIEW in the returned result.
 
+Open `/what-if` for a read-only browser preflight. Presets fill hypothetical values;
+Apply fix adds the verified repair to the proposal and rechecks it. The URL stores the
+proposal as repeated `set` parameters so it can be shared on a reachable deployment.
+Nothing is saved or posted, and external facts are explicitly labelled.
+
 ## The useful distinction
 
 ADR-007 promises both deduplication and fast acknowledgement. ADR-012 depends on

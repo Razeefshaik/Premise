@@ -4,6 +4,13 @@ Run date: October 16, 2026 (IST). Initial build checks and subsequent live check
 
 ## F1 preflight feature merge gate
 
+F2 subsequently passed **145 tests** (52.70 s), **12/12 CLI scenarios**, and the extended
+desktop/mobile browser gate (`artifacts/f2-merge/`). `/what-if` displays 12 registered
+facts and four source-loaded presets. The browser verified S1 BLOCKED, four non-holding
+guarantees, Jun Park by name, rendered Mermaid, Apply fix turning CLEAR, URL reload,
+and S6/S12 requiring review. Repeated HTTP calls preserve graph counts and GraphState.
+An initial mobile overflow in hidden table labels was corrected before the passing gate.
+
 `feat/check-change`: **143 tests passed** (47.42 s), **12/12 CLI scenarios passed**,
 and the desktop/mobile browser script passed against an isolated graph on port 8002.
 The official MCP stdio test lists 11 tools and executes a real S1 `check_change`.

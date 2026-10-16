@@ -40,6 +40,24 @@ def main():
         page.goto(base+'/',wait_until='networkidle')
         page.screenshot(path=str(artifact/'brain-mobile.png'),full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
+        page.set_viewport_size({'width':1440,'height':1050})
+        page.goto(base+'/what-if?set=paylane.retry_window_hours=72',wait_until='networkidle')
+        page.locator('#check-verdict').filter(has_text='BLOCKED').wait_for()
+        page.locator('#whatif-graph svg').wait_for()
+        assert page.locator('#whatif-guarantees tbody tr').count()==4
+        assert 'Jun Park' in page.locator('#whatif-decisions').inner_text()
+        page.screenshot(path=str(artifact/'whatif-desktop.png'),full_page=True)
+        page.set_viewport_size({'width':390,'height':844})
+        page.screenshot(path=str(artifact/'whatif-mobile.png'),full_page=True)
+        assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth'), page.evaluate("({width:innerWidth,scroll:document.documentElement.scrollWidth,children:[...document.body.children].map(e=>({tag:e.tagName,id:e.id,cls:String(e.className),right:e.getBoundingClientRect().right,width:e.getBoundingClientRect().width})),overflow:[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>innerWidth && !e.closest('.table-wrap')).map(e=>({tag:e.tagName,id:e.id,cls:String(e.className),right:e.getBoundingClientRect().right})).slice(0,20)})")
+        page.get_by_role('button',name='Apply fix',exact=True).first.click()
+        page.locator('#check-verdict').filter(has_text='CLEAR_WITHIN_SCOPE').wait_for()
+        assert 'redis.max_ttl_hours' in page.url
+        page.reload(wait_until='networkidle')
+        page.locator('#check-verdict').filter(has_text='CLEAR_WITHIN_SCOPE').wait_for()
+        for preset,expected in [('S6','NEEDS_REVIEW'),('S12','NEEDS_REVIEW')]:
+            page.locator(f'[data-preset="{preset}"]').click()
+            page.locator('#check-verdict').filter(has_text=expected).wait_for()
         browser.close()
         report={'page_errors':errors,'mermaid_svg_rendered':graph,'desktop':[1440,1050],'mobile':[390,844]}
         (artifact/'ui-check.json').write_text(json.dumps(report,indent=2))

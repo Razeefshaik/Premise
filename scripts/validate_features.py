@@ -30,7 +30,10 @@ def main():
         if result.returncode:
             raise RuntimeError(label+' failed')
     try:
-        run('tests',['-m','pytest','-q'])
+        if '--browser-only' not in sys.argv:
+            run('tests',['-m','pytest','-q'])
+        else:
+            report['browser_only']=True
         run('seed',['-m','premise.cli','--graph',name,'demo'])
         run('scenarios',['-m','premise.cli','--graph',name,'scenarios'])
         with (artifact/'server.log').open('wb') as log:

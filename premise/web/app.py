@@ -18,6 +18,7 @@ from ..agent.analyst import answer_question
 from ..agent.render import mermaid, provenance, render_comment
 from ..github.store import Store
 from ..reasoning.preflight import ChangeArgs, FileArgs
+from ..reasoning.models import AssessmentResult, GuaranteeResult
 
 ROOT = Path(__file__).parent
 templates = Jinja2Templates(directory=str(ROOT/"templates"))
@@ -97,7 +98,31 @@ def create_app(client=None, config=None):
             raise HTTPException(422, 'Invalid hypothetical proposal') from exc
         if any(r['code'] == 'R_UNTRACKED' for r in result['reasons']):
             return JSONResponse(result, status_code=422)
+        if result['verdict'] == 'ERROR':
+            return JSONResponse(result, status_code=503)
+        visual = AssessmentResult(verdict=result['verdict'], guarantees=[GuaranteeResult(**g) for g in result['not_holding']])
+        result['mermaid'] = mermaid(visual)
+        result['mermaid'] += '\n  classDef broken fill:#fae5e8,stroke:#a73146\n  classDef unknown fill:#fff0d2,stroke:#785412\n  classDef holds fill:#dfefe7,stroke:#24634d'
+        for g in result['not_holding']:
+            nodes = ','.join(dict.fromkeys(re.sub(r'[^A-Za-z0-9_]', '_', node) for node in [g['id'], *g['chain']]))
+            result['mermaid'] += f"\n  class {nodes} {g['status']}"
+        if not result['not_holding']:
+            result['mermaid'] += '\n  class clear holds'
+        result['names'] = {p['id']:p['name'] for p in graph.read('MATCH (p:Person) RETURN p.id AS id, p.name AS name')}
         return result
+
+    @app.get('/what-if', response_class=HTMLResponse)
+    def what_if(request: Request):
+        from ..scenarios import load_scenarios
+        tools.guard()
+        facts = graph.named('registered_facts')
+        lookup = {(f['file'],f['key']):f['id'] for f in facts}
+        data = load_scenarios(Path(__file__).resolve().parents[2]/'scenarios/scenarios.yaml')
+        presets = [{'id':key,'title':data['scenarios'][key]['title'],
+                    'values':{lookup[(p['file'],p['key'])]:p['value'] for p in data['scenarios'][key]['patches']
+                              if p['op']=='set' and (p['file'],p['key']) in lookup}}
+                   for key in ['S1','S1_FIXED','S6','S12']]
+        return templates.TemplateResponse(request=request,name='whatif.html',context={'facts':facts,'presets':presets})
 
     @app.get("/api/health")
     def health():
