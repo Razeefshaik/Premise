@@ -85,6 +85,19 @@ def test_missing_knowledge_graph_is_reported_without_inventing_zero_counts(new_g
         assert "No evidence waiting for review" in http.get("/").text
 
 
+def test_dismissed_finding_returns_only_when_evidence_is_newer(new_graph):
+    app, staging, decision, knowledge = setup(new_graph)
+    staging.reject("review:test", "test", "", "dismissed", at_ms=1000)
+    with TestClient(app) as http:
+        assert "Review retry policy" not in http.get("/").text
+        # Re-rendering the same finding doesn't create newer evidence.
+        staging.upsert_proposal("review:test", {"title": "Review retry policy"})
+        assert "Review retry policy" not in http.get("/").text
+        evidence = [{"quote": "New public evidence", "visibility": "public", "as_of_ms": 1001}]
+        staging.upsert_proposal("review:test", {"evidence_json": json.dumps(evidence)})
+        assert "Review retry policy" in http.get("/").text
+
+
 def test_v1_stylesheet_is_copied_and_bundled():
     from conftest import ROOT
     assert (ROOT / "premise_v2/web/static/style.css").read_bytes() == (ROOT / "premise/web/static/style.css").read_bytes()

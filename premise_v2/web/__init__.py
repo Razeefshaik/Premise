@@ -60,7 +60,14 @@ def items(staging):
         key = "unmatched:" + u["id"]
         collected[key] = {"key": key, "kind": "unmatched", "title": u["phrase"], "data": {"evidence": [u]},
                           "created_ms": u.get("created_ms"), "support": "observed"}
-    return [r for r in collected.values() if not staging.rejection(r["key"])]
+    visible = []
+    for row in collected.values():
+        rejection = staging.rejection(row["key"])
+        newest = max((e.get("as_of_ms") or e.get("time_ms") or 0 for e in evidence_of(row)), default=0)
+        if rejection and newest <= rejection["at_ms"]:
+            continue
+        visible.append(row)
+    return visible
 
 
 def summary(row, local):

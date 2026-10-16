@@ -49,6 +49,29 @@ def test_bridge_counts_authoritative_account_before_first_message(r, new_graph, 
     assert p.identities.person_map() == {}
 
 
+def test_replayed_phase1_claims_backfill_accounts_without_extraction(r, new_graph, stream_name, repo_copy, monkeypatch):
+    p = ready(r, new_graph, stream_name, repo_copy)
+    messages = [env("Paylane now retries for 72 hours.", user="U01ANIKA"),
+                env("Paylane now retries for 72 hours.", key="slack:C2:2.0", user="UALIAS")]
+    for message in messages:
+        p.handle(message)
+    # Phase 1 stored person assignments and lacked source-account properties.
+    p.staging.c.write("MATCH (c:Claim) SET c.person='legacy-person' REMOVE c.account")
+    before = p.staging.c.read("MATCH (c:Claim) RETURN c.id AS id ORDER BY id")
+    monkeypatch.setattr(p.extractor, "extract", lambda *a: __import__("pytest").fail("unchanged source was re-extracted"))
+    for message in messages:
+        p.handle(message)
+    assert p.staging.c.read("MATCH (c:Claim) RETURN c.id AS id ORDER BY id") == before
+    assert all(c["account"] and c["person"] is None for c in p.staging.c.read(
+        "MATCH (c:Claim) RETURN c.account AS account, c.person AS person"))
+    assert reconcile(p.staging, p.decision, repo_copy)[0][0].support == "corroborated"
+    path = repo_copy / "ext/identities.yaml"
+    doc = yaml.safe_load(path.read_text())
+    doc["links"] = [{"account": "slack:UALIAS", "person": "p_anika", "status": "confirmed"}]
+    path.write_text(yaml.safe_dump(doc), encoding="utf-8")
+    assert reconcile(p.staging, p.decision, repo_copy)[0][0].support == "observed"
+
+
 def test_changed_and_removed_mapping_recounts_without_reprocessing(r, new_graph, stream_name, repo_copy):
     p = ready(r, new_graph, stream_name, repo_copy)
     p.handle(env("Paylane now retries for 72 hours.", user="U01ANIKA"))

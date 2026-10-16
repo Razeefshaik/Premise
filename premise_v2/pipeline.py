@@ -154,6 +154,7 @@ class Pipeline:
         if res.action == "duplicate" and env.scope:
             self.staging.adopt_scope(env.entity_key, env.scope)
         if res.action == "duplicate":
+            self.staging.adopt_account(env.entity_key, account)
             return
         clean = res.envelope
         self.summary.redactions += sum(res.redactions.values())

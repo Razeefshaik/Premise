@@ -14,6 +14,12 @@ are preserved. The design is [Premise_v2_Phase2_Design.md](Premise_v2_Phase2_Des
 | P2.5 | Frozen 80-snippet corpus, actual Codex recordings, strict offline replay, holdout floors and CI | **261 passed**, 1 existing warning, 159.69 s |
 | P2.6 | Local read-only review queue, private-safe details, registry counts and CSRF-protected staging-only dismissal | **269 passed**, 1 existing warning, 218.28 s |
 | P2.7 | Grounded E1, private-only draft review, validated inactive ADR files, shared pipeline budget/cache and actual E1 recordings | **284 passed**, 1 existing warning, 285.05 s |
+| Final compatibility cleanup | Backfill legacy source accounts on duplicate replay; let dismissed findings return only for newer evidence | **286 passed**, 1 existing warning, 432.88 s |
+
+The final cleanup also passed 17 focused identity/review tests. Claim ids are preserved when
+Phase 1 envelopes are replayed; reviewed link changes then re-count origins without extraction.
+Re-rendering a dismissed finding keeps it hidden; newer source timestamps can restore it.
+The final suite uses real FalkorDB, FakeGitHub and FakeAdapter, including strict gold replay.
 
 P2.7 holdout E1: precision/recall/exact quotes 1.00; annotated-field accuracy 0.857
 (literal title punctuation). Claim matching normalizes a terminal full stop/case in the

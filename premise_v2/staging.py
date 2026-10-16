@@ -76,6 +76,13 @@ class Staging:
         """Backfill ownership when pre-scope evidence is replayed by its connector."""
         self.c.write("MATCH (i:Item {key:$k}) WHERE i.scope IS NULL SET i.scope=$s", {"k": key, "s": scope})
 
+    def adopt_account(self, key: str, account: str) -> None:
+        """Backfill replayed Phase 1 evidence without re-extracting unchanged text."""
+        self.c.write("MATCH (i:Item {key:$k}) WHERE i.account IS NULL SET i.account=$a",
+                     {"k": key, "a": account})
+        self.c.write("MATCH (c:Claim {envelope_key:$k}) WHERE c.account IS NULL "
+                     "SET c.account=$a REMOVE c.person", {"k": key, "a": account})
+
     def item(self, key: str) -> dict | None:
         rows = self.c.read("MATCH (i:Item {key:$k}) RETURN properties(i) AS p", {"k": key})
         return rows[0]["p"] if rows else None
