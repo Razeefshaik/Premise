@@ -185,6 +185,17 @@ def create_graph_router(client, at_ms=None, node_cap=300):
     def overview():
         return explorer.execute(explorer.overview)
 
+    @router.get('/facts')
+    def facts():
+        from .app import scenario_presets
+        def collect(health):
+            rows, presets = scenario_presets(client)
+            links = client.read('MATCH (a:Assumption)-[:LHS|RHS]->(f:Fact) RETURN a.id AS assumption, f.id AS fact')
+            for row in rows:
+                row['assumptions'] = sorted(r['assumption'] for r in links if r['fact'] == row['id'])
+            return {'nodes': [], 'edges': [], 'truncated': False, 'facts': rows, 'presets': presets}
+        return explorer.execute(collect)
+
     @router.get("/neighborhood")
     def neighborhood(focus: str = Query(min_length=1, max_length=160), depth: int = Query(1, ge=1, le=4),
                      kinds: str = Query("reasoning,people,services,facts", max_length=100)):

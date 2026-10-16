@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from ..config import settings as get_settings
 from ..graph.client import GraphClient, GraphUnavailable
 from ..graph.tools import GraphTools
+from ..graph.recorder import QueryRecorder
 from ..reasoning.assess import graph_ready
 from ..agent.analyst import answer_question
 from ..agent.render import mermaid, provenance, render_comment
@@ -124,6 +125,14 @@ def create_app(client=None, config=None, *, graph_api_at_ms=None, graph_node_cap
 
     @app.post('/api/check')
     def check_change(payload: ChangeArgs | FileArgs):
+        with QueryRecorder(graph) as recorder:
+            response = checked_change(payload)
+            if isinstance(response, JSONResponse):
+                import json
+                return JSONResponse({**json.loads(response.body), 'queries': recorder.entries}, status_code=response.status_code)
+            return {**response, 'queries': recorder.entries}
+
+    def checked_change(payload):
         try:
             result = tools.call('check_change' if isinstance(payload, ChangeArgs) else 'check_files',
                                 payload.model_dump(exclude_unset=True))

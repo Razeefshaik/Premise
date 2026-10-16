@@ -126,6 +126,7 @@ def check_proposal(client, *, changes=None, files=None, include_fixes=True, at_m
 
 def compact(result):
     return {'hypothetical': True, 'stored': False, 'graph_rev': result.graph_rev, 'verdict': result.verdict,
+        'touched': sorted(a.id for a in result.assumptions if a.touched),
         'reasons': [r.model_dump(include={'code', 'detail'}) for r in result.reasons],
         'changed': [c.model_dump(include={'fact', 'old', 'new', 'controlled_by'}) for c in result.changed_facts],
         'not_holding': [g.model_dump(include={'id', 'status', 'baseline', 'tier', 'chain', 'promised_by'})
