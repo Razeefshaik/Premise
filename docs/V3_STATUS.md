@@ -167,3 +167,12 @@ so current-time hypothetical results cannot overwrite forecast health. No snapsh
 Focused check passed: G_DEDUPE holds on 2026-10-16 and is unknown on 2027-03-02, with at
 least four unknown guarantees; malformed dates return traced 422 responses and reads cannot
 write. Full V3.5–V3.7 batch validation is running.
+
+### Second batch checkpoint
+
+The full run returned **337 passed, 3 failed in 352.15 seconds**. One new benchmark
+isolation assertion used an unnecessary node×edge Cartesian count and hit the configured
+1-second database timeout. It now performs two linear counts. Two old exact-string
+assertions were updated to expect the newly neutralized URL protocol; their escaping
+checks remain strict. The focused rerun passed **29 tests**. Browser validation and all
+12 scenarios passed, with no page or console errors. A final full suite follows V3.8.

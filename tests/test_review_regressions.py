@@ -83,12 +83,12 @@ def test_P5_pr_controlled_string_cannot_render_as_link():
                                                     new="[Approve here](https://evil.example)")])
     comment = render_comment(r, 1, "http://x")
     assert "[Approve here](https://evil.example)" not in comment
-    assert r"\[Approve here\]\(https://evil.example\)" in comment
+    assert "\\[Approve here\\]\\(https:\u200b//evil.example\\)" in comment
 
 
 def test_pr_comment_escapes_mentions_and_code_fences():
     assert '@' not in safe('@everyone @reviewer')
-    assert safe('```\n[approve](https://evil.example)') == r'\`\`\` \[approve\]\(https://evil.example\)'
+    assert safe('```\n[approve](https://evil.example)') == "\\`\\`\\` \\[approve\\]\\(https:\u200b//evil.example\\)"
 
 
 @pytest.mark.parametrize('head,base,expected',[
