@@ -13,6 +13,18 @@ are preserved. The design is [Premise_v2_Phase2_Design.md](Premise_v2_Phase2_Des
 | P2.4 | Approved descriptive extraction, temporal knowledge proposals, unmatched mentions, explicit partners, isolated validated loader | **253 passed**, 1 existing warning, 152.23 s |
 | P2.5 | Frozen 80-snippet corpus, actual Codex recordings, strict offline replay, holdout floors and CI | **261 passed**, 1 existing warning, 159.69 s |
 | P2.6 | Local read-only review queue, private-safe details, registry counts and CSRF-protected staging-only dismissal | **269 passed**, 1 existing warning, 218.28 s |
+| P2.7 | Grounded E1, private-only draft review, validated inactive ADR files, shared pipeline budget/cache and actual E1 recordings | **284 passed**, 1 existing warning, 285.05 s |
+
+P2.7 holdout E1: precision/recall/exact quotes 1.00; annotated-field accuracy 0.857
+(literal title punctuation). Claim matching normalizes a terminal full stop/case in the
+title, while requiring matching services, guarantees, assumption checks and requirement indexes;
+optional absent nulls are equivalent. Scoring was frozen before E1 holdout capture.
+Across all extractors/splits, recordings contain 29 actual Codex calls. No test calls a model.
+
+Final checks at P2.7: registry check passed; gold holdout floors passed with no injected
+grounded candidates; original fixture eval remains 10/10 correct claims, 1/1 expected
+drift, 0 false drifts, 0/6 promoted decoys and 4/4 rejected fabricated claims.
+No files under `premise/` differ from the submission branch; no remote push was performed.
 
 P2.6 browser checks: queue, detail and relations at 1440x1000 and 390x844, no document
 overflow, no page errors; Dismiss removes the finding. Screenshots are local ignored artifacts.
@@ -37,3 +49,6 @@ read-only extension of the existing FakeGitHub; no live GitHub or model calls oc
 - The 80-snippet gold corpus can be authored here, but its human-review status must remain pending
   until Razeef reviews it. Recorded outputs must come from an actual Codex run; fabricated outputs
   must never be labeled model recordings.
+- v1 parses active guarantee/assumption fields regardless of proposed status. E1 therefore
+  stores prospective fields under an inert `draft` key. A human must promote those fields,
+  assign accountable people, accept and merge. Tests prove draft ingest preserves verdicts.

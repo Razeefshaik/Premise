@@ -380,13 +380,14 @@ a verdict. See [docs/V2.md](docs/V2.md) and [docs/V2_EVAL.md](docs/V2_EVAL.md).
 
 ```bash
 premise-v2 run     # dry run; proposals land in .runtime/v2/proposals/
-premise-v2 eval
+premise-v2 eval --gold
 ```
 
 Phase 2 on `v2/phase-2` adds source connectors, reversible identity links, grounded
-attestation evidence and approved descriptive relations. The frozen **40-snippet holdout**
-currently gives E2/E3/Kind 2 precision and recall of 1.00, with zero grounded injection
-outputs. E3 annotated-field accuracy is 0.75. These are small synthetic examples, **awaiting
+attestation evidence, descriptive relations, a local review page and inactive decision drafts.
+The frozen **40-snippet holdout** currently gives E2/E3/Kind 2/E1 precision and recall of
+1.00, with zero grounded injection outputs. E3 annotated-field accuracy is 0.75 and E1 is
+0.857 (literal title punctuation). These are small synthetic examples, **awaiting
 Razeef's hand review**, not production accuracy. Actual Codex responses are recorded and
 replayed offline; see [the complete evaluation](docs/V2_EVAL.md).
 
@@ -406,4 +407,5 @@ no LLM extracts production facts or decides verdicts. Synthetic data and automat
 evidence should be reviewed before the public demonstration.
 
 The experimental v2 branch (`premise_v2/`, its fixtures, tests and docs) was written with Claude, from a design
-and research report produced with Claude and reviewed by the project author.
+and research report produced with Claude and reviewed by the project author. The Phase 1
+review fixes and Phase 2 implementation, tests and recorded evaluation were completed with Codex.

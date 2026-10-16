@@ -25,6 +25,8 @@ from .extract.attestation import AttestationExtractor
 from .challenges import ChallengeWriter
 from .extract.knowledge import KnowledgeExtractor, KnowledgeModelExtractor
 from .knowledge import KnowledgeWriter
+from .extract.decision import DecisionExtractor
+from .decisions import DecisionWriter
 from .propose import ProposalWriter
 from .reconcile import reconcile
 from .registry import Ext, check_relations
@@ -57,6 +59,7 @@ class RunSummary:
     extraction: dict = field(default_factory=dict)
     challenges: list = field(default_factory=list)
     knowledge_proposals: list = field(default_factory=list)
+    decision_proposals: list = field(default_factory=list)
 
 
 def fixture_workers(fixtures: str | Path) -> list:
@@ -186,7 +189,8 @@ class Pipeline:
             self.summary.proposal_skip_reason = "stream not caught up"
             return self.summary
         runner = ExtractionRunner(self.staging, [AttestationExtractor(self.decision), KnowledgeExtractor(self.decision, self.model_root),
-                                               KnowledgeModelExtractor(self.decision, self.model_root)], self.adapter,
+                                               KnowledgeModelExtractor(self.decision, self.model_root),
+                                               DecisionExtractor(self.decision, self.model_root)], self.adapter,
                                   self.llm_provider, self.model_budget)
         self.summary.extraction = runner.run(self.staging.items())
         challenges = ChallengeWriter(self.staging, self.decision, self.model_root, self.writer.out, self.issue_github).run()
@@ -227,4 +231,5 @@ class Pipeline:
                 self.summary.withdrawals.append(withdrawn)
         self.summary.identity_proposals = self.identities.propose(self.writer)
         self.summary.knowledge_proposals = KnowledgeWriter(self.staging, self.decision, self.model_root, self.writer).run()
+        self.summary.decision_proposals = DecisionWriter(self.staging, self.decision, self.model_root, self.writer).run()
         return self.summary

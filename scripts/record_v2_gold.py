@@ -13,7 +13,7 @@ from premise_v2.gold import run_gold
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--split", required=True, choices=["tune", "holdout"])
-    ap.add_argument("--extractors", nargs="+", default=["E3", "K2", "K2_LLM"])
+    ap.add_argument("--extractors", nargs="+", default=["E3", "K2", "K2_LLM", "E1"])
     ap.add_argument("--budget", type=int, default=40)
     args = ap.parse_args()
     s = settings()

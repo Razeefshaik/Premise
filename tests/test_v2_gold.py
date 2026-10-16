@@ -1,12 +1,13 @@
 from pathlib import Path
 import shutil
 import json
+import inspect
 
 import pytest
 
 from premise_v2.envelope import Envelope
 from premise_v2.extract import FactClaimExtractor, ground
-from premise_v2.gold import corpus, run_gold
+from premise_v2.gold import corpus, run_gold, semantic, score, annotated_equal
 from premise_v2.registry import Ext
 from premise_v2.replay import FakeAdapter, digest
 from conftest import ROOT, SANDBOX, SERVER_HOST
@@ -51,6 +52,13 @@ def test_replay_rejects_changed_source_or_prompt():
 def test_rules_and_prompts_match_the_pre_holdout_freeze():
     freeze = json.loads((ROOT / "fixtures/v2/gold/recordings/freeze.json").read_text())
     assert all(digest((ROOT / f).read_text(encoding="utf-8")) == h for f, h in freeze["files"].items())
+
+
+def test_e1_rules_and_scoring_match_the_pre_holdout_freeze():
+    freeze = json.loads((ROOT / "fixtures/v2/gold/recordings/freeze-e1.json").read_text())
+    assert all(digest((ROOT / f).read_text(encoding="utf-8")) == h for f, h in freeze["files"].items())
+    for function in (semantic, score, annotated_equal):
+        assert digest(inspect.getsource(function)) == freeze["scoring"][function.__name__]
 
 
 def test_real_recordings_replay_above_holdout_floors_without_live_calls(falkordb_port, monkeypatch):

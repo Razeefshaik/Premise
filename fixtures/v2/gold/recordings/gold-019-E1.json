@@ -1,0 +1,10 @@
+{
+  "provider": "codex-cli",
+  "requested_model": "configured-default",
+  "resolved_model": null,
+  "corpus_hash": "26e6e37e9a1bb3ab78267ac07e8ebcc3aeb0ff355024e6eb00057709064bc7a5",
+  "extractor": "E1",
+  "version": "1",
+  "source_hash": "6b780e5a4e7d7bf44e415dd3161e995d38a50c3697141df684bd3428fb4edded",
+  "requests": []
+}

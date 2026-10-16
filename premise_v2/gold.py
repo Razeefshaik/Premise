@@ -54,9 +54,27 @@ class RecordingAdapter:
 
 
 def semantic(name, row):
+    if name == "E1":
+        def normalized(value):
+            if isinstance(value, dict):
+                return {k: normalized(v) for k, v in value.items() if v is not None}
+            if isinstance(value, list):
+                return [normalized(v) for v in value]
+            return value
+        facts = {k: normalized(row.get(k)) for k in ("governs", "guarantees", "assumptions", "requires")}
+        facts["title"] = row.get("title", "").strip().rstrip(".").casefold()
+        return (json.dumps(facts, sort_keys=True),)
     fields = {"E2": ("fact", "value", "status"), "E3": ("assumption_id", "stance"),
               "K2": ("relation", "from_id", "to_id", "action"), "E1": ("title",)}[name]
     return tuple(json.dumps(row.get(f, "add" if f == "action" else None), sort_keys=True) for f in fields)
+
+
+def annotated_equal(expected, actual):
+    if isinstance(expected, dict):
+        return isinstance(actual, dict) and all(k in actual and annotated_equal(v, actual[k]) for k, v in expected.items())
+    if isinstance(expected, list):
+        return isinstance(actual, list) and len(expected) == len(actual) and all(annotated_equal(a, b) for a, b in zip(expected, actual))
+    return expected == actual
 
 
 def score(name, expected, actual):
@@ -68,13 +86,13 @@ def score(name, expected, actual):
     for key in matched:
         for field, value in expected[key].items():
             fields += 1
-            correct += actual[key].get(field) == value
+            correct += annotated_equal(value, actual[key].get(field))
     return {"expected": len(expected), "predicted": len(actual), "correct": len(matched),
             "fields": fields, "fields_correct": correct}
 
 
 def run_gold(host, port, model_root, root="fixtures/v2/gold", split=None, capture=None,
-             extractor_names=("E3", "K2", "K2_LLM"), budget=40):
+             extractor_names=("E3", "K2", "K2_LLM", "E1"), budget=40):
     """capture is a real adapter only in the explicitly executed recording script."""
     root, model_root = Path(root), Path(model_root)
     manifest, examples = corpus(root)
@@ -215,6 +233,9 @@ def write_markdown(report, path):
             "These small, author-labeled samples do not establish production accuracy.",
             "Model metrics replay actual local Codex outputs; seconds are recorded inference time, not replay time.",
             "Requested CLI default does not identify the resolved backend model.", "",
+            "E1 claim matching ignores a title's terminal full stop/case and absent optional nulls; "
+            "governs, guarantees, assumption checks and requirement indexes must match. "
+            "Literal title punctuation remains part of annotated-field accuracy.", "",
             f'Corpus SHA256: `{report["corpus_hash"]}`', "",
             "| Split | Extractor | Precision | Recall | Exact quotes | Field accuracy | Schema validity | Calls | Recorded seconds |",
             "|---|---|---:|---:|---:|---:|---:|---:|---:|"]

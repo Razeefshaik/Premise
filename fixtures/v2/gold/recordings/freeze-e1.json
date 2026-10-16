@@ -1,0 +1,13 @@
+{
+  "stage": "before E1 holdout capture",
+  "files": {
+    "premise_v2/extract/decision.py": "93ecb7ca5daff27816e844a157ae0c630f9a7d4b0244a61aa3b72ab330069f35",
+    "premise_v2/decisions.py": "44fc25b4a5dd5f3b46d7a817820783e3bb069200cd739e06cdd6d399d0d0b89a"
+  },
+  "scoring": {
+    "semantic": "68dacf9e7fb2d9724ee28f792bdf618a21bdb380614efc51860fb9b8a84bae46",
+    "score": "a197f51ef1fd4c3da2069e490cec78f1139acd5343f445d677f19f3935337911",
+    "annotated_equal": "29c1091232fb296eb0bede8c5544ce910ff63f33b2ac2259c1b7c53288ab4571"
+  },
+  "claim_semantics": "title ignores terminal full stop and case; all governs, guarantee, assumption and requirement fields must match; null optional fields equal absence; literal title still scored in field accuracy"
+}
