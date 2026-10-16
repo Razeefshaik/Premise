@@ -1,12 +1,14 @@
 """Headless desktop/mobile QA of a running local demo. Install playwright separately."""
 from pathlib import Path
 import json
+import os
 from playwright.sync_api import sync_playwright
 
 
 def main():
     print('Starting headless UI check',flush=True)
-    artifact=Path('artifacts'); artifact.mkdir(exist_ok=True)
+    artifact=Path(os.getenv('PREMISE_UI_ARTIFACT_DIR','artifacts')); artifact.mkdir(parents=True,exist_ok=True)
+    base=os.getenv('PREMISE_BASE_URL','http://localhost:8000').rstrip('/')
     candidates=[Path('C:/Program Files/Google/Chrome/Application/chrome.exe'),Path('C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe')]
     executable=next((str(p) for p in candidates if p.exists()),None)
     with sync_playwright() as p:
@@ -15,7 +17,7 @@ def main():
         errors=[]
         page=browser.new_page(viewport={'width':1440,'height':1050},device_scale_factor=1)
         page.on('pageerror',lambda error:errors.append(str(error)))
-        page.goto('http://localhost:8000/',wait_until='networkidle')
+        page.goto(base+'/',wait_until='networkidle')
         print('Brain loaded',flush=True)
         page.get_by_role('heading',name='What still holds?').wait_for()
         assert page.locator('tbody tr').count()>=9
@@ -35,7 +37,7 @@ def main():
         page.set_viewport_size({'width':390,'height':844})
         page.screenshot(path=str(artifact/'assessment-mobile.png'),full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
-        page.goto('http://localhost:8000/',wait_until='networkidle')
+        page.goto(base+'/',wait_until='networkidle')
         page.screenshot(path=str(artifact/'brain-mobile.png'),full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
         browser.close()

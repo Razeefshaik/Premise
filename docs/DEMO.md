@@ -51,7 +51,7 @@ a later demonstration instead of bypassing the evaluator.
 
 ## MCP setup
 
-The official SDK stdio server has nine read tools. On Windows, configure your MCP client
+The official SDK stdio server has eleven read tools, including the read-only preflight checks. On Windows, configure your MCP client
 with the absolute virtual-environment Python executable and `cwd` set to this repository:
 
 ```json

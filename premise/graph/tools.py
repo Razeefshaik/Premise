@@ -7,6 +7,7 @@ from .client import GraphUnavailable
 from ..reasoning.assess import graph_ready, now_ms, _route, DAY_MS
 from ..reasoning.evaluate import evaluate_assumptions, rollup
 from ..agent.render import provenance
+from ..reasoning.preflight import ChangeArgs, FileArgs, check_proposal
 
 
 class Args(BaseModel):
@@ -35,6 +36,8 @@ class Limit(Args):
 
 
 TOOLS = {
+    "check_change": ("Hypothetical: check proposed fact values against every affected guarantee. Stores nothing.", ChangeArgs),
+    "check_files": ("Hypothetical: check proposed full file contents. Stores nothing and posts nothing.", FileArgs),
     "resolve": ("Resolve an entity name to graph ids", Search),
     "decision_lineage": ("Decision requirements, source evidence, lifecycle and current reviewers", Entity),
     "guarantee_health": ("Current full-prerequisite guarantee and assumption health; omit id for all", Health),
@@ -70,10 +73,16 @@ class GraphTools:
             raise ValueError("Unknown read tool")
         self.guard()
         args = TOOLS[name][1].model_validate(arguments)
-        return getattr(self, name)(**args.model_dump())
+        return getattr(self, name)(**args.model_dump(exclude_unset=True))
 
     def schemas(self):
         return [{"name":name, "description":desc, "input_schema":model.model_json_schema()} for name,(desc,model) in TOOLS.items()]
+
+    def check_change(self, changes, include_fixes=True):
+        return check_proposal(self.client, changes=changes, include_fixes=include_fixes, at_ms=self.now, since_days=self.since_days)
+
+    def check_files(self, files, include_fixes=True):
+        return check_proposal(self.client, files=files, include_fixes=include_fixes, at_ms=self.now, since_days=self.since_days)
 
     def resolve(self, query, limit=10):
         exact = self.client.read("MATCH (e:Entity {id:$id}) WHERE e.retired_rev IS NULL RETURN e.id AS id, labels(e) AS labels, e.search_text AS text, 1.0 AS score", {"id":query})

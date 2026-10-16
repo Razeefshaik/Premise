@@ -19,6 +19,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--port", type=int, default=s.falkordb_port)
     ap.add_argument("--host", default=s.falkordb_host)
     sub = ap.add_subparsers(dest="cmd", required=True)
+    p_check = sub.add_parser('check', help='Read-only preflight; 2 blocked, 1 review/error, 0 clear')
+    p_check.add_argument('--set', action='append', default=[], dest='sets')
+    p_check.add_argument('--file', action='append', default=[], dest='files')
+    p_check.add_argument('--repo', default='.')
+    p_check.add_argument('--json', action='store_true')
     p_ing = sub.add_parser("ingest")
     p_ing.add_argument("--repo", default=s.sandbox_dir)
     p_ing.add_argument("--sha", default="local")
@@ -49,6 +54,29 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     client = GraphClient(args.host, args.port, args.graph)
+    if args.cmd == 'check':
+        from .reasoning.preflight import check_proposal, repo_path
+        from .graph.client import GraphUnavailable
+        try:
+            if not args.sets and not args.files:
+                raise ValueError('Supply --set or --file')
+            changes = []
+            for value in args.sets:
+                fact, sep, raw = value.partition('=')
+                if not sep:
+                    raise ValueError('Use --set fact=JSON-scalar')
+                try:
+                    parsed = json.loads(raw)
+                except json.JSONDecodeError:
+                    parsed = raw
+                changes.append({'fact': fact, 'value': parsed})
+            files = {repo_path(p): (Path(args.repo) / p).read_text(encoding='utf-8') for p in args.files}
+            result = check_proposal(client, changes=changes or None, files=files or None)
+        except (ValueError, OSError, GraphUnavailable) as exc:
+            print(json.dumps({'verdict': 'ERROR', 'error': str(exc)}))
+            return 1
+        print(json.dumps(result, indent=2))
+        return {'BLOCKED': 2, 'NEEDS_REVIEW': 1, 'ERROR': 1, 'CLEAR_WITHIN_SCOPE': 0}[result['verdict']]
     if args.cmd == "serve":
         import uvicorn
         from .web.app import create_app

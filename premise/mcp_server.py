@@ -3,12 +3,23 @@ from mcp.server.fastmcp import FastMCP
 from .config import settings
 from .graph.client import GraphClient
 from .graph.tools import GraphTools
+from .reasoning.preflight import ChangeItem
 
 
 def create_server(client=None):
     s = settings()
     tools = GraphTools(client or GraphClient(s.falkordb_host,s.falkordb_port,s.graph_name))
     server = FastMCP("Premise Company Brain")
+
+    @server.tool()
+    def check_change(changes: list[ChangeItem], include_fixes: bool = True) -> dict:
+        """Hypothetical preflight of proposed facts. Stores nothing; posts nothing."""
+        return tools.call('check_change', {'changes': [c.model_dump(exclude_unset=True) for c in changes], 'include_fixes': include_fixes})
+
+    @server.tool()
+    def check_files(files: dict[str, str | None], include_fixes: bool = True) -> dict:
+        """Hypothetical preflight of full proposed files. Stores nothing; posts nothing."""
+        return tools.call('check_files', {'files': files, 'include_fixes': include_fixes})
 
     @server.tool()
     def resolve(query: str, limit: int = 10) -> list:

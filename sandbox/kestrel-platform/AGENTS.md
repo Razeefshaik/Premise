@@ -1,0 +1,1 @@
+Before editing any file under `config/`, call the `premise` MCP tool `check_files` with the full proposed file contents. If the verdict is BLOCKED, do not write the change; propose the returned verified fix instead and name the reviewers.

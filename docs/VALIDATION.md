@@ -2,6 +2,19 @@
 
 Run date: October 16, 2026 (IST). Initial build checks and subsequent live checks are distinguished below.
 
+## F1 preflight feature merge gate
+
+`feat/check-change`: **143 tests passed** (47.42 s), **12/12 CLI scenarios passed**,
+and the desktop/mobile browser script passed against an isolated graph on port 8002.
+The official MCP stdio test lists 11 tools and executes a real S1 `check_change`.
+Read-only tests compare node counts, edge counts and GraphState properties and forbid
+write keywords on the graph read path. CLI exit codes, malformed YAML, unknown facts,
+argument limits, traversal rejection and HTTP validation were exercised.
+Evidence: ignored `artifacts/f1/validation.json`, logs and browser screenshots.
+Kestrel's separate publishing checkout has local commit `1c045f8` for its agent instructions;
+no repository was pushed. Claude Code is not installed, so its interactive automatic
+tool-selection demonstration was not executed.
+
 ## Optional local Codex branch
 
 Branch `feat/local-codex-cli` starts from `main` commit `8bf6202`. The native CLI provider

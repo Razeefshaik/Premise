@@ -17,6 +17,7 @@ from ..reasoning.assess import graph_ready
 from ..agent.analyst import answer_question
 from ..agent.render import mermaid, provenance, render_comment
 from ..github.store import Store
+from ..reasoning.preflight import ChangeArgs, FileArgs
 
 ROOT = Path(__file__).parent
 templates = Jinja2Templates(directory=str(ROOT/"templates"))
@@ -86,6 +87,17 @@ def create_app(client=None, config=None):
     @app.post("/api/ask")
     def ask(payload:Question):
         return answer_question(tools,payload.question,s)
+
+    @app.post('/api/check')
+    def check_change(payload: ChangeArgs | FileArgs):
+        try:
+            result = tools.call('check_change' if isinstance(payload, ChangeArgs) else 'check_files',
+                                payload.model_dump(exclude_unset=True))
+        except ValueError as exc:
+            raise HTTPException(422, 'Invalid hypothetical proposal') from exc
+        if any(r['code'] == 'R_UNTRACKED' for r in result['reasons']):
+            return JSONResponse(result, status_code=422)
+        return result
 
     @app.get("/api/health")
     def health():

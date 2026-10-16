@@ -20,6 +20,36 @@ The authoritative design is [Revision 2](docs/Premise_Implementation_Spec.md).
 On branch `feat/local-codex-cli`, the optional [local Codex provider](docs/LOCAL_CODEX.md)
 uses your installed, signed-in CLI. The existing Anthropic/Docker setup remains the default.
 
+## Pre-flight checks for coding agents
+
+`check_change` and `check_files` ask the same deterministic evaluator before an edit exists.
+They expose 11 shared read-only tools through MCP, the Analyst and HTTP. No hypothetical
+check creates an assessment, changes graph state, calls a model or posts to GitHub.
+Unknown facts require review; missing knowledge is never permission to apply a change.
+
+From the fictional Kestrel checkout, configure either client (substitute the absolute Python path):
+
+```powershell
+claude mcp add premise -- "S:/StudyResource/TechBoooo/Hackathons/weMakeDevs-FolkoreDB/Premise/.venv/Scripts/python.exe" -m premise.cli --host 127.0.0.1 --port 6379 --graph premise_kestrel mcp
+codex mcp add premise -- "S:/StudyResource/TechBoooo/Hackathons/weMakeDevs-FolkoreDB/Premise/.venv/Scripts/python.exe" -m premise.cli --host 127.0.0.1 --port 6379 --graph premise_kestrel mcp
+```
+
+Codex syntax was checked with the installed `codex mcp add --help`. The bundled Kestrel
+`AGENTS.md` and `CLAUDE.md` direct agents to check full proposed config files before editing.
+Claude Code itself is not installed on the validation machine; its automatic tool-selection
+demonstration remains a manual check, separate from the passing official MCP protocol test.
+
+```powershell
+.\.venv\Scripts\python.exe -m premise.cli check --set paylane.retry_window_hours=72 --json
+.\.venv\Scripts\python.exe -m premise.cli check --file config/partners/paylane.yaml --repo sandbox/kestrel-platform
+```
+
+CLI exit codes are 2 for BLOCKED, 1 for NEEDS_REVIEW/ERROR and 0 for CLEAR_WITHIN_SCOPE.
+Multiple `--set` and `--file` options can be combined; explicit scalar settings override
+the corresponding proposed file values in memory. HTTP `POST /api/check` accepts either
+`{changes:[...]}` or `{files:{...}}`; invalid/untracked HTTP requests return 422, with
+untracked proposals still represented as NEEDS_REVIEW in the returned result.
+
 ## The useful distinction
 
 ADR-007 promises both deduplication and fast acknowledgement. ADR-012 depends on
@@ -235,7 +265,7 @@ returned states. Other prose claims are not verified, and the UI labels that lim
 The deterministic fallback shows the graph
 evidence and its limitations. Source text is quoted untrusted data, never tool instructions.
 
-The nine shared read tools are `resolve`, `decision_lineage`, `guarantee_health`,
+The eleven shared read tools are `check_change`, `check_files`, `resolve`, `decision_lineage`, `guarantee_health`,
 `who_knows`, `search_evidence`, `orphaned_decisions`, `load_bearing_guarantees`,
 `impact_if_broken`, and `recall`. Run `premise mcp` for stdio. See the
 [MCP configuration and demo questions](docs/DEMO.md#mcp-setup).

@@ -141,7 +141,9 @@ async def test_mcp_official_stdio_read_tools(kestrel,falkordb_port):
             async with ClientSession(read,write) as session:
                 await session.initialize()
                 listing=await session.list_tools()
-                assert len(listing.tools)==9
+                assert len(listing.tools)==11
                 assert not any('fix' in t.name or 'write' in t.name for t in listing.tools)
                 result=await session.call_tool('guarantee_health',{'id':'G_DEDUPE'})
                 assert not result.isError and 'G_DEDUPE' in str(result.content)
+                checked=await session.call_tool('check_change',{'changes':[{'fact':'paylane.retry_window_hours','value':72}]})
+                assert not checked.isError and 'BLOCKED' in str(checked.content)
