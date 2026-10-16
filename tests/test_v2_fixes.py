@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 import json
+import subprocess
+import sys
 from datetime import datetime, timezone
 
 import pytest
@@ -15,6 +17,7 @@ from premise_v2.pipeline import fixture_workers
 from premise_v2.stream import EnvelopeStream
 from premise_v2.envelope import Envelope
 from test_v2_pipeline import DRIFT, FIXTURES, FakeGitHub, env, pipeline, r, stream_name
+from conftest import ROOT
 
 
 @pytest.mark.parametrize("command,collision", [
@@ -291,3 +294,13 @@ def test_deferred_remote_withdrawal_is_retried_without_rejection(r, new_graph, s
     assert gh.prs[1]["state"] == "closed"
     assert p.staging.proposal(DRIFT)["remote_state"] == "closed"
     assert not p.staging.rejection(DRIFT)
+
+
+def test_cli_unreachable_falkordb_has_short_error():
+    result = subprocess.run([sys.executable, "-m", "premise_v2.cli", "--host", "127.0.0.1", "--port", "1", "run"],
+                            cwd=ROOT, text=True, capture_output=True, timeout=30)
+    assert result.returncode == 3
+    assert "Cannot reach FalkorDB at 127.0.0.1:1" in result.stderr
+    assert "docker compose up -d falkordb" in result.stderr
+    assert "Traceback" not in result.stdout + result.stderr
+    assert len(result.stderr.strip().splitlines()) == 1

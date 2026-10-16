@@ -9,7 +9,7 @@ import sys
 import redis
 
 from premise.config import settings
-from premise.graph.client import GraphClient
+from premise.graph.client import GraphClient, GraphUnavailable
 
 from .pipeline import Pipeline, fixture_workers
 from .registry import Ext, check_relations
@@ -56,6 +56,15 @@ def main(argv: list[str] | None = None) -> int:
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 2
+    try:
+        return _execute(args, s)
+    except (GraphUnavailable, redis.exceptions.ConnectionError, redis.exceptions.TimeoutError):
+        print(f"Cannot reach FalkorDB at {args.host}:{args.port}. Start it with: docker compose up -d falkordb "
+              '(check FALKORDB_HOST in .env: use 127.0.0.1 when running on Windows, not "falkordb")', file=sys.stderr)
+        return 3
+
+
+def _execute(args: argparse.Namespace, s) -> int:
     r = redis.Redis(host=args.host, port=args.port)
     staging = GraphClient(args.host, args.port, args.staging_graph)
     decision = GraphClient(args.host, args.port, args.decision_graph)
