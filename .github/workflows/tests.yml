@@ -31,3 +31,4 @@ jobs:
       - run: premise-v2 eval --gold
       - run: premise ingest
       - run: premise scenarios
+      - run: premise redteam report

@@ -13,7 +13,27 @@ from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
 
 def compose(text: str) -> Node | None:
+    # Parse events iteratively before composing Python nodes. SafeLoader alone still
+    # accepts recursive aliases and can recurse past Python's stack on deep input.
+    if len(text.encode('utf-8')) > 200_000:
+        raise yaml.YAMLError('YAML exceeds 200 KB')
+    depth = count = 0
+    for event in yaml.parse(text, Loader=yaml.SafeLoader):
+        count += 1
+        if isinstance(event, yaml.events.AliasEvent):
+            raise yaml.YAMLError('YAML aliases are unsupported in company inputs')
+        if isinstance(event, (yaml.events.MappingStartEvent, yaml.events.SequenceStartEvent)):
+            depth += 1
+        elif isinstance(event, (yaml.events.MappingEndEvent, yaml.events.SequenceEndEvent)):
+            depth -= 1
+        if depth > 64 or count > 20_000:
+            raise yaml.YAMLError('YAML nesting or node limit exceeded')
     return yaml.compose(text, Loader=yaml.SafeLoader)
+
+
+def safe_load(text):
+    compose(text)
+    return yaml.safe_load(text)
 
 
 def mapping_get(node: Node | None, key: str) -> tuple[ScalarNode | None, Node | None]:

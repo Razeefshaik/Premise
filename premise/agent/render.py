@@ -6,6 +6,9 @@ import re
 
 def safe(text):
     text = str(text).replace("\\", "\\\\")
+    # GitHub also autolinks bare URLs; escaping Markdown brackets is insufficient.
+    text = re.sub(r'(?i)\b(?:https?|ftp)://|www\.',
+                  lambda m: m.group().replace(':', ':\u200b').replace('www.', 'w\u200bww.'), text)
     for char in "|[]()`*_!":
         text = text.replace(char, "\\" + char)
     return text.replace("<", "&lt;").replace(">", "&gt;").replace("@", "＠").replace("\n", " ").replace("\r", " ")

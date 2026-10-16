@@ -22,6 +22,8 @@ def main(argv: list[str] | None = None) -> int:
     p_bench = sub.add_parser('bench', help='Frozen, local graph/keyword/vector benchmark')
     p_bench.add_argument('action', choices=['run'])
     p_bench.add_argument('--download-model', action='store_true')
+    p_redteam = sub.add_parser('redteam', help='Run adversarial regressions and write the real report')
+    p_redteam.add_argument('action', choices=['report'])
     p_check = sub.add_parser('check', help='Read-only preflight; 2 blocked, 1 review/error, 0 clear')
     p_check.add_argument('--set', action='append', default=[], dest='sets')
     p_check.add_argument('--file', action='append', default=[], dest='files')
@@ -59,6 +61,11 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     client = GraphClient(args.host, args.port, args.graph)
+    if args.cmd == 'redteam':
+        from .redteam import report
+        result = report(args.host,args.port)
+        print(json.dumps(result))
+        return result['exit_code']
     if args.cmd == 'bench':
         from .benchmark.run import run, write_report
         result = run(client, download=args.download_model)

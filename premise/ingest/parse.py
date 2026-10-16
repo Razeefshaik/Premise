@@ -149,7 +149,7 @@ def parse_company(m: Model, root: Path, sha: str, repo: str | None) -> None:
     sid = _source(m, path, "company", sha, repo)
     doc = yp.compose(text)
     for item in yp.items(yp.mapping_get(doc, "teams")[1]):
-        t = yaml.safe_load(yaml.serialize(item))
+        t = yp.safe_load(yaml.serialize(item))
         m.node("Team", t["id"], path, name=t["name"], search_text=f"{t['id']} {t['name']}")
         m.edge("STATED_IN", t["id"], sid, path, yp.line(item))
 
@@ -158,7 +158,7 @@ def parse_company(m: Model, root: Path, sha: str, repo: str | None) -> None:
     sid = _source(m, path, "company", sha, repo)
     doc = yp.compose(text)
     for item in yp.items(yp.mapping_get(doc, "people")[1]):
-        p = yaml.safe_load(yaml.serialize(item))
+        p = yp.safe_load(yaml.serialize(item))
         m.node("Person", p["id"], path, name=p["name"], status=p["status"], left_at=to_ms(p.get("left_at")),
                search_text=f"{p['id']} {p['name']}")
         m.edge("STATED_IN", p["id"], sid, path, yp.line(item))
@@ -174,7 +174,7 @@ def parse_catalog(m: Model, root: Path, sha: str, repo: str | None) -> None:
     sid = _source(m, path, "catalog", sha, repo)
     doc = yp.compose(text)
     for item in yp.items(yp.mapping_get(doc, "services")[1]):
-        s = yaml.safe_load(yaml.serialize(item))
+        s = yp.safe_load(yaml.serialize(item))
         aliases = s.get("aliases", []) or []
         m.node("Service", s["id"], path, name=s["name"], tier=int(s["tier"]), aliases=aliases,
                fictional=bool(s.get("fictional", False)),
@@ -190,7 +190,7 @@ def parse_catalog(m: Model, root: Path, sha: str, repo: str | None) -> None:
 
 def parse_facts(m: Model, root: Path, sha: str, repo: str | None) -> None:
     path = "facts.yaml"
-    reg = yaml.safe_load((root / path).read_text())["facts"]
+    reg = yp.safe_load((root / path).read_text())["facts"]
     sources: dict[str, str] = {}
     for fid, spec in reg.items():
         fpath = spec["file"]
@@ -218,7 +218,7 @@ def parse_adrs(m: Model, root: Path, sha: str, repo: str | None) -> None:
         text = file.read_text()
         fm_text, body, body_first = _split_front_matter(text)
         doc = yp.compose(fm_text)
-        fm = yaml.safe_load(fm_text) or {}
+        fm = yp.safe_load(fm_text) or {}
         off = 1  # front matter text starts on file line 2
         did = fm["id"]
         sid = _source(m, path, "adr", sha, repo, title=f"{did} {fm.get('title', '')}", decision=did,
@@ -252,7 +252,7 @@ def parse_adrs(m: Model, root: Path, sha: str, repo: str | None) -> None:
 
         m.decision_provides[did] = []
         for item in yp.items(yp.mapping_get(doc, "provides")[1]):
-            g = yaml.safe_load(yaml.serialize(item))
+            g = yp.safe_load(yaml.serialize(item))
             gid = g["id"]
             m.decision_provides[did].append(gid)
             ln = yp.line(item, off)
@@ -270,7 +270,7 @@ def parse_adrs(m: Model, root: Path, sha: str, repo: str | None) -> None:
                 m.edge("REQUIRES", gid, req, path, yp.line(rkn, off))
 
         for item in yp.items(yp.mapping_get(doc, "assumptions")[1]):
-            a = yaml.safe_load(yaml.serialize(item))
+            a = yp.safe_load(yaml.serialize(item))
             aid = a["id"]
             ln = yp.line(item, off)
             check = a.get("check")
@@ -308,7 +308,7 @@ def parse_texts(m: Model, root: Path, sha: str, repo: str | None) -> None:
     for file in sorted((root / "docs").rglob("*.md")):
         path = file.relative_to(root).as_posix()
         fm_text, body, first = _split_front_matter(file.read_text())
-        fm = yaml.safe_load(fm_text) if fm_text else {}
+        fm = yp.safe_load(fm_text) if fm_text else {}
         sid = _source(m, path, "doc", sha, repo, title=path, ts=to_ms((fm or {}).get("updated")))
         for pid in (fm or {}).get("authors", []) or []:
             m.edge("AUTHORED", pid, sid, path, 2)

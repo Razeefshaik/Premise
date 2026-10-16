@@ -9,7 +9,7 @@ Each phase has its own branch and local commits. No V3 merge or push has been pe
 | V3.2 Decision Explorer | Complete and batch verified | `v3/decision-explorer` |
 | V3.3 Live consequences | Complete and batch verified | `v3/live-consequences` |
 | V3.4 Benchmark | Complete and batch verified | `v3/benchmark` |
-| V3.5 Red team | Pending | `v3/red-team` (planned) |
+| V3.5 Red team | Implemented; 35/35 focused attacks passed | `v3/red-team` |
 | V3.6 Continuity | Pending | `v3/continuity` (planned) |
 | V3.7 Time machine | Pending | `v3/time-machine` (planned) |
 | V3.8 Public replay | Pending | `v3/public-replay` (planned) |
@@ -132,3 +132,14 @@ in 266.36 seconds**, **12/12 scenarios passed**, and browser checks passed at de
 node clicking, four red guarantees for S1, verified repair back to green, recorded Cypher
 and the benchmark chart/table. Small later stylesheet refinements reuse the same controls;
 their final captures will be included in the V3 finish review.
+
+## V3.5 implementation
+
+35 YAML-defined attacks exercise deterministic intake, PR metadata, comments, paths,
+malformed/10 MB/deep/recursive YAML, attestations, analyst grounding, unknown entities,
+forks, stale heads, outages and read-only tools. The runner publishes real JUnit outcomes
+to [REDTEAM.md](REDTEAM.md); failures fail CI. GitHub and model output use existing fakes.
+Bare-link and depth/alias regressions failed before the fixes and pass afterward.
+Untrusted links are neutralized, mentions remain full-width, and company YAML is limited
+to 200 KB, depth 64 and 20,000 parse events, with aliases explicitly unsupported.
+The focused run passed **35/35**; full regression follows after V3.7.
