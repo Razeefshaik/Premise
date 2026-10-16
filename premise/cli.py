@@ -19,6 +19,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--port", type=int, default=s.falkordb_port)
     ap.add_argument("--host", default=s.falkordb_host)
     sub = ap.add_subparsers(dest="cmd", required=True)
+    p_bench = sub.add_parser('bench', help='Frozen, local graph/keyword/vector benchmark')
+    p_bench.add_argument('action', choices=['run'])
+    p_bench.add_argument('--download-model', action='store_true')
     p_check = sub.add_parser('check', help='Read-only preflight; 2 blocked, 1 review/error, 0 clear')
     p_check.add_argument('--set', action='append', default=[], dest='sets')
     p_check.add_argument('--file', action='append', default=[], dest='files')
@@ -56,6 +59,12 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     client = GraphClient(args.host, args.port, args.graph)
+    if args.cmd == 'bench':
+        from .benchmark.run import run, write_report
+        result = run(client, download=args.download_model)
+        write_report(result)
+        print(json.dumps({'recorded_at':result['recorded_at'],'summary':result['summary']},indent=2))
+        return 0
     if args.cmd == 'steward':
         from .github.api import GitHub
         from .github.steward import Steward

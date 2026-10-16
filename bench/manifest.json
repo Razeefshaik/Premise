@@ -1,0 +1,8 @@
+{
+  "sha256": "432afd0a18e4740821b801b3c12b494df1bb9ad2003f06acdd0a103d0c50900f",
+  "questions": 60,
+  "split": {
+    "dev": 30,
+    "test": 30
+  }
+}

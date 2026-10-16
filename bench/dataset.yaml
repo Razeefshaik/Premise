@@ -1,0 +1,440 @@
+version: 1
+human_review: pending_razeef
+caveat: Synthetic authored questions. Test contains related parameter/paraphrase variants,
+  not independent companies. Gold labels were authored from the model and scenarios,
+  not fitted to measured outputs.
+questions:
+- id: dev-change-01
+  split: dev
+  kind: change
+  question: 'paylane.retry_window_hours changes to 48: which decisions are affected?'
+  changes:
+  - fact: paylane.retry_window_hours
+    value: 48
+  gold: &id001
+  - ADR-007
+  - ADR-012
+  - ADR-015
+  - ADR-018
+- id: dev-change-02
+  split: dev
+  kind: change
+  question: 'paylane.retry_window_hours changes to 72: which decisions are affected?'
+  changes:
+  - fact: paylane.retry_window_hours
+    value: 72
+  gold: *id001
+- id: dev-change-03
+  split: dev
+  kind: change
+  question: 'paylane.retry_window_hours changes to 96: which decisions are affected?'
+  changes:
+  - fact: paylane.retry_window_hours
+    value: 96
+  gold: *id001
+- id: dev-change-04
+  split: dev
+  kind: change
+  question: 'paylane.retry_window_hours changes to 168: which decisions are affected?'
+  changes:
+  - fact: paylane.retry_window_hours
+    value: 168
+  gold: *id001
+- id: dev-change-05
+  split: dev
+  kind: change
+  question: 'webhook.dedupe_ttl_hours changes to 12: which decisions are affected?'
+  changes:
+  - fact: webhook.dedupe_ttl_hours
+    value: 12
+  gold: *id001
+- id: dev-change-06
+  split: dev
+  kind: change
+  question: 'webhook.dedupe_ttl_hours changes to 6: which decisions are affected?'
+  changes:
+  - fact: webhook.dedupe_ttl_hours
+    value: 6
+  gold: *id001
+- id: dev-change-07
+  split: dev
+  kind: change
+  question: 'webhook.dedupe_ttl_hours changes to 72: which decisions are affected?'
+  changes:
+  - fact: webhook.dedupe_ttl_hours
+    value: 72
+  gold: *id001
+- id: dev-change-08
+  split: dev
+  kind: change
+  question: 'paymentservice.charge_timeout_ms changes to 1500: which decisions are
+    affected?'
+  changes:
+  - fact: paymentservice.charge_timeout_ms
+    value: 1500
+  gold:
+  - ADR-009
+- id: dev-change-09
+  split: dev
+  kind: change
+  question: 'paymentservice.charge_timeout_ms changes to 2000: which decisions are
+    affected?'
+  changes:
+  - fact: paymentservice.charge_timeout_ms
+    value: 2000
+  gold:
+  - ADR-009
+- id: dev-change-10
+  split: dev
+  kind: change
+  question: 'checkoutservice.payment_timeout_ms changes to 500: which decisions are
+    affected?'
+  changes:
+  - fact: checkoutservice.payment_timeout_ms
+    value: 500
+  gold:
+  - ADR-009
+- id: dev-change-11
+  split: dev
+  kind: change
+  question: 'emailservice.retry_max_attempts changes to 11: which decisions are affected?'
+  changes:
+  - fact: emailservice.retry_max_attempts
+    value: 11
+  gold:
+  - ADR-011
+- id: dev-change-12
+  split: dev
+  kind: change
+  question: 'emailservice.retry_max_attempts changes to 20: which decisions are affected?'
+  changes:
+  - fact: emailservice.retry_max_attempts
+    value: 20
+  gold:
+  - ADR-011
+- id: dev-change-13
+  split: dev
+  kind: change
+  question: 'emailservice.retry_max_attempts changes to 8: which decisions are affected?'
+  changes:
+  - fact: emailservice.retry_max_attempts
+    value: 8
+  gold: []
+- id: dev-change-14
+  split: dev
+  kind: change
+  question: 'paylane.retry_window_hours changes to 24: which decisions are affected?'
+  changes:
+  - fact: paylane.retry_window_hours
+    value: 24
+  gold: []
+- id: dev-change-15
+  split: dev
+  kind: change
+  question: 'redis.max_ttl_hours changes to 12: which decisions are affected?'
+  changes:
+  - fact: redis.max_ttl_hours
+    value: 12
+  gold: *id001
+- id: dev-brain-01
+  split: dev
+  kind: brain
+  question: Who should review ADR-012?
+  gold: &id002
+  - p_jun
+  - p_anika
+- id: dev-brain-02
+  split: dev
+  kind: brain
+  question: Why ADR-007?
+  gold: &id003
+  - ADR-007
+  - G_DEDUPE
+- id: dev-brain-03
+  split: dev
+  kind: brain
+  question: Why ADR-015?
+  gold: &id004
+  - ADR-015
+  - G_REFUND_MATCH
+  - G_CHARGE_ONCE
+- id: dev-brain-04
+  split: dev
+  kind: brain
+  question: Why ADR-018?
+  gold: &id005
+  - ADR-018
+  - G_LEDGER_CONSISTENT
+- id: dev-brain-05
+  split: dev
+  kind: brain
+  question: Who owns paymentservice?
+  gold: &id006
+  - t_payments
+  - p_jun
+- id: dev-brain-06
+  split: dev
+  kind: brain
+  question: Who knows webhookingress?
+  gold: &id007
+  - webhookingress
+  - p_anika
+- id: dev-brain-07
+  split: dev
+  kind: brain
+  question: Which guarantees are unverified?
+  gold: &id008
+  - G_RATES_FRESH
+  - A_RATES_SOURCE
+- id: dev-brain-08
+  split: dev
+  kind: brain
+  question: What is the health of G_DEDUPE?
+  gold: &id009
+  - G_DEDUPE
+- id: dev-brain-09
+  split: dev
+  kind: brain
+  question: Who should review ADR-009?
+  gold: &id010
+  - ADR-009
+- id: dev-brain-10
+  split: dev
+  kind: brain
+  question: Why ADR-011?
+  gold: &id011
+  - ADR-011
+  - G_EMAIL_WITHIN_BUDGET
+- id: dev-brain-11
+  split: dev
+  kind: brain
+  question: Who owns refundworker?
+  gold: &id012
+  - refundworker
+- id: dev-brain-12
+  split: dev
+  kind: brain
+  question: Why ADR-016?
+  gold: &id013
+  - ADR-016
+- id: dev-brain-13
+  split: dev
+  kind: brain
+  question: Which decisions are orphaned?
+  gold: &id014
+  - ADR-012
+- id: dev-brain-14
+  split: dev
+  kind: brain
+  question: Why ADR-010?
+  gold: &id015
+  - ADR-010
+- id: dev-brain-15
+  split: dev
+  kind: brain
+  question: What is the health of G_CHARGE_ONCE?
+  gold: &id016
+  - G_CHARGE_ONCE
+- id: test-change-01
+  split: test
+  kind: change
+  question: 'paylane.retry_window_hours changes to 49: which decisions are affected?'
+  changes:
+  - fact: paylane.retry_window_hours
+    value: 49
+  gold: *id001
+- id: test-change-02
+  split: test
+  kind: change
+  question: 'paylane.retry_window_hours changes to 73: which decisions are affected?'
+  changes:
+  - fact: paylane.retry_window_hours
+    value: 73
+  gold: *id001
+- id: test-change-03
+  split: test
+  kind: change
+  question: 'paylane.retry_window_hours changes to 120: which decisions are affected?'
+  changes:
+  - fact: paylane.retry_window_hours
+    value: 120
+  gold: *id001
+- id: test-change-04
+  split: test
+  kind: change
+  question: 'paylane.retry_window_hours changes to 240: which decisions are affected?'
+  changes:
+  - fact: paylane.retry_window_hours
+    value: 240
+  gold: *id001
+- id: test-change-05
+  split: test
+  kind: change
+  question: 'webhook.dedupe_ttl_hours changes to 8: which decisions are affected?'
+  changes:
+  - fact: webhook.dedupe_ttl_hours
+    value: 8
+  gold: *id001
+- id: test-change-06
+  split: test
+  kind: change
+  question: 'webhook.dedupe_ttl_hours changes to 18: which decisions are affected?'
+  changes:
+  - fact: webhook.dedupe_ttl_hours
+    value: 18
+  gold: *id001
+- id: test-change-07
+  split: test
+  kind: change
+  question: 'webhook.dedupe_ttl_hours changes to 96: which decisions are affected?'
+  changes:
+  - fact: webhook.dedupe_ttl_hours
+    value: 96
+  gold: *id001
+- id: test-change-08
+  split: test
+  kind: change
+  question: 'paymentservice.charge_timeout_ms changes to 1800: which decisions are
+    affected?'
+  changes:
+  - fact: paymentservice.charge_timeout_ms
+    value: 1800
+  gold:
+  - ADR-009
+- id: test-change-09
+  split: test
+  kind: change
+  question: 'paymentservice.charge_timeout_ms changes to 3000: which decisions are
+    affected?'
+  changes:
+  - fact: paymentservice.charge_timeout_ms
+    value: 3000
+  gold:
+  - ADR-009
+- id: test-change-10
+  split: test
+  kind: change
+  question: 'checkoutservice.payment_timeout_ms changes to 600: which decisions are
+    affected?'
+  changes:
+  - fact: checkoutservice.payment_timeout_ms
+    value: 600
+  gold:
+  - ADR-009
+- id: test-change-11
+  split: test
+  kind: change
+  question: 'emailservice.retry_max_attempts changes to 12: which decisions are affected?'
+  changes:
+  - fact: emailservice.retry_max_attempts
+    value: 12
+  gold:
+  - ADR-011
+- id: test-change-12
+  split: test
+  kind: change
+  question: 'emailservice.retry_max_attempts changes to 30: which decisions are affected?'
+  changes:
+  - fact: emailservice.retry_max_attempts
+    value: 30
+  gold:
+  - ADR-011
+- id: test-change-13
+  split: test
+  kind: change
+  question: 'emailservice.retry_max_attempts changes to 7: which decisions are affected?'
+  changes:
+  - fact: emailservice.retry_max_attempts
+    value: 7
+  gold: []
+- id: test-change-14
+  split: test
+  kind: change
+  question: 'paylane.retry_window_hours changes to 12: which decisions are affected?'
+  changes:
+  - fact: paylane.retry_window_hours
+    value: 12
+  gold: []
+- id: test-change-15
+  split: test
+  kind: change
+  question: 'redis.max_ttl_hours changes to 18: which decisions are affected?'
+  changes:
+  - fact: redis.max_ttl_hours
+    value: 18
+  gold: *id001
+- id: test-brain-01
+  split: test
+  kind: brain
+  question: Find reviewers for ADR-012?
+  gold: *id002
+- id: test-brain-02
+  split: test
+  kind: brain
+  question: Explain ADR-007?
+  gold: *id003
+- id: test-brain-03
+  split: test
+  kind: brain
+  question: Explain ADR-015?
+  gold: *id004
+- id: test-brain-04
+  split: test
+  kind: brain
+  question: Explain ADR-018?
+  gold: *id005
+- id: test-brain-05
+  split: test
+  kind: brain
+  question: Who knows paymentservice?
+  gold: *id006
+- id: test-brain-06
+  split: test
+  kind: brain
+  question: Who knows webhookingress?
+  gold: *id007
+- id: test-brain-07
+  split: test
+  kind: brain
+  question: Which guarantees are unverified?
+  gold: *id008
+- id: test-brain-08
+  split: test
+  kind: brain
+  question: What is the health of G_DEDUPE?
+  gold: *id009
+- id: test-brain-09
+  split: test
+  kind: brain
+  question: Find reviewers for ADR-009?
+  gold: *id010
+- id: test-brain-10
+  split: test
+  kind: brain
+  question: Explain ADR-011?
+  gold: *id011
+- id: test-brain-11
+  split: test
+  kind: brain
+  question: Who knows refundworker?
+  gold: *id012
+- id: test-brain-12
+  split: test
+  kind: brain
+  question: Explain ADR-016?
+  gold: *id013
+- id: test-brain-13
+  split: test
+  kind: brain
+  question: Which decisions are orphaned?
+  gold: *id014
+- id: test-brain-14
+  split: test
+  kind: brain
+  question: Explain ADR-010?
+  gold: *id015
+- id: test-brain-15
+  split: test
+  kind: brain
+  question: What is the health of G_CHARGE_ONCE?
+  gold: *id016

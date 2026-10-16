@@ -6,9 +6,9 @@ Each phase has its own branch and local commits. No V3 merge or push has been pe
 | Phase | Status | Branch |
 | --- | --- | --- |
 | V3.1 Query recorder + Graph API | Complete and verified locally | `v3/query-recorder-graph-api` |
-| V3.2 Decision Explorer | Pending | `v3/decision-explorer` (planned) |
-| V3.3 Live consequences | Pending | `v3/live-consequences` (planned) |
-| V3.4 Benchmark | Pending | `v3/benchmark` (planned) |
+| V3.2 Decision Explorer | Implemented; batch verification in progress | `v3/decision-explorer` |
+| V3.3 Live consequences | Implemented; batch verification in progress | `v3/live-consequences` |
+| V3.4 Benchmark | Implemented; batch verification in progress | `v3/benchmark` |
 | V3.5 Red team | Pending | `v3/red-team` (planned) |
 | V3.6 Continuity | Pending | `v3/continuity` (planned) |
 | V3.7 Time machine | Pending | `v3/time-machine` (planned) |
@@ -102,3 +102,29 @@ polling/model use disabled. The owned server and graph were removed afterward.
 
 Browser artifacts and command logs are ignored under `.runtime/v3-validation/`.
 One existing Starlette/httpx deprecation warning is unrelated to this phase.
+
+## Batch workflow
+
+The user authorized building three phases before each full regression/browser run.
+Branches are stacked from the preceding V3 phase so the complete build stays isolated
+from `main`; no automatic main merge or push is performed. Each phase still has its
+own local commit. V3.2 is `720f993`; V3.3 is `0655b9f`.
+
+V3.2 adds a pinned, locally vendored Cytoscape explorer, node evidence, depth/kind
+controls, shift-click paths, keyboard-accessible node selection and a real query drawer.
+V3.3 reuses `/api/check` for hypothetical changes, shows the four downstream guarantee
+failures, merges the affected graph neighborhood and applies only engine-verified fixes.
+No hypothetical data is written or posted to GitHub.
+
+V3.4 freezes 60 authored questions and gold ids with a SHA-256 manifest before scoring.
+All three systems use real FalkorDB. Vector retrieval uses the pinned MiniLM checkpoint
+through CPU ONNX, downloaded once; `pip install -e ".[benchmark]"` installs optional
+inference dependencies. Run `premise bench run --download-model` against an ingested
+graph. Both retrieval systems use the same active ADR passages. All k values and both
+splits are published, with a table/chart on `/benchmark` and caveats in
+[BENCHMARK.md](BENCHMARK.md). CI replays recorded, real embeddings to test vector index
+creation/query/cleanup without a model download; their provenance is stored with them.
+The benchmark report uses actual local inference, not the test embedding fixture.
+
+Focused benchmark integration checks: **3 passed**. All **12 scenarios passed** during
+the batch browser run. Full regression and final browser confirmation are in progress.

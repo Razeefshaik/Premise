@@ -20,6 +20,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-asyncio>=0.24"]
 lite = ["falkordblite>=0.10; sys_platform == 'linux'"]
+benchmark = ["numpy==2.5.4", "onnxruntime==1.31.0", "tokenizers==0.23.3"]
 
 [project.scripts]
 premise = "premise.cli:main"

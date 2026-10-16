@@ -19,6 +19,7 @@
   <a class="brand" href="/" aria-label="Premise home"><span class="mark" aria-hidden="true">P</span>Premise</a>
   <nav aria-label="Main">
     <a href="/explore" {% if path == '/explore' %}aria-current="page"{% endif %}><span>Explore</span></a>
+    <a href="/benchmark" {% if path == '/benchmark' %}aria-current="page"{% endif %}><span>Benchmark</span></a>
     <a href="/" {% if path == '/' %}aria-current="page"{% endif %}>{{ icon('network') }}<span>Company Brain</span></a>
     <a href="/what-if" {% if path.startswith('/what-if') %}aria-current="page"{% endif %}>{{ icon('flask-conical') }}<span>What if</span></a>
     <a href="/docs">{{ icon('braces') }}<span>API</span></a>

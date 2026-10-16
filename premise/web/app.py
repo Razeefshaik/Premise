@@ -162,6 +162,26 @@ def create_app(client=None, config=None, *, graph_api_at_ms=None, graph_node_cap
     def health():
         return tools.call("guarantee_health",{})
 
+    @app.get('/benchmark', response_class=HTMLResponse)
+    def benchmark(request: Request):
+        return templates.TemplateResponse(request=request,name='benchmark.html',context={})
+
+    @app.get('/api/benchmark/questions')
+    def benchmark_questions():
+        from ..benchmark.run import dataset
+        data, manifest = dataset()
+        return {**data,'manifest':manifest,'queries':[]}
+
+    @app.get('/api/benchmark')
+    def benchmark_results():
+        import json
+        path = Path(__file__).resolve().parents[2] / 'bench/results/latest.json'
+        if not path.exists():
+            return JSONResponse({'error':'No recorded benchmark. Run premise bench run locally.','queries':[]},status_code=404)
+        result = json.loads(path.read_text(encoding='utf-8'))
+        return {**result,'recorded':True,'queries':result['setup_queries'][:1] +
+                [q for row in result['rows'][:7] for q in row['queries']]}
+
     @app.get("/assessments/{aid}",response_class=HTMLResponse)
     def assessment(request:Request,aid:str):
         tools.guard()
