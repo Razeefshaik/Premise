@@ -3,68 +3,69 @@
 {% block content %}
 {% set tally = namespace(holds=0, unknown=0, broken=0) %}
 {% for g in health.guarantees %}{% if g.status == 'holds' %}{% set tally.holds = tally.holds + 1 %}{% elif g.status == 'broken' %}{% set tally.broken = tally.broken + 1 %}{% else %}{% set tally.unknown = tally.unknown + 1 %}{% endif %}{% endfor %}
-<section class="hero" aria-labelledby="hero-title">
+{% set states = {} %}{% for a in health.assumptions %}{% set _ = states.update({a.id: a.state}) %}{% endfor %}
+<section class="frame hero" aria-labelledby="hero-title">
+  <p class="wordmark" aria-hidden="true">PREMISE</p>
+  <div class="brain-stage" id="brain">
+    <p class="brain-fallback">Loading the company brain…</p>
+    <p class="brain-hint">Drag to turn the brain · point at a cell to trace it</p>
+  </div>
   <div class="hero-copy">
-    <h1 id="hero-title" class="display rise">What still holds?</h1>
+    <h1 id="hero-title" class="rise">What still holds?</h1>
     <p class="statement rise">Premise connects every architecture decision to the guarantees it relies on, and checks each change against the facts you have today.</p>
-    <dl class="readout rise">
-      <div><dt><span class="live" aria-hidden="true"></span>Graph</dt><dd>Ready at revision {{ state.rev }}</dd></div>
-      <div><dt>Main</dt><dd><code>{{ state.main_sha[:10] }}</code></dd></div>
-      <div><dt>Guarantees</dt><dd><span class="t-holds">{{ tally.holds }} hold</span>{% if tally.unknown %} · <span class="t-unknown">{{ tally.unknown }} unknown</span>{% endif %}{% if tally.broken %} · <span class="t-broken">{{ tally.broken }} broken</span>{% endif %}</dd></div>
-    </dl>
+    <ul class="readout rise">
+      <li><span class="live" aria-hidden="true"></span>Ready at revision <b>{{ state.rev }}</b></li>
+      <li>Main <code>{{ state.main_sha[:10] }}</code></li>
+      <li><b class="t-holds" data-count="{{ tally.holds }}">{{ tally.holds }}</b> hold</li>
+      {% if tally.unknown %}<li><b class="t-unknown" data-count="{{ tally.unknown }}">{{ tally.unknown }}</b> unknown</li>{% endif %}
+      {% if tally.broken %}<li><b class="t-broken" data-count="{{ tally.broken }}">{{ tally.broken }}</b> broken</li>{% endif %}
+    </ul>
     <div class="fire rise" id="fire">
-      <p class="fire-label" id="fire-label">Send a proposed change through the network. Nothing is stored or posted.</p>
+      <p class="fire-label" id="fire-label">Fire a proposed change through the brain. Nothing is stored or posted.</p>
       <div class="fire-presets" role="group" aria-labelledby="fire-label">
         {% for p in plate.presets %}<button type="button" class="chip" data-fire="{{ p.id }}">{{ icon('zap') }}<span>{{ p.title }}</span></button>{% endfor %}
       </div>
-      <div class="fire-result" id="fire-result" aria-live="polite"></div>
     </div>
   </div>
-  <figure class="specimen">
-    <div class="specimen-stage" id="plate">
-      <img class="plate-fallback" src="/static/img/plate-purkinje-cell.webp" width="450" height="682" alt="Cajal's drawing of two Purkinje cells, their dendrites branching upward">
-    </div>
-    <figcaption><span class="fig">Fig. 1.</span> Kestrel Platform at revision {{ state.rev }}: {{ plate.facts|length }} tracked facts feed {{ plate.assumptions|length }} assumptions, which hold up {{ plate.guarantees|length }} guarantees. Drawn live from FalkorDB; point at a cell to trace it.</figcaption>
-  </figure>
+  <aside class="hud glass rise" aria-live="polite">
+    <h2>Live from FalkorDB</h2>
+    <p>Kestrel Platform, revision {{ state.rev }}</p>
+    <div id="fire-result"><p class="hud-idle"><b data-count="{{ plate.facts|length }}">{{ plate.facts|length }}</b> facts · <b data-count="{{ plate.assumptions|length }}">{{ plate.assumptions|length }}</b> assumptions · <b data-count="{{ plate.guarantees|length }}">{{ plate.guarantees|length }}</b> guarantees. Fire a change to see what breaks.</p></div>
+  </aside>
 </section>
 <script type="application/json" id="plate-data">{{ plate|tojson }}</script>
 
-<figure class="strip reveal-plate">
-  <img src="/static/img/plate-cortex-strip.webp" width="1850" height="505" loading="lazy" alt="Cajal's drawing of horizontal cells in the first layer of the motor cortex, their axons running in long parallel paths">
-  <figcaption><span class="fig">Fig. 2.</span> Santiago Ramón y Cajal, horizontal cells of the motor cortex, Golgi method. Wellcome Collection, CC BY 4.0.</figcaption>
-</figure>
+<section class="network" aria-labelledby="network-title">
+  <figure class="specimen reveal">
+    <div class="specimen-stage" id="plate"></div>
+    <figcaption><span class="fig">Fig. 1.</span> {{ plate.facts|length }} tracked facts feed {{ plate.assumptions|length }} assumptions, which hold up {{ plate.guarantees|length }} guarantees. Drawn live from FalkorDB.</figcaption>
+  </figure>
+  <div class="network-copy glass reveal">
+    <div>
+      <h2 id="network-title">The decision network</h2>
+      <p>The same nerves as the brain above, laid flat. Point at a cell to trace everything it touches; fire a change and watch the signal travel from the fact to every guarantee it breaks.</p>
+    </div>
+    <ul class="legend">
+      <li class="t-holds"><i></i><span>Holds on its full prerequisite set</span></li>
+      <li class="t-unknown"><i></i><span>Unknown: evidence missing or expired</span></li>
+      <li class="t-broken"><i></i><span>Broken by the proposed change</span></li>
+    </ul>
+  </div>
+</section>
+
+<section aria-labelledby="guarantees-title">
+  <div class="section-head reveal"><h2 id="guarantees-title">Guarantees</h2><p>Ordered by graph PageRank</p></div>
+  <div class="bento">
+    {% for g in health.guarantees %}<a class="card g-card reveal is-{{ g.status }}" href="/entities/{{ g.id }}" data-guarantee="{{ g.id }}">
+      <div class="g-top"><span class="id"><code>{{ g.id }}</code></span>{{ badge(g.status) }}</div>
+      <p class="g-statement">{{ g.statement }}</p>
+      {% if loop.first %}<ul class="prereq">{% for a in g.prerequisites %}<li><i class="{{ states.get(a, '') }}"></i><code>{{ a }}</code><span>{{ states.get(a, 'not evaluated') }}</span></li>{% endfor %}</ul>{% endif %}
+      <div class="g-foot"><span>{{ g.prerequisites|length }} prerequisite{% if g.prerequisites|length != 1 %}s{% endif %}{% if g.unverified %} · <span class="t-unknown">{{ g.unverified }} unverified</span>{% endif %}</span><span class="dots" aria-hidden="true">{% for a in g.prerequisites %}<i class="{{ states.get(a, '') }}"></i>{% endfor %}</span></div>
+    </a>{% endfor %}
+  </div>
+</section>
 
 <div class="board">
-  <section class="guarantees" aria-labelledby="guarantees-title">
-    <div class="section-head reveal"><h2 id="guarantees-title">Guarantees</h2><p>Ordered by graph PageRank</p></div>
-    <div class="table-wrap reveal">
-      <table>
-        <thead><tr><th scope="col">Guarantee</th><th scope="col">Current health</th><th scope="col">Evidence coverage</th></tr></thead>
-        <tbody>
-        {% for g in health.guarantees %}<tr class="reveal">
-          <td><a class="id" href="/entities/{{ g.id }}"><code>{{ g.id }}</code></a><p>{{ g.statement }}</p></td>
-          <td data-label="Current health">{{ badge(g.status) }}</td>
-          <td data-label="Evidence coverage"><span class="num">{{ g.prerequisites|length }}</span> prerequisites{% if g.unverified %}<small class="warning">{{ icon('clock') }}{{ g.unverified }} unverified attestation{% if g.unverified != 1 %}s{% endif %}</small>{% endif %}</td>
-        </tr>{% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </section>
-  <aside class="analyst" aria-labelledby="ask-title">
-    <img class="analyst-plate" src="/static/img/plate-purkinje-cell.webp" width="450" height="682" alt="" loading="lazy">
-    <h2 id="ask-title">Ask the company</h2>
-    <p>Follow a decision to its assumptions, sources, and the people who know why.</p>
-    <form id="ask-form">
-      <label for="question">Your question</label>
-      <textarea id="question" required maxlength="2000" rows="4" placeholder="Why does ADR-012 skip idempotency, and who owns it now?"></textarea>
-      <button id="ask-button" class="button primary">{{ icon('corner-down-left') }}<span>Find graph evidence</span></button>
-    </form>
-    <p class="mode">{% if llm %}Model provider configured: {{ provider }}{% else %}Deterministic graph tools{% endif %}</p>
-    <div id="answer" aria-live="polite"></div>
-  </aside>
-</div>
-
-<div class="lower-grid">
   <section class="recent" aria-labelledby="recent-title">
     <div class="section-head reveal"><h2 id="recent-title">Recent PR assessments</h2></div>
     {% if recent %}<div class="table-wrap reveal">
@@ -78,16 +79,29 @@
       </table>
     </div>{% else %}<div class="empty reveal">{{ icon('git-pull-request') }}<p>No PR assessments yet. Assess a sandbox PR with <code>premise assess --pr N</code>, or load the local demo with <code>premise demo</code>.</p></div>{% endif %}
   </section>
-  <section class="gaps" aria-labelledby="gaps-title">
-    <div class="section-head reveal"><h2 id="gaps-title">Accountability gaps</h2></div>
-    <p class="reveal">These accepted decisions have no active accountable author or approver.</p>
-    <ul class="gap-list">{% for d in orphaned %}<li class="reveal"><a class="gap" href="/entities/{{ d.decision }}">{{ icon('user-x') }}<span class="gap-body"><strong class="id"><code>{{ d.decision }}</code></strong><span>{{ d.title }}</span><small>{{ d.services|join(', ') }}</small></span></a></li>{% else %}<li class="quiet">No accountability gaps in this revision.</li>{% endfor %}</ul>
-    <figure class="gap-plate reveal-plate">
-      <img src="/static/img/plate-cortex-columns.webp" width="672" height="777" loading="lazy" alt="Three of Cajal's drawings of the layered human cortex, from cell bodies alone to the full web of fibres">
-      <figcaption><span class="fig">Fig. 3.</span> Santiago Ramón y Cajal, the layers of the human cortex drawn three ways, from cell bodies alone to the full web of fibres.</figcaption>
-    </figure>
-  </section>
+  <aside class="analyst" aria-labelledby="ask-title">
+    <h2 id="ask-title">Ask the company</h2>
+    <p>Follow a decision to its assumptions, sources, and the people who know why.</p>
+    <form id="ask-form">
+      <label for="question">Your question</label>
+      <textarea id="question" required maxlength="2000" rows="4" placeholder="Why does ADR-012 skip idempotency, and who owns it now?"></textarea>
+      <button id="ask-button" class="button">{{ icon('corner-down-left') }}<span>Find graph evidence</span></button>
+    </form>
+    <p class="mode">{% if llm %}Model provider configured: {{ provider }}{% else %}Deterministic graph tools{% endif %}</p>
+    <div id="answer" aria-live="polite"></div>
+  </aside>
 </div>
+
+<section class="gaps" aria-labelledby="gaps-title">
+  <div class="section-head reveal"><h2 id="gaps-title">Accountability gaps</h2><p>Accepted decisions with no active accountable author or approver</p></div>
+  <ul class="gap-list">{% for d in orphaned %}<li class="reveal"><a class="gap" href="/entities/{{ d.decision }}">{{ icon('user-x') }}<span class="gap-body"><strong class="id"><code>{{ d.decision }}</code></strong><span>{{ d.title }}</span><small>{{ d.services|join(', ') }}</small></span></a></li>{% else %}<li class="quiet">No accountability gaps in this revision.</li>{% endfor %}</ul>
+</section>
 {% if warnings %}<details class="warnings"><summary>{{ icon('triangle-alert') }}Ingestion warnings ({{ warnings|length }})</summary><ul>{% for w in warnings %}<li>{{ w }}</li>{% endfor %}</ul></details>{% endif %}
 {% endblock %}
-{% block scripts %}<script src="/static/ask.js" defer></script><script src="/static/plate.js" defer></script>{% endblock %}
+{% block scripts %}
+<script src="/static/ask.js" defer></script>
+<script src="/static/fire.js" defer></script>
+<script src="/static/plate.js" defer></script>
+<script type="importmap">{"imports": {"three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module" src="/static/brain3d.js"></script>
+{% endblock %}

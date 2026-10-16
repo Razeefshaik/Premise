@@ -1,22 +1,46 @@
-// Shared page behaviour: section entrances and the icon helper used by the page scripts.
+// Shared page behaviour: section entrances, counters, card spotlights, and the icon/badge helpers.
 (() => {
-  const targets = [...document.querySelectorAll('.reveal, .reveal-plate')];
+  const still = navigator.webdriver || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const targets = [...document.querySelectorAll('.reveal')];
   const showAll = () => targets.forEach(el => el.classList.add('in'));
-  // Automation and full-page captures never scroll, so they get the finished page at once.
-  if (navigator.webdriver || !('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    // Settle the page outright: no hidden states, no transitions in flight, every picture loaded.
+
+  // Cards light up where the pointer is
+  document.addEventListener('pointermove', event => {
+    const card = event.target.closest?.('.card');
+    if (!card) return;
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--x', `${event.clientX - r.left}px`);
+    card.style.setProperty('--y', `${event.clientY - r.top}px`);
+  }, {passive: true});
+
+  // Automation, reduced motion and old browsers get the settled page at once.
+  if (still || !('IntersectionObserver' in window)) {
     document.documentElement.classList.remove('js');
-    if (navigator.webdriver) document.querySelectorAll('img[loading="lazy"]').forEach(img => { img.loading = 'eager'; });
     showAll();
     return;
   }
-  // Stagger siblings that arrive together: heading, then text, then the table or plate.
+
+  // Numbers count up once, from zero to the graph's value
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const end = Number(el.dataset.count);
+    if (!Number.isFinite(end) || end === 0) return;
+    const start = performance.now(), duration = 900 + end * 25;
+    const step = now => {
+      const t = Math.min(1, (now - start) / duration);
+      el.textContent = String(Math.round(end * (1 - Math.pow(1 - t, 3))));
+      if (t < 1) requestAnimationFrame(step);
+    };
+    el.textContent = '0';
+    requestAnimationFrame(step);
+  });
+
+  // Siblings arriving together stagger: heading, text, then the cards row by row
   const groups = new Map();
   for (const el of targets) {
-    const parent = el.closest('section, .pair, .board, .lower-grid, ul, ol') || document.body;
+    const parent = el.parentElement;
     const index = groups.get(parent) || 0;
     groups.set(parent, index + 1);
-    el.style.setProperty('--d', `${Math.min(index, 6) * 70}ms`);
+    el.style.setProperty('--d', `${Math.min(index, 8) * 60}ms`);
   }
   const observer = new IntersectionObserver(entries => {
     for (const entry of entries) {
@@ -24,7 +48,7 @@
       entry.target.classList.add('in');
       observer.unobserve(entry.target);
     }
-  }, {rootMargin: '0px 0px -8% 0px', threshold: 0.08});
+  }, {rootMargin: '0px 0px -6% 0px', threshold: 0.06});
   targets.forEach(el => observer.observe(el));
 })();
 

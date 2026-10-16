@@ -21,7 +21,17 @@ form.addEventListener('submit', async event => {
     if (!response.ok) throw new Error(result.error || 'The graph could not answer this question.');
     box.classList.remove('thinking');
     append('h3', result.outcome.replaceAll('_', ' '));
-    append('p', result.answer_markdown);
+    // The answer arrives word by word; automation and reduced motion get it whole.
+    const answer = append('p', '');
+    if (navigator.webdriver || matchMedia('(prefers-reduced-motion: reduce)').matches) answer.textContent = result.answer_markdown;
+    else result.answer_markdown.split(/(\s+)/).forEach((word, i) => {
+      if (!word.trim()) { answer.append(word); return; }
+      const span = document.createElement('span');
+      span.className = 'reveal-word';
+      span.style.animationDelay = `${Math.min(i, 160) * 9}ms`;
+      span.textContent = word;
+      answer.append(span);
+    });
     append('small', `Answer mode: ${result.mode} · provider: ${result.provider || result.mode}`);
     if (result.provider_error === 'AnswerVerificationFailed') {
       append('p', 'The model summary did not pass verification; showing graph results.');

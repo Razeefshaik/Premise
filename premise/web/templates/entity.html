@@ -3,15 +3,14 @@
 {% block page %}page-entity{% endblock %}
 {% block content %}
 <a class="back" href="/">{{ icon('arrow-left') }}Company Brain</a>
-<header class="page-head with-plate entity-head">
-  <img class="head-plate tall" src="/static/img/plate-cortex-columns.webp" width="672" height="777" alt="Three of Cajal's drawings of the layered human cortex">
+<header class="frame page-head entity-head">
+  <span class="orb" aria-hidden="true"></span>
   <div class="page-head-copy">
     <h1 class="rise entity-id">{{ id }}</h1>
     {% if data is mapping and data.decision %}<p class="statement rise">{{ data.decision.title }}</p>
     <p class="meta rise"><span>{{ icon('layers') }}Lifecycle: {{ data.decision.status }}</span><span>{{ icon('users') }}Current reviewers: {{ data.reviewers|join(', ') or 'No active reviewer' }}</span></p>
     {% elif data is mapping and data.guarantees is defined and data.guarantees %}<p class="statement rise">{{ data.guarantees[0].statement }}</p>
     {% elif data is mapping and data.text %}<p class="statement rise">{{ data.text }}</p>{% endif %}
-    <p class="plate-note rise"><span class="fig">Fig. 1.</span> Santiago Ramón y Cajal, the layers of the human cortex drawn three ways.</p>
   </div>
 </header>
 

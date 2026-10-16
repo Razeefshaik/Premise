@@ -3,8 +3,8 @@
 {% block page %}page-assessment{% endblock %}
 {% block content %}
 <a class="back" href="/">{{ icon('arrow-left') }}Company Brain</a>
-<header class="page-head with-plate">
-  <img class="head-plate" src="/static/img/plate-hippocampus.webp" width="832" height="687" alt="Cajal's drawing of the hippocampus, signal pathways looping through its cell layers">
+<header class="frame page-head">
+  <span class="orb" aria-hidden="true"></span>
   <div class="page-head-copy">
     <h1 class="rise">Consequences, connected.</h1>
     <p class="statement rise">Every affected guarantee was evaluated on all of its prerequisites.</p>
@@ -14,7 +14,6 @@
       <span>{{ icon('git-commit-horizontal') }}Head <code>{{ result.head_sha }}</code></span>
       <a href="/api/assessments/{{ aid }}">{{ icon('braces') }}Assessment JSON</a>
     </p>
-    <p class="plate-note rise"><span class="fig">Fig. 1.</span> Santiago Ramón y Cajal, the hippocampus, its signal paths looping from one cell layer to the next.</p>
   </div>
   <div class="verdict {{ result.verdict|lower }} rise" role="status">
     <span class="verdict-label">Verdict</span>
@@ -44,7 +43,7 @@
   <h2 id="reach-title" class="reveal">How far it reaches</h2>
   <figure class="graph-panel reveal">
     <pre class="mermaid">{{ styled }}</pre>
-    <figcaption><span class="fig">Fig. 2.</span> Each broken path fires from the changed assumption up to the decisions that promise or rely on it.</figcaption>
+    <figcaption><span class="fig">Fig. 1.</span> Each broken path fires from the changed assumption up to the decisions that promise or rely on it.</figcaption>
   </figure>
   <details><summary>Dependency graph text</summary><pre>{{ mermaid }}</pre></details>
   <div class="table-wrap reveal"><table>

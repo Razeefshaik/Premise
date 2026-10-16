@@ -1,4 +1,4 @@
-// Fig. 1: the company's decision network drawn as a Cajal plate, from the live graph.
+// Fig. 1: the company's decision network laid flat as nerves, drawn from the live graph.
 // Facts feed assumptions; assumptions hold up guarantees. Firing a change uses the read-only /api/check.
 (() => {
   const stage = document.getElementById('plate');
@@ -214,8 +214,6 @@
   setInterval(impulse, 2600);
 
   // Firing a change ---------------------------------------------------------
-  const result = document.getElementById('fire-result');
-  let active = null;
   function clearFire() {
     svg.classList.remove('firing');
     for (const cell of cells.values()) cell.classList.remove('fired', 'touched', 'checked');
@@ -243,61 +241,10 @@
       if (isChecked && edge.kind === 'ag') cells.get(edge.to)?.classList.add('checked');
     }
   }
-  function summary(check) {
-    const broken = check.not_holding.filter(g => g.status === 'broken').length;
-    const unknown = check.not_holding.length - broken;
-    if (broken) return `${broken} guarantee${broken === 1 ? '' : 's'} stop holding${unknown ? `, ${unknown} become unknown` : ''}.`;
-    if (unknown) return `${unknown} guarantee${unknown === 1 ? '' : 's'} can no longer be shown to hold.`;
-    return 'Every affected guarantee still holds.';
-  }
-  function report(check, changes) {
-    result.replaceChildren();
-    const wrap = document.createElement('div');
-    wrap.className = 'settle';
-    const line = document.createElement('div');
-    line.className = 'verdict-line';
-    line.append(window.premiseBadge(check.verdict));
-    const text = document.createElement('span');
-    text.textContent = summary(check);
-    line.append(text);
-    const advice = document.createElement('p');
-    advice.textContent = check.advice;
-    const url = new URL('/what-if', location.origin);
-    for (const c of changes) url.searchParams.append('set', `${c.fact}=${JSON.stringify(c.value)}`);
-    const link = document.createElement('a');
-    link.href = url.pathname + url.search;
-    link.append(document.createTextNode('Trace it in What if'), window.premiseIcon('arrow-up-right'));
-    wrap.append(line, advice, link);
-    result.append(wrap);
-  }
-  async function fire(button) {
-    const preset = data.presets.find(p => p.id === button.dataset.fire);
-    const buttons = document.querySelectorAll('[data-fire]');
-    if (active === preset.id) {
-      active = null; lastResult = null;
-      buttons.forEach(b => b.setAttribute('aria-pressed', 'false'));
-      clearFire(); result.replaceChildren();
-      return;
-    }
-    active = preset.id;
-    buttons.forEach(b => b.setAttribute('aria-pressed', String(b === button)));
-    const changes = Object.entries(preset.values).map(([fact, value]) => ({fact, value}));
-    result.textContent = 'Tracing the change through the graph…';
-    try {
-      const response = await fetch('/api/check', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({changes})});
-      const check = await response.json();
-      if (active !== preset.id) return;
-      if (!response.ok) throw new Error('The graph could not check this change.');
-      lastResult = check;
-      apply(check);
-      report(check, changes);
-    } catch (error) {
-      result.textContent = error.message;
-    }
-  }
-  document.querySelectorAll('[data-fire]').forEach(button => {
-    button.setAttribute('aria-pressed', 'false');
-    button.addEventListener('click', () => fire(button));
+  // The shared fire controller (fire.js) broadcasts each checked scenario; the plate follows it.
+  document.addEventListener('premise:fire', event => {
+    lastResult = event.detail ? event.detail.check : null;
+    if (lastResult) apply(lastResult); else clearFire();
   });
 
   draw();

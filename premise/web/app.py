@@ -35,9 +35,9 @@ def attestation_evidence(graph, assumptions):
                      for a in item.attestations] for item in assumptions}
 
 
-STATE_CLASSES = ('\n  classDef broken fill:#3b1913,stroke:#f27a62,color:#ffd8cf'
-                 '\n  classDef unknown fill:#3a2c12,stroke:#eab65a,color:#f8e3bc'
-                 '\n  classDef holds fill:#16271d,stroke:#8fcfa6,color:#d7efdf')
+STATE_CLASSES = ('\n  classDef broken fill:#2a0f1a,stroke:#ff6b8b,color:#ffd3dd'
+                 '\n  classDef unknown fill:#2a2310,stroke:#ffd27a,color:#fff0cc'
+                 '\n  classDef holds fill:#0d2620,stroke:#7cf0c8,color:#d8fff2')
 
 
 def coloured(text, guarantees):

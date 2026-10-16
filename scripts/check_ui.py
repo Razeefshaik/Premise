@@ -20,7 +20,7 @@ def main():
         page.goto(base+'/',wait_until='networkidle')
         print('Brain loaded',flush=True)
         page.get_by_role('heading',name='What still holds?').wait_for()
-        assert page.locator('tbody tr').count()>=9
+        assert page.locator('.g-card').count()>=9
         page.screenshot(path=str(artifact/'brain-desktop.png'),full_page=True)
         page.get_by_label('Your question').fill('Why ADR-012, and who owns it now?')
         page.get_by_role('button',name='Find graph evidence').click()

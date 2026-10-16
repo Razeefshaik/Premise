@@ -1,8 +1,8 @@
 {% extends 'base.html' %}{% from '_ui.html' import icon, state as badge %}
 {% block page %}page-error{% endblock %}
 {% block content %}
-<section class="dark-room">
-  <img class="dark-plate" src="/static/img/plate-purkinje-field.webp" width="1800" height="695" alt="Cajal's ink drawing of nerve cells in the brain, their fibres crossing in a dense field">
+<section class="frame dark-room">
+  <span class="orb" aria-hidden="true"></span>
   <div class="dark-copy">
     {{ badge('error', 'Unavailable', 'large') }}
     <h1>Assessment unavailable</h1>
