@@ -69,6 +69,7 @@ class Pipeline:
         if now_ms() < self._sync_retry_at:
             return []
         try:
+            before_rev = graph_ready(self.client)[1] if self.settings.steward_enabled else None
             self.sync_main()
         except Exception:
             log.exception("Main synchronization failed")
@@ -82,6 +83,12 @@ class Pipeline:
                     self.github.status(pr["head"]["sha"], "error", "Assessment unavailable: ingestion or graph failed")
             raise
         self._sync_failures = self._sync_retry_at = 0
+        if self.settings.steward_enabled and graph_ready(self.client)[1] != before_rev:
+            from .steward import Steward
+            try:
+                Steward(self.client,self.github,since_days=self.settings.since_days).run(execute=True)
+            except Exception:
+                log.exception('Knowledge steward failed; continuing PR assessments')
         self.executor.reconcile()
         cursor = self.store.cursor()
         rev = self.client.named("graph_state")[0]["rev"]

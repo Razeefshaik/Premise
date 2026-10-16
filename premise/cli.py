@@ -48,12 +48,23 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("mcp")
     sub.add_parser("poll-once")
     sub.add_parser("reconcile")
+    p_steward=sub.add_parser('steward',help='Plan knowledge maintenance; writes require --execute')
+    p_steward.add_argument('--execute',action='store_true')
     sub.add_parser("demo",help="Persist locally evaluated scenarios for browsing; no GitHub calls")
     p_reset=sub.add_parser("reset")
     p_reset.add_argument("--demo",action="store_true",required=True)
     args = ap.parse_args(argv)
 
     client = GraphClient(args.host, args.port, args.graph)
+    if args.cmd == 'steward':
+        from .github.api import GitHub
+        from .github.steward import Steward
+        github=GitHub(s.sandbox_repo,s.github_token)
+        try:
+            print(json.dumps(Steward(client,github,since_days=s.since_days).run(execute=args.execute),indent=2))
+            return 0
+        finally:
+            github.close()
     if args.cmd == 'check':
         from .reasoning.preflight import check_proposal, repo_path
         from .graph.client import GraphUnavailable

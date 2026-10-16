@@ -26,6 +26,7 @@ class Settings:
     poll_seconds: int = field(default_factory=lambda: int(os.getenv("POLL_SECONDS", "15")))
     auto_fix_pr: bool = field(default_factory=lambda: os.getenv("AUTO_FIX_PR", "false").lower() == "true")
     poll_enabled: bool = field(default_factory=lambda: os.getenv("POLL_ENABLED", "true").lower() == "true")
+    steward_enabled: bool = field(default_factory=lambda: os.getenv("STEWARD_ENABLED", "false").lower() == "true")
 
     def __post_init__(self):
         if self.llm_provider not in {"anthropic", "codex-cli", "none"}:

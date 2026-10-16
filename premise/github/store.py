@@ -76,3 +76,16 @@ class Store:
 
     def set_cursor(self, cursor):
         self.client.write("MATCH (s:GraphState {id:'state'}) SET s.pr_cursor_json=$cursor", {"cursor": json.dumps(cursor)})
+
+    def begin_task(self, key, kind, payload):
+        self.client.write("MERGE (s:StewardAction {id:$id}) SET s.kind=$kind, s.entity=$entity, "
+                          "s.status='executing', s.issue_url=$url, s.graph_rev=$rev, s.payload_json=$payload",
+            {'id':key,'kind':kind,'entity':payload['entity'],'url':payload.get('issue_url',''),
+             'rev':payload['graph_rev'],'payload':json.dumps(payload,sort_keys=True)})
+
+    def finish_task(self, key, status='done', url='', error=''):
+        self.client.write('MATCH (s:StewardAction {id:$id}) SET s.status=$status, s.issue_url=$url, s.error=$error',
+                          {'id':key,'status':status,'url':url,'error':error})
+
+    def pending_tasks(self):
+        return self.client.read("MATCH (s:StewardAction) WHERE s.status IN ['executing','failed'] RETURN s.id AS id, s.payload_json AS payload")

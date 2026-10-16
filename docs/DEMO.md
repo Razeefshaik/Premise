@@ -29,6 +29,18 @@ fix PR. Keep those claims separate when recording.
 
 Three questions:
 
+Additional main-branch demonstrations:
+
+- Preflight: an agent calls `check_files` before editing Kestrel configuration; the unsafe
+  72-hour change is BLOCKED and the complete repair plus reviewers is returned. The
+  installed MCP protocol is tested, but Claude Code automatic tool selection still needs
+  a machine with Claude Code installed.
+- What if: open `/what-if?set=paylane.retry_window_hours=72`, show the red graph, then
+  Apply fix and show CLEAR. This is a hypothetical check and saves/posts nothing.
+- Optional steward: show the dry-run plan for the expired rates attestation and orphaned
+  ADR-012. Show a real GitHub issue only after deliberately executing the reviewed plan;
+  mocked issue tests are not evidence of a live issue.
+
 1. Which guarantees are load bearing, and which rest on unverified assumptions?
 2. Why does ADR-012 skip idempotency, and who owns that decision now?
 3. Who knows paymentservice, and what evidence supports that?

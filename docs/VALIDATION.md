@@ -4,6 +4,14 @@ Run date: October 16, 2026 (IST). Initial build checks and subsequent live check
 
 ## F1 preflight feature merge gate
 
+F3 knowledge steward passed **152 tests** (58.79 s), **12/12 CLI scenarios**, and
+the extended desktop/mobile browser script (`artifacts/f3/`). Real FalkorDB and
+`httpx.MockTransport` cover exact findings, dry-run read-only state, idempotence,
+reconciliation, resolution comments/closure, human suppression, escaping, ten-write
+cap, graph readiness and disabled/revision-gated polling. Optional steward failure
+does not prevent PR checks. Only `StewardAction` operational records are written by
+the steward. No live maintenance issues were created during this work.
+
 F2 subsequently passed **145 tests** (52.70 s), **12/12 CLI scenarios**, and the extended
 desktop/mobile browser gate (`artifacts/f2-merge/`). `/what-if` displays 12 registered
 facts and four source-loaded presets. The browser verified S1 BLOCKED, four non-holding

@@ -69,6 +69,17 @@ work independently of public hosting.
 Token permissions on the sandbox: Contents, Pull requests, Issues, Commit statuses read/write;
 Metadata read. Administration write is additionally needed to configure branch protection.
 
+The optional knowledge steward specifically needs **Issues: Read and write** on
+`Razeefshaik/kestrel-platform`. Start with `premise steward` to inspect its dry-run plan.
+Only `premise steward --execute`, or explicitly setting `STEWARD_ENABLED=true` for a
+poller that ingests a new main revision, permits issue writes. Keep the flag false for
+ordinary demos until that plan has been reviewed. It never assigns or mentions the
+fictional people, reopens human-closed issues, edits files or merges PRs.
+
+Automated steward validation uses real FalkorDB with HTTP-level GitHub mocks; no live
+steward issue creation is claimed. New Kestrel agent instructions are committed locally
+in `.runtime/kestrel-publish` and need a separate manual push when publishing that repo.
+
 ```powershell
 docker compose up --build -d
 .\.venv\Scripts\python.exe scripts/github_rehearsal.py --execute --protect-main

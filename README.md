@@ -55,6 +55,31 @@ Apply fix adds the verified repair to the proposal and rechecks it. The URL stor
 proposal as repeated `set` parameters so it can be shared on a reachable deployment.
 Nothing is saved or posted, and external facts are explicitly labelled.
 
+## Knowledge steward
+
+`premise steward` plans maintenance issues in `SANDBOX_REPO` for unverified manual
+assumptions and accepted decisions without active accountable people. The plan is
+deterministic, includes current guarantee health, sources and reviewer candidates,
+and defaults to dry run. It makes GitHub reads but no issue or graph writes.
+
+```powershell
+.\.venv\Scripts\python.exe -m premise.cli steward
+# Explicitly opt in to issue writes after reviewing the plan:
+.\.venv\Scripts\python.exe -m premise.cli steward --execute
+```
+
+Execution creates or updates bot-authored marked issues, comments and closes them
+when resolved, and respects human-closed issues without reopening. At most ten
+GitHub writes are attempted per sweep; deferred work is reported. Fictional people
+are never assigned or mentioned. Only operational `StewardAction` nodes are written;
+domain knowledge is changed only through reviewed source commits and ingestion.
+
+`STEWARD_ENABLED=false` by default. Opting in runs a sweep only when `sync_main`
+changes the graph revision; unchanged revisions do not trigger repeated issue writes.
+Use the explicit command for a time-based audit without a new main revision. A failed
+optional sweep is logged and does not stop PR assessments. Issues read/write permission
+is required; see [publishing instructions](docs/PUBLISH.md).
+
 ## The useful distinction
 
 ADR-007 promises both deduplication and fast acknowledgement. ADR-012 depends on
@@ -292,6 +317,7 @@ remote URLs, graph records and application logs.
 | POLL_ENABLED | Compose defaults false; set true for real polling |
 | POLL_SECONDS | 15 |
 | AUTO_FIX_PR | false; explicitly enable verified fix PRs |
+| STEWARD_ENABLED | false; opt in to maintenance issue writes after a new main graph revision |
 | PUBLIC_BASE_URL | http://localhost:8000; use a reachable deployment URL for judges |
 | ANTHROPIC_API_KEY | Optional; no key means deterministic tools and repair |
 | LLM_MODEL | claude-sonnet-5-5, configurable through the adapter |
