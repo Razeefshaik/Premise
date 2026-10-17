@@ -3,6 +3,7 @@ from pathlib import Path
 import json
 import os
 from playwright.sync_api import sync_playwright
+from explorer_checks import assert_canvas_in_first_screen, assert_hypothetical_status, assert_continuity_names
 
 
 def main():
@@ -60,12 +61,12 @@ def main():
         for preset,expected in [('S6','NEEDS_REVIEW'),('S12','NEEDS_REVIEW')]:
             page.locator(f'[data-preset="{preset}"]').click()
             page.locator('#check-verdict').filter(has_text=expected).wait_for()
-        for size in [{'width':1440,'height':1050},{'width':390,'height':844}]:
+        for size in [{'width':1440,'height':900},{'width':390,'height':844}]:
             page.set_viewport_size(size)
             page.goto(base+'/explore?focus=G_DEDUPE&depth=2',wait_until='networkidle')
             page.wait_for_function('window.premiseExplorer?.cy.nodes().length >= 5')
-            page.locator('#explorer-canvas').scroll_into_view_if_needed()
-            page.evaluate('window.premiseExplorer.cy.resize(); window.premiseExplorer.cy.fit(undefined,35)')
+            assert_canvas_in_first_screen(page)
+            page.locator('#graph-message').filter(has_text='nodes').wait_for()
             position=page.evaluate("window.premiseExplorer.cy.getElementById('G_DEDUPE').renderedPosition()")
             box=page.locator('#explorer-canvas').bounding_box()
             page.mouse.click(box['x']+position['x'],box['y']+position['y'])
@@ -82,13 +83,37 @@ def main():
             page.locator('[data-explorer-preset="S1"]').click()
             page.locator('#explorer-verdict').filter(has_text='BLOCKED').wait_for()
             assert page.evaluate('window.premiseExplorer.cy.nodes(".broken").length')==4
+            assert_hypothetical_status(page)
+            page.screenshot(path=str(artifact/f"explorer-blocked-{size['width']}.png"),full_page=True)
             if size['width']==1440:
                 page.locator('#explorer-canvas').screenshot(path=str(artifact/'explorer-red.png'))
+            page.get_by_role('tab',name='What if',exact=True).click()
             page.get_by_role('button',name='Apply verified fix').first.click()
             page.locator('#explorer-verdict').filter(has_text='CLEAR').wait_for()
             assert page.evaluate('window.premiseExplorer.cy.nodes(".broken").length')==0
+            assert_hypothetical_status(page,state='holds',assumption='holding',verdict='CLEAR')
             if size['width']==1440:
                 page.locator('#explorer-canvas').screenshot(path=str(artifact/'explorer-fixed.png'))
+        # Regression requested explicitly: a direct numeric proposal must label G_DEDUPE broken.
+        page.goto(base+'/explore?focus=G_DEDUPE&depth=2&set=paylane.retry_window_hours=72',wait_until='networkidle')
+        assert_hypothetical_status(page)
+        page.get_by_role('tab',name='What if',exact=True).click()
+        page.get_by_label('Proposed paylane.retry_window_hours',exact=True).fill('12')
+        assert_hypothetical_status(page,state='holds',assumption='holding',verdict='CLEAR')
+        page.get_by_role('tab',name='What if',exact=True).click()
+        page.locator('.v3-fact').filter(has=page.locator('#slider-paylane-retry_window_hours')).get_by_role('button',name='Reset',exact=True).click()
+        page.locator('#explorer-verdict').filter(has_text='Baseline').wait_for()
+        page.locator('#node-picker').select_option('G_DEDUPE')
+        page.locator('#node-status').filter(has_text='holds · Baseline').wait_for()
+        for preset,target,state in [('S6','G_ADS_FRESH','broken'),('S12','G_RATES_FRESH','unknown')]:
+            page.get_by_role('tab',name='What if',exact=True).click()
+            page.locator(f'[data-explorer-preset="{preset}"]').click()
+            page.locator('#explorer-verdict').filter(has_text='NEEDS_REVIEW').wait_for()
+            page.locator('#node-picker').select_option(target)
+            page.locator(f'#node-status[data-state="{state}"]').wait_for()
+            assert page.evaluate('(id)=>window.premiseExplorer.cy.getElementById(id).style("label")',target)==target+'\n'+state
+        page.goto(base+'/explore?focus=G_DEDUPE&depth=2&set=webhook.dedupe_ttl_hours=null',wait_until='networkidle')
+        assert_hypothetical_status(page,state='unknown',assumption='unevaluable',verdict='NEEDS_REVIEW')
         page.goto(base+'/benchmark',wait_until='networkidle')
         page.locator('#benchmark-chart svg').wait_for()
         assert page.locator('#benchmark-rows tr').count()==21
@@ -96,9 +121,11 @@ def main():
         page.goto(base+'/continuity?person=p_anika',wait_until='networkidle')
         page.locator('#continuity-promises').filter(has_text='A_STABLE_EVENT_ID').wait_for()
         page.locator('#continuity-canvas canvas').first.wait_for()
+        assert_continuity_names(page)
         page.screenshot(path=str(artifact/'continuity-mobile.png'),full_page=True)
         page.goto(base+'/explore?at=2027-03-02',wait_until='networkidle')
         page.wait_for_function('window.premiseExplorer?.cy.getElementById("G_DEDUPE").data("health")==="unknown"')
+        page.locator('.explorer-controls summary').click()
         page.locator('#time-label').filter(has_text='Forecast').wait_for()
         page.locator('#time-live').click()
         page.wait_for_function('window.premiseExplorer?.cy.getElementById("G_DEDUPE").data("health")==="holds"')
@@ -109,7 +136,7 @@ def main():
         page.locator('#time-live').click()
         page.locator('[data-guarantee="G_DEDUPE"] .badge').filter(has_text='holds').wait_for()
         browser.close()
-        report={'page_errors':errors,'console_errors':console_errors,'mermaid_svg_rendered':graph,'desktop':[1440,1050],'mobile':[390,844]}
+        report={'page_errors':errors,'console_errors':console_errors,'mermaid_svg_rendered':graph,'desktop':[1440,1050],'explorer_desktop':[1440,900],'mobile':[390,844], 'hypothetical_labels':['broken','violated','unknown','holds'],'canvas_in_first_screen':True,'reviewer_names':True}
         (artifact/'ui-check.json').write_text(json.dumps(report,indent=2))
         print(json.dumps(report))
         assert not errors

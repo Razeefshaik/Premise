@@ -129,6 +129,8 @@ def compact(result):
         'touched': sorted(a.id for a in result.assumptions if a.touched),
         'reasons': [r.model_dump(include={'code', 'detail'}) for r in result.reasons],
         'changed': [c.model_dump(include={'fact', 'old', 'new', 'controlled_by'}) for c in result.changed_facts],
+        'assumptions': [a.model_dump(include={'id', 'state'}) for a in result.assumptions],
+        'guarantees': [g.model_dump(include={'id', 'status', 'chain'}) for g in result.guarantees],
         'not_holding': [g.model_dump(include={'id', 'status', 'baseline', 'tier', 'chain', 'promised_by'})
                         for g in result.guarantees if g.status != 'holds'],
         'decisions': [d.model_dump(include={'id', 'reviewers', 'departed'}) for d in result.decisions],

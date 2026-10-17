@@ -7,3 +7,30 @@
 .v3-detail [role=tabpanel]{max-height:680px;overflow:auto;padding-right:6px}.v3-tabs [aria-selected=true]{border-color:#b2c0ff;background:#323d5b}@media(max-width:900px){.v3-detail [role=tabpanel]{max-height:none}}
 
 .v3-chart-scroll{overflow-x:auto;margin:20px 0 36px}.v3-chart-scroll svg{display:block;width:100%;min-width:820px}.v3-app .bar nav{overflow-x:auto}
+
+/* The Explorer starts with the graph; optional controls stay in the inspector. */
+.explorer-head.v3-head{margin:0 auto 16px;padding-top:0}
+.explorer-head h1{font-size:clamp(24px,2.4vw,34px);margin:0 0 8px}
+.explorer-head p{margin:0;font-size:14px}
+.explorer-workspace.v3-explorer{margin:0 auto;align-items:start}
+.explorer-workspace .v3-network{margin:0}
+.explorer-workspace #explorer-verdict{margin:0 0 12px;padding:12px 16px;background:#141b27;border-radius:8px;font-size:14px;overflow-wrap:anywhere}
+.explorer-workspace #explorer-canvas{height:clamp(320px,calc(100dvh - 300px),590px)}
+.v3-app:has(.v3-replay) .explorer-workspace #explorer-canvas{height:clamp(280px,calc(100dvh - 350px),590px)}
+.explorer-workspace #graph-message{margin:12px 0;padding:0;font-size:12px}
+.explorer-workspace .v3-detail{padding:16px}
+.explorer-controls{margin-bottom:20px}
+.explorer-controls summary{cursor:pointer;font-size:14px;font-weight:600;min-height:32px}
+.explorer-controls .v3-controls{padding:0;margin:16px 0;gap:16px;align-items:start}
+.explorer-controls .v3-controls>*,.explorer-controls input[type=range]{width:100%}
+.explorer-controls .v3-date{gap:12px}
+.explorer-controls p{font-size:12px}
+.explorer-picker{display:block;font-size:13px;margin-bottom:16px}
+.explorer-picker select{display:block;width:100%;min-width:0;max-width:100%;margin-top:8px;background:#10121d;color:#edf0ff;border:1px solid #626c8c;border-radius:6px;padding:10px;font:inherit}
+@media(max-width:900px){
+  .explorer-head.v3-head{margin-bottom:12px}
+  .explorer-head p{display:none}
+  .explorer-workspace #explorer-canvas{height:clamp(280px,calc(100dvh - 390px),460px)}
+  .v3-app:has(.v3-replay) .explorer-workspace #explorer-canvas{height:clamp(240px,calc(100dvh - 440px),460px)}
+  .explorer-workspace{gap:16px}
+}

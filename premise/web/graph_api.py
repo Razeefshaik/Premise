@@ -156,6 +156,9 @@ class GraphExplorer:
             decisions = [r["id"] for r in self.client.named("explore_decisions", {"ids": gids})]
         lineages = [self.tools.call("decision_lineage", {"id": decision}) for decision in decisions]
         details["reviewers"] = sorted({reviewer for lineage in lineages for reviewer in lineage["reviewers"]})
+        details["names"] = {person["id"]: person["name"] for person in self.client.read(
+            'MATCH (p:Person) WHERE p.id IN $ids RETURN p.id AS id, p.name AS name',
+            {"ids": details["reviewers"]})} if details["reviewers"] else {}
         details["lineage"] = lineages
         if node["label"] == "Assumption":
             details["assumption"] = deepcopy(health["assumptions"].get(id))
