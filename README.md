@@ -1,233 +1,218 @@
 # Premise
 
-**Every change checked against the guarantees your engineering decisions depend on.**
+**Search finds documents. Premise finds consequences.**
 
-[V3 recorded replay](https://razeefshaik.github.io/Premise/) **(deployment pending)** ·
-[V3 build and checks](docs/V3_STATUS.md) · [Replay instructions](docs/REPLAY.md)
+Premise is a pull request check for engineering decisions, built on FalkorDB. It connects
+architecture decisions to the guarantees they promise, guarantees to the assumptions they
+require, and assumptions to live config values and dated human attestations. When a pull
+request changes a fact, FalkorDB traces what breaks, Premise blocks or passes the PR, names
+the people who must review, and opens a fix PR only after verifying on the graph that the fix works.
 
-![Recorded Explorer propagation: Paylane retries rise to 72 hours, failure travels through the graph, and the verified fix heals it](docs/media/propagation.gif)
+**[Live replay](https://razeefshaik.github.io/Premise/)** ·
+**[Real PR that went red, then green](#the-real-github-flow)** ·
+**[Benchmark](#benchmark-what-does-structure-buy)** ·
+**[Graph data model](#graph-data-model)** ·
+**[Cypher and algorithms](#cypher-and-graph-algorithms)** ·
+**Demo video:** _link added on submission_
 
-12-second recording from the local Explorer and real FalkorDB checks. [Record it again](scripts/record_propagation.py).
+Built for WeMakeDevs × FalkorDB Graph Hacks, entering **Track 1: Agents That Act on Connected
+Data** and **Track 3: Company Brain**.
 
-Authored synthetic test macro F1: **graph 0.789**, keyword **0.178–0.247**, vector
-**0.206–0.297** across k=3,5,10. [Full results and limitations](docs/BENCHMARK.md).
-[Red team](docs/REDTEAM.md): **35/35** expected safe outcomes. Human review of benchmark
-labels remains pending; these are structured synthetic-company results, not general QA claims.
-V3 is on local branches; the replay URL becomes usable only after a successful Pages deployment.
+![A partner's retry window rises to 72 hours, the failure travels through the graph, and the verified fix heals it](docs/media/propagation.gif)
 
-Premise connects architecture decisions to explicit guarantees, guarantees to their
-prerequisites, and prerequisites to current facts and human attestations. A pull request
-changes a fact; FalkorDB traces the consequences, routes review, and verifies remedies
-before any fix PR can be opened.
+<sub>Recorded from the local Explorer against a real FalkorDB. [Record it again](scripts/record_propagation.py).</sub>
 
-Built for WeMakeDevs × FalkorDB Graph Hacks: **Track 1, Agents That Act on Connected Data**,
-and **Track 3, Company Brain**. Name both tracks when submitting; the
-[official rules](https://www.wemakedevs.org/hackathons/falkordb/rules) allow entering multiple tracks.
-The authoritative design is [Revision 2](docs/Premise_Implementation_Spec.md).
+| Result | Evidence |
+| --- | --- |
+| **348 tests pass**, 12/12 scenarios match | [CI workflow](.github/workflows/tests.yml) runs them against FalkorDB v4.18.3 |
+| **Graph F1 1.00** vs 0.46 vector RAG on change impact questions | [Synthetic benchmark with its limits](docs/BENCHMARK.md) |
+| **35/35** red team attacks end in the expected safe outcome | [Red team report](docs/REDTEAM.md) |
+| **0** verdicts decided by a language model | Verdicts are parameterized Cypher plus deterministic Python |
 
-[Product repository](https://github.com/Razeefshaik/Premise) ·
-[Fictional company](https://github.com/Razeefshaik/kestrel-platform) ·
-[Publishing handoff](docs/PUBLISH.md) · [Three-minute demo](docs/DEMO.md) ·
-[Actual validation](docs/VALIDATION.md)
+---
 
-The optional [local Codex provider](docs/LOCAL_CODEX.md), now merged into `main`,
-uses your installed, signed-in CLI. The existing Anthropic/Docker setup remains the default.
+## The problem
 
-## Pre-flight checks for coding agents
+A team decides "we deduplicate partner webhooks in Redis for 24 hours, because the partner
+stops retrying after 24 hours". Three other decisions quietly build on that promise: charging
+once, matching refunds, keeping the ledger consistent. Months later someone records that the
+partner now retries for 72 hours. Every test passes. Nothing in those three decisions mentions
+the partner, so search and code review never find them, and duplicate charges start.
 
-`check_change` and `check_files` ask the same deterministic evaluator before an edit exists.
-They expose 11 shared read-only tools through MCP, the Analyst and HTTP. No hypothetical
-check creates an assessment, changes graph state, calls a model or posts to GitHub.
-Unknown facts require review; missing knowledge is never permission to apply a change.
+Premise keeps the *reasons* behind decisions as a graph, so a change is checked against
+everything that depends on it.
 
-From the fictional Kestrel checkout, configure either client (substitute the absolute Python path):
+## What Premise does
 
-```powershell
-claude mcp add premise -- "S:/StudyResource/TechBoooo/Hackathons/weMakeDevs-FolkoreDB/Premise/.venv/Scripts/python.exe" -m premise.cli --host 127.0.0.1 --port 6379 --graph premise_kestrel mcp
-codex mcp add premise -- "S:/StudyResource/TechBoooo/Hackathons/weMakeDevs-FolkoreDB/Premise/.venv/Scripts/python.exe" -m premise.cli --host 127.0.0.1 --port 6379 --graph premise_kestrel mcp
-```
+1. **Traces consequences.** A changed fact makes an assumption false, and the failure travels
+   up `REQUIRES` edges to every guarantee and decision that depends on it, even when their text
+   never mentions the changed value.
+2. **Acts on the pull request.** Posts a `premise/decisions` commit status (BLOCKED, NEEDS_REVIEW
+   or CLEAR_WITHIN_SCOPE) and one comment with the broken chain, the evidence lines, the
+   decisions checked and not affected, and the people who should review.
+3. **Fixes only what it has verified.** A bounded repair search tests candidate fixes on the graph
+   and opens a fix PR only when the complete remedy turns every affected guarantee green.
+4. **Answers company brain questions** from the same graph: what still holds, who knows about
+   this, what breaks if this person leaves, which promises expire next month.
+5. **Stops coding agents before they edit.** An MCP server lets Claude Code or Codex ask
+   Premise whether a change is safe before writing it.
 
-Codex syntax was checked with the installed `codex mcp add --help`. The bundled Kestrel
-`AGENTS.md` and `CLAUDE.md` direct agents to check full proposed config files before editing.
-Claude Code itself is not installed on the validation machine; its automatic tool-selection
-demonstration remains a manual check, separate from the passing official MCP protocol test.
+## Try it
 
-```powershell
-.\.venv\Scripts\python.exe -m premise.cli check --set paylane.retry_window_hours=72 --json
-.\.venv\Scripts\python.exe -m premise.cli check --file config/partners/paylane.yaml --repo sandbox/kestrel-platform
-```
+**In the browser, no install:** [razeefshaik.github.io/Premise](https://razeefshaik.github.io/Premise/).
+On every push to `main`, [a workflow](.github/workflows/pages.yml) starts a fresh FalkorDB
+v4.18.3, ingests the fictional company, records the real API responses and publishes them.
+The replay is read only: "Ask the company" and PR assessment need the local app.
 
-CLI exit codes are 2 for BLOCKED, 1 for NEEDS_REVIEW/ERROR and 0 for CLEAR_WITHIN_SCOPE.
-Multiple `--set` and `--file` options can be combined; explicit scalar settings override
-the corresponding proposed file values in memory. HTTP `POST /api/check` accepts either
-`{changes:[...]}` or `{files:{...}}`; invalid/untracked HTTP requests return 422, with
-untracked proposals still represented as NEEDS_REVIEW in the returned result.
-
-Open `/what-if` for a read-only browser preflight. Presets fill hypothetical values;
-Apply fix adds the verified repair to the proposal and rechecks it. The URL stores the
-proposal as repeated `set` parameters so it can be shared on a reachable deployment.
-Nothing is saved or posted, and external facts are explicitly labelled.
-
-## Knowledge steward
-
-`premise steward` plans maintenance issues in `SANDBOX_REPO` for unverified manual
-assumptions and accepted decisions without active accountable people. The plan is
-deterministic, includes current guarantee health, sources and reviewer candidates,
-and defaults to dry run. It makes GitHub reads but no issue or graph writes.
-
-```powershell
-.\.venv\Scripts\python.exe -m premise.cli steward
-# Explicitly opt in to issue writes after reviewing the plan:
-.\.venv\Scripts\python.exe -m premise.cli steward --execute
-```
-
-Execution creates or updates bot-authored marked issues, comments and closes them
-when resolved, and respects human-closed issues without reopening. At most ten
-GitHub writes are attempted per sweep; deferred work is reported. Fictional people
-are never assigned or mentioned. Only operational `StewardAction` nodes are written;
-domain knowledge is changed only through reviewed source commits and ingestion.
-
-`STEWARD_ENABLED=false` by default. Opting in runs a sweep only when `sync_main`
-changes the graph revision; unchanged revisions do not trigger repeated issue writes.
-Use the explicit command for a time-based audit without a new main revision. A failed
-optional sweep is logged and does not stop PR assessments. Issues read/write permission
-is required; see [publishing instructions](docs/PUBLISH.md).
-
-## The useful distinction
-
-ADR-007 promises both deduplication and fast acknowledgement. ADR-012 depends on
-deduplication; ADR-016 depends only on acknowledgement. When a partner extends its retry
-policy, the first guarantee breaks while the second still holds. Premise reaches
-ADR-012, ADR-015, and ADR-018 even though those decision bodies never mention the changed
-partner policy. ADR-016 is explicitly evaluated and remains unaffected.
-
-```mermaid
-flowchart LR
-  F[Partner policy: 72 hours] --> A[A_RETRY_WINDOW: 72 <= 24 is false]
-  A --> D[G_DEDUPE broken]
-  D --> C[G_CHARGE_ONCE broken]
-  C --> R[G_REFUND_MATCH broken]
-  C --> L[G_LEDGER_CONSISTENT broken]
-  R --> L
-  D -. relies on .-> ADR12[ADR-012]
-  C -. relies on .-> ADR15[ADR-015]
-  L -. promises .-> ADR18[ADR-018]
-  ACK[G_ACK_FAST holds] -. relies on .-> ADR16[ADR-016 checked and not affected]
-```
-
-Changing TTL to 72 hours looks plausible, but breaks the Redis maximum of 48 hours.
-The complete remedy raises both TTL and Redis max to 72. The fix controller accepts it
-only after re-evaluating every prerequisite, including unchanged facts and current manual
-attestations. An expired attestation leaves the guarantee **unknown**, never healthy.
-
-## Run locally
-
-Install Docker Desktop with a running Linux engine. No GitHub or model key is needed to
-explore the company and local scenarios:
+**Locally, the full app** (Docker Desktop with a Linux engine, no keys needed):
 
 ```bash
 docker compose up --build -d
 docker compose exec app premise demo
 ```
 
-Open **http://localhost:8000** for the Brain and **http://localhost:3000** for the FalkorDB
-Browser. The initial compose deployment defaults to local mode. The four saved demo rows
-are labelled **Local demo**, use synthetic PR numbers, and make no GitHub calls.
+Open **http://localhost:8000** for Premise and **http://localhost:3000** for the FalkorDB
+Browser. Full setup is in [Run locally](#run-locally).
 
-```bash
-docker compose exec app premise scenarios
-docker compose exec app premise health
-docker compose exec app premise ask "Why ADR-012, and who owns it now?"
-docker compose exec app python -m pytest -q
-docker compose logs --tail 50 app
+## A tour in screenshots
+
+**1. The company brain.** A fictional company, Kestrel: 12 tracked facts feed assumptions that
+support 9 guarantees across its architecture decisions.
+
+![Premise landing page with the 3D company brain](docs/media/01-landing.jpg)
+
+**2. Change one fact.** The partner retry window goes from 24 to 72 hours. `A_RETRY_WINDOW`
+is violated and the failure travels up the `REQUIRES` chain.
+
+![Explorer tracing failure from A_RETRY_WINDOW through G_DEDUPE to G_CHARGE_ONCE](docs/media/02-propagation.png)
+
+**3. The verdict.** BLOCKED: 4 guarantees broken, 4 decisions affected, review routed to
+Anika Rao, Ravi Menon and Jun Park, people who are still at the company.
+
+![BLOCKED verdict banner with reviewers and an Apply verified fix button](docs/media/03-blocked.png)
+
+**4. The verified fix.** Raising the dedupe TTL alone would break the Redis maximum, so the
+complete remedy raises both to 72 hours. Applying it turns every affected guarantee green.
+
+![Explorer after the verified fix: CLEAR, every affected guarantee holds](docs/media/04-verified-fix.png)
+
+**5. Every verdict shows its Cypher.** The Explorer records each query it ran, with timings,
+row counts and parameters. This is the query that decides guarantee health:
+
+![The rollup_guarantees Cypher query shown in the Explorer](docs/media/05-show-cypher.png)
+
+**6. Time machine.** Move the date to 2 March 2027. No code changes, but Anika's attestation
+behind `A_STABLE_EVENT_ID` expires, so `G_DEDUPE` and four more guarantees become *unknown*.
+
+![Time machine forecast showing guarantees turning unknown after an attestation expires](docs/media/06-time-machine.png)
+
+**7. When someone leaves.** A hypothetical departure shows accountability gaps, promises that
+become unverified, the next reviewers, and FalkorDB betweenness for knowledge bridges.
+
+![Continuity page for a hypothetical departure of Anika Rao](docs/media/07-continuity.png)
+
+**8. The assessment record.** Every assessment is stored in FalkorDB with its reasons, the
+changed facts and the shortest chain to each failure.
+
+![Assessment page: BLOCKED with four R_BROKEN_T1 reasons and their chains](docs/media/09-assessment.png)
+
+## How it works
+
+```mermaid
+flowchart LR
+  D[Decision<br/>ADR-007] -- PROVIDES --> G1[Guarantee<br/>G_DEDUPE]
+  D2[Decision<br/>ADR-012] -- RELIES_ON --> G1
+  G2[Guarantee<br/>G_CHARGE_ONCE] -- REQUIRES --> G1
+  G1 -- REQUIRES --> A[Assumption<br/>A_RETRY_WINDOW]
+  A -- LHS --> F1[Fact<br/>paylane.retry_window_hours]
+  A -- RHS --> F2[Fact<br/>webhook.dedupe_ttl_hours]
+  G1 -- REQUIRES --> A2[Assumption<br/>A_STABLE_EVENT_ID]
+  P[Person<br/>Anika Rao] -- ATTESTED --> A2
 ```
 
-The FalkorDB image is pinned to **v4.18.3**. Compose retains graph data in a named volume
-with append-only persistence and exposes its ports on loopback. The app runs as a
-non-root user on Python 3.12. Do not delete the volume to reset the demo; use
-`premise reset --demo`, which only replaces local demo records.
+1. **Facts** are values in config files, ingested deterministically with their file and line.
+2. **Assumptions** are predicates over two facts (`retry_window <= dedupe_ttl`) or a human
+   attestation with a review date. An attestation only counts while it is current and the person is active.
+3. **Guarantees** `REQUIRES` assumptions or other guarantees. `REQUIRES` is the only edge failure
+   can travel along, so a broken assumption never leaks into unrelated decisions.
+4. **Three valued logic.** A guarantee is *broken* if any prerequisite is violated, else *unknown*
+   if any is unverifiable, else *holds*. Broken beats unknown beats holds. An expired attestation
+   makes a guarantee unknown, never healthy.
+5. **A pull request is an overlay.** Premise reads the changed values from the PR's own diff and
+   evaluates them without mutating the main graph. The main graph changes only after merge.
+6. **Every affected guarantee is judged on its full prerequisite closure**, not only the path
+   the change touched, and sibling guarantees are evaluated before a decision is reported as unaffected.
 
-For a host development environment:
-
-```powershell
-python -m venv .venv
-# pip --python works even if ensurepip failed while creating the venv:
-python -m pip --python .venv install -r requirements.lock
-python -m pip --python .venv install --no-deps -e .
-docker compose up -d falkordb
-.\.venv\Scripts\python.exe -m premise.cli ingest
-.\.venv\Scripts\python.exe -m premise.cli demo
-.\.venv\Scripts\python.exe -m premise.cli serve
+```mermaid
+sequenceDiagram
+  participant Dev as Developer or agent
+  participant GH as GitHub PR
+  participant P as Premise
+  participant DB as FalkorDB
+  Dev->>GH: change paylane retry window to 72
+  P->>GH: fetch the PR head and its merge base
+  P->>DB: facts in the diff, touched assumptions
+  P->>DB: three valued rollup over REQUIRES*1..6
+  DB-->>P: G_DEDUPE broken via A_RETRY_WINDOW, and 3 more
+  P->>DB: test candidate fixes on the overlay
+  P->>GH: status BLOCKED, comment with chain and reviewers
+  P->>GH: fix PR, only for a verified complete remedy
 ```
 
-Linux/macOS use `.venv/bin/python` and the same CLI. Tests use a running server at
-`FALKORDB_PORT`, otherwise port 6379. Linux can install `.[lite]` to use a real local
-FalkorDB module instead; Windows requires the Docker server. Each test uses an isolated
-graph and deletes it afterward.
+## The real GitHub flow
 
-## Real GitHub workflow
+This ran on the fictional company's repository,
+[Razeefshaik/kestrel-platform](https://github.com/Razeefshaik/kestrel-platform), on 16 October 2026 (times in IST):
 
-See [docs/PUBLISH.md](docs/PUBLISH.md) for the prepared local sandbox, manual push commands,
-token permissions, explicit live rehearsal, branch protection, and the red-to-green demo.
-The user requested local commits and will push manually. No live PR URLs or successful
-remote actions are claimed before that rehearsal.
+| Time | Event | Evidence |
+| --- | --- | --- |
+| 12:25:59 | PR #1 "Record Paylane new 72 hour retry policy" is assessed: **failure**, `BLOCKED: G_CHARGE_ONCE is broken via G_CHARGE_ONCE -> G_DEDUPE -> A_RETRY_WINDOW` | [status on commit a2d6537](https://github.com/Razeefshaik/kestrel-platform/commit/a2d6537d62f8cd2e94d8a8e4ad4949329d25e4be) |
+| 12:26:06 | Premise opens **fix PR #2** into PR #1's branch: `redis.max_ttl_hours = 72`, `webhook.dedupe_ttl_hours = 72`, "Graph-verified complete remedy" | [PR #2](https://github.com/Razeefshaik/kestrel-platform/pull/2) |
+| 12:26:34 | The fix PR's own check: **success**, `CLEAR_WITHIN_SCOPE: 4 prerequisite assumptions checked` | [PR #2](https://github.com/Razeefshaik/kestrel-platform/pull/2) |
+| 12:39:33 | A human merges the fix into PR #1's branch | [merge commit 7693573](https://github.com/Razeefshaik/kestrel-platform/commit/76935738b0279b1ee3f9985a10eaf7911cde961f) |
+| 12:39:55 | PR #1 is re-assessed: **success**, every affected guarantee holds | [PR #1](https://github.com/Razeefshaik/kestrel-platform/pull/1) |
 
-```bash
-# After pushing the sandbox and configuring .env:
-premise assess --pr 1 --json           # assess and save, no GitHub writes
-premise assess --pr 1 --execute        # post real status/comment; fix only if enabled
-premise poll-once                     # ingest current main, assess changed open PRs, execute
-premise reconcile                    # reconcile actions interrupted during execution
-premise serve                        # starts the poller only when enabled and token is present
-```
+The PR comment is a single comment that Premise updates in place, so PR #1 now shows the
+green version. The red result is kept in the commit status history linked above.
+Screenshot 8 shows the same change assessed by the local demo. [PR #3](https://github.com/Razeefshaik/kestrel-platform/pull/3)
+is a safe change (email retries within the provider budget) that passes.
 
-The intake fetches `refs/pull/N/head`, checks the expected immutable SHA, and diffs the
-PR's own merge base. Only files in that diff supply proposed values. Deleted keys stay
-null; unrelated main-branch changes are never attributed to the PR. PR overlays do not
-mutate the main graph's facts.
+Fixes and the original PRs are never merged automatically. Fork PRs never get fix branches.
 
-Execution posts `premise/decisions` commit statuses and one updatable issue comment with
-paths, predicates, source lines, unaffected decisions, reviewers, and remedies. Every
-action rechecks the PR SHA and graph revision. Graph-backed Action records and marker
-search reconcile crashes; this is retryable execution, not an exactly-once claim.
-The fix branch uses one atomic Git tree/commit for all edited files, preserving scalar
-line edits and comments. Its PR base is the original PR branch. Fork PRs never receive
-automatic fix branches. Fixes and the original scenario PRs are never merged automatically.
-
-## Architecture and boundaries
+## Graph data model
 
 ```mermaid
 flowchart TB
-  GH[GitHub sandbox] -->|15-second poll and git fetch| P[Serialized poller]
-  P --> I[Deterministic ingest and revision sweep]
-  P --> E[PR overlay and evaluator]
-  I --> DB[(FalkorDB: only datastore)]
-  E <-->|Typed Cypher queries| DB
-  E --> F[Bounded fix agent]
-  F -->|Test complete remedy| E
-  E --> X[Stale guard and action executor]
-  X -->|Status, updatable comment, stacked fix PR| GH
-  DB --> T[Shared read tools]
-  T --> UI[FastAPI and Jinja Brain]
-  T --> MCP[Official MCP stdio server]
-  T --> QA[Bounded Analyst with verified IDs and citations]
+  subgraph Reasoning
+    Decision -- PROVIDES --> Guarantee
+    Decision -- RELIES_ON --> Guarantee
+    Guarantee -- REQUIRES --> Guarantee
+    Guarantee -- REQUIRES --> Assumption
+    Assumption -- LHS / RHS --> Fact
+    Decision -- SUPERSEDES --> Decision
+  end
+  subgraph Accountability
+    Person -- ATTESTED --> Assumption
+    Person -- ACCOUNTABLE_FOR --> Decision
+    Person -- MEMBER_OF --> Team
+    Team -- OWNS --> Service
+    Decision -- GOVERNS --> Service
+    Guarantee -- ABOUT --> Service
+    Service -- DEPENDS_ON --> Service
+  end
+  subgraph Provenance
+    Decision -- STATED_IN --> Source
+    Fact -- DEFINED_IN --> Source
+    Passage -- PART_OF --> Source
+    Person -- AUTHORED --> Source
+    Passage -- MENTIONS --> Entity[Any entity]
+  end
+  subgraph Memory
+    Assessment -- OF --> ChangeProposal
+    ChangeProposal -- CHANGES --> Fact
+    Assessment -- FOUND / FLAGGED --> Guarantee
+  end
 ```
-
-FalkorDB holds domain data, graph revisions, PR cursors, assessments, action history and
-LLM replay cache. Git checkouts and deployment configuration are files, not a second
-application database. The replay cache lives in FalkorDB to honor locked decision D6;
-this deliberately resolves the spec's later suggestion of a disk cache in favor of D6.
-It is an exact-request replay cache: the payload includes the assessment's `now_ms`, so
-new assessments normally have different keys. It does not guarantee repeatable model prose.
-If the graph is unavailable or ingesting, assessment is ERROR, the commit status is
-`error`, and no comment or fix PR is permitted.
-
-The API poller performs one assessment at a time. Run **one app process and one executor**;
-concurrent independent CLI executors are outside the supported deployment model.
-Verdicts are deterministic Python policy over Cypher comparisons and graph traversals.
-No model can pass/fail a check or authorize an action.
-
-### Graph schema
 
 Every domain node has an `Entity` label and a fulltext-searchable description. Derived
 health is computed on demand; only authored decision lifecycle is stored on domain nodes.
@@ -252,17 +237,38 @@ Historical assessments store their result snapshots for audit.
 | SUPERSEDES | Decision lifecycle linkage; superseded decisions never gate |
 | CHANGES, OF, FOUND, FLAGGED, TOOK | Assessment and action history; never revision-swept |
 
-Guarantee health is three-valued AND: broken dominates unknown, which dominates holds.
-Every affected guarantee is checked on its full prerequisite closure; sibling guarantees
-must actually be evaluated before a decision can appear under "checked and not affected."
-Review routing prefers active authors/approvers. Otherwise active current owning-team
-members rank by distinct recent authored sources, then by ID.
+Review routing prefers active authors and approvers. Otherwise active members of the current
+owning team rank by distinct recent authored sources, then by ID.
 
-### Query reference
+## Cypher and graph algorithms
+
+The verdict is a graph traversal. This is the query that decides guarantee health
+([rollup_guarantees.cypher](premise/graph/queries/rollup_guarantees.cypher)):
+
+```cypher
+// Three valued AND over every prerequisite of each guarantee.
+// broken if any reachable assumption is violated, else unknown if any is unknown, else holds.
+// The witness is the shortest chain to a violated assumption if one exists, else to an unknown one.
+UNWIND $guarantees AS gid
+MATCH (g:Guarantee {id: gid})
+OPTIONAL MATCH p = (g)-[:REQUIRES*1..6]->(a:Assumption)
+WHERE a.id IN $violated OR a.id IN $unknown
+WITH g, p, CASE WHEN a IS NULL THEN 2 WHEN a.id IN $violated THEN 0 ELSE 1 END AS rank
+ORDER BY rank, length(p)
+WITH g, collect(rank) AS ranks, head(collect(p)) AS witness
+RETURN g.id AS guarantee, g.statement AS statement,
+       CASE WHEN 0 IN ranks THEN 'broken' WHEN 1 IN ranks THEN 'unknown' ELSE 'holds' END AS status,
+       CASE WHEN witness IS NULL THEN [] ELSE [n IN nodes(witness) | n.id] END AS chain
+ORDER BY guarantee
+```
+
+Ranking each path (0 violated, 1 unknown, 2 fine) and sorting by rank then length gives both
+the three valued result and the shortest witness chain in one query. That chain is what the
+PR comment, the assessment page and the Explorer animation show.
 
 All query arguments are parameters. Read tools use `GRAPH.RO_QUERY`; no user or LLM
 input is executed as Cypher. Authored schema writes and operational memory writes are
-fixed in the ingestor and Store; their vocabulary cannot be selected by the model.
+fixed in the ingestor and store; their vocabulary cannot be selected by a model.
 
 | Query | Responsibility |
 | --- | --- |
@@ -286,38 +292,192 @@ fixed in the ingestor and Store; their vocabulary cannot be selected by the mode
 | [orphaned_decisions](premise/graph/queries/orphaned_decisions.cypher) | Accountability gaps |
 | [recall](premise/graph/queries/recall.cypher) | Historical assessments by entity |
 
-### Agent and Company Brain
+**FalkorDB features used, and where:**
 
-Deterministic repair always runs with a 16-evaluation budget. It keeps rejected candidates,
-handles independent violation clusters, and verifies their combined remedy as a whole.
-The optional Anthropic adapter permits at most eight fix-agent tool calls or six Analyst
-tool calls. A model fix is accepted only when the identical changes map was tested in
-that session; only finite numeric controllable facts are allowed, at most three per fix.
-Partial repairs never become fix PRs. Provider errors/refusals preserve the fallback.
+| Feature | Used for | Where |
+| --- | --- | --- |
+| Variable length paths `[:REQUIRES*1..6]` | Failure propagation and witness chains | [rollup_guarantees](premise/graph/queries/rollup_guarantees.cypher) |
+| `algo.pageRank('Guarantee', 'REQUIRES')` | Ordering "What still holds?" by how load bearing a guarantee is | [load_bearing_guarantees](premise/graph/queries/load_bearing_guarantees.cypher) |
+| `algo.betweenness`, `algo.WCC` | Knowledge bridges and disconnection when a person leaves | [continuity.py](premise/web/continuity.py) |
+| Fulltext index | Resolving names like "Paylane" or "ADR-012" to entities | [resolve](premise/graph/queries/resolve.cypher) |
+| Vector index, `db.idx.vector.queryNodes` (cosine) | The vector RAG baseline in the benchmark, on the same database | [premise/benchmark](premise/benchmark) |
+| `GRAPH.RO_QUERY` | Every read tool used by the MCP server, Analyst and web app | [premise/graph](premise/graph) |
+| Redis Streams next to the graph | The v2 ingestion stream (XADD, consumer groups, XAUTOCLAIM) | [premise_v2/stream.py](premise_v2/stream.py) |
 
-The adapter omits sampling parameters, forced tool choice, thinking overrides and assistant
-prefill. It appends provider thinking blocks unchanged. `LLM_MODEL` defaults to the
-specification's `claude-sonnet-5-5`; its live availability and API compatibility still
-require an actual provider call with your key. No such successful call is claimed here.
+FalkorDB is the only datastore. It also holds graph revisions, PR cursors, assessments,
+action history and the model replay cache, so the audit trail of every verdict lives in the graph.
 
-Analyst outcomes distinguish sourced answers, assessment memory, unknown entities and
-topics absent from the graph. IDs must exist in tool results; model-authored links are
-rejected and citations come from server rows. A model answer requires its own tool calls;
-fallback reads cannot validate it. Explicit health words are checked conservatively against
-returned states. Other prose claims are not verified, and the UI labels that limit.
-The deterministic fallback shows the graph
-evidence and its limitations. Source text is quoted untrusted data, never tool instructions.
+## Benchmark: what does structure buy?
 
-The eleven shared read tools are `check_change`, `check_files`, `resolve`, `decision_lineage`, `guarantee_health`,
-`who_knows`, `search_evidence`, `orphaned_decisions`, `load_bearing_guarantees`,
-`impact_if_broken`, and `recall`. Run `premise mcp` for stdio. See the
-[MCP configuration and demo questions](docs/DEMO.md#mcp-setup).
+![Grouped bar chart of test split macro F1 for graph reasoning, keyword search and vector RAG](docs/media/benchmark-f1.png)
+
+On the 15 test questions about change impact, graph reasoning scores **F1 1.00**; the best
+vector RAG setting scores **0.46** (k=3) and the best keyword setting **0.27** (k=5). Across all
+30 test questions: graph **0.79**, vector **0.30**, keyword **0.25**. Keyword and vector use
+exactly the same 44 ADR passages, and the vector index is a real FalkorDB cosine index.
+
+This is a synthetic company and questions we wrote, so it measures what the authored structure
+buys, not general question answering. Gold labels were written before running the systems; human
+review of the labels is still pending. Every k, the latency and the limits are in
+[docs/BENCHMARK.md](docs/BENCHMARK.md); the chart is rebuilt by [scripts/plot_benchmark.py](scripts/plot_benchmark.py)
+from [bench/results/latest.json](bench/results/latest.json).
+
+## Red team
+
+[35 attacks](docs/REDTEAM.md), all ending in the expected safe outcome on a real FalkorDB:
+prompt injection in YAML and PR text, link and mention injection in comments, path traversal,
+malformed, huge, deep and "bomb" YAML, forged attestations, write attempts through MCP, false
+Analyst answers, unknown entities, fork PRs, stale state and GitHub outages. GitHub writes use an
+HTTP mock transport in this suite. It is a regression set, not a security certification.
+
+## Agents and MCP
+
+`premise mcp` starts an official MCP stdio server with 11 read tools: `check_change`,
+`check_files`, `resolve`, `decision_lineage`, `guarantee_health`, `who_knows`, `search_evidence`,
+`orphaned_decisions`, `load_bearing_guarantees`, `impact_if_broken` and `recall`.
+
+`check_change` and `check_files` ask the same deterministic evaluator before an edit exists.
+No hypothetical check creates an assessment, changes graph state, calls a model or posts to GitHub.
+Unknown facts require review; missing knowledge is never permission to apply a change.
+The Kestrel repository ships an `AGENTS.md` and `CLAUDE.md` that tell agents to check proposed
+config files before editing.
+
+```bash
+# from the Kestrel checkout; use the absolute path of your Premise virtual environment
+claude mcp add premise -- /path/to/Premise/.venv/bin/python -m premise.cli --host 127.0.0.1 --port 6379 --graph premise_kestrel mcp
+codex mcp add premise -- /path/to/Premise/.venv/bin/python -m premise.cli --host 127.0.0.1 --port 6379 --graph premise_kestrel mcp
+```
+
+The automated test opens a real MCP SDK stdio session against the server. Tool selection by
+Claude Code itself is a manual check, not part of the test suite.
+
+The same check from the command line (exit code 2 BLOCKED, 1 NEEDS_REVIEW or ERROR, 0 CLEAR):
+
+```bash
+premise check --set paylane.retry_window_hours=72 --json
+premise check --file config/partners/paylane.yaml --repo sandbox/kestrel-platform
+```
+
+HTTP `POST /api/check` accepts `{changes:[...]}` or `{files:{...}}`. The `/what-if` page is the
+same preflight in the browser; nothing is saved or posted.
+
+### Bounded fix agent and Analyst
+
+Deterministic repair always runs, with a 16 evaluation budget. It keeps rejected candidates,
+handles independent violation clusters, and verifies their combined remedy as a whole. Only finite
+numeric controllable facts may change, at most three per fix. Partial repairs never become fix PRs.
+
+An optional model provider can propose fixes and answer questions, with at most eight fix tool
+calls or six Analyst tool calls. A model fix is accepted only when the identical change set was
+tested on the graph in that session. Analyst IDs must exist in tool results and citations come
+from server rows. The optional [local Codex CLI provider](docs/LOCAL_CODEX.md) uses your signed-in
+CLI with its own tools disabled. The Anthropic adapter is implemented, but no successful live
+Anthropic API call is claimed. With no provider, everything runs in deterministic mode.
+
+### Knowledge steward
+
+`premise steward` plans maintenance issues for unverified manual assumptions and accepted
+decisions with nobody accountable. It defaults to a dry run; `--execute` writes at most ten
+marked GitHub issues per sweep and never reopens human-closed issues. `STEWARD_ENABLED=false` by default.
+
+## Architecture
+
+```mermaid
+flowchart TB
+  GH[GitHub sandbox] -->|15-second poll and git fetch| P[Serialized poller]
+  P --> I[Deterministic ingest and revision sweep]
+  P --> E[PR overlay and evaluator]
+  I --> DB[(FalkorDB: only datastore)]
+  E <-->|Typed Cypher queries| DB
+  E --> F[Bounded fix agent]
+  F -->|Test complete remedy| E
+  E --> X[Stale guard and action executor]
+  X -->|Status, updatable comment, stacked fix PR| GH
+  DB --> T[Shared read tools]
+  T --> UI[FastAPI web app and Explorer]
+  T --> MCP[Official MCP stdio server]
+  T --> QA[Bounded Analyst with verified IDs and citations]
+```
+
+The poller performs one assessment at a time; run one app process and one executor. If the
+graph is unavailable or ingesting, the assessment is ERROR, the commit status is `error`, and no
+comment or fix PR is permitted. Every action rechecks the PR SHA and graph revision before writing.
+
+## v2: a brain that keeps itself current
+
+`premise_v2/` reads Slack, Jira, GitHub and wiki style sources (fixtures, shaped like each API's
+responses), finds claims such as "Paylane now retries webhooks for 72 hours", checks in code that
+every quote really appears in its source, counts independent origins, and proposes a model update
+as a pull request that Premise then checks like any other change. v2 never writes the decision
+graph and never decides a verdict; a human merge does.
+
+```bash
+premise-v2 run          # dry run; proposals land in .runtime/v2/proposals/
+premise-v2 eval --gold
+premise-v2 serve        # local evidence review page
+```
+
+On a frozen 40 snippet holdout, the extractors reach precision and recall of 1.00 with zero
+grounded injection outputs; annotated field accuracy is 0.75 for E3 and 0.857 for E1. These are
+small synthetic samples awaiting hand review, not production accuracy. Model outputs from the
+local Codex CLI are recorded and replayed offline. Details: [docs/V2.md](docs/V2.md),
+[docs/V2_EVAL.md](docs/V2_EVAL.md).
+
+## Run locally
+
+Install Docker Desktop with a running Linux engine. No GitHub or model key is needed to
+explore the company and the local scenarios:
+
+```bash
+docker compose up --build -d
+docker compose exec app premise demo
+docker compose exec app premise scenarios
+docker compose exec app premise health
+docker compose exec app premise ask "Why ADR-012, and who owns it now?"
+docker compose exec app python -m pytest -q
+```
+
+Open **http://localhost:8000** for Premise and **http://localhost:3000** for the FalkorDB Browser.
+The FalkorDB image is pinned to **v4.18.3**. Compose keeps graph data in a named volume with
+append-only persistence and exposes ports on loopback only. The app runs as a non-root user on
+Python 3.12. To reset the demo, use `premise reset --demo` rather than deleting the volume.
+
+For a host development environment:
+
+```bash
+python -m venv .venv
+python -m pip --python .venv install -r requirements.lock
+python -m pip --python .venv install --no-deps -e .
+docker compose up -d falkordb
+.venv/bin/premise ingest     # Windows: .\.venv\Scripts\premise.exe
+.venv/bin/premise demo
+.venv/bin/premise serve
+```
+
+Tests use a running server at `FALKORDB_PORT` (default 6379); each test uses an isolated graph
+and deletes it afterwards. Linux can install `.[lite]` to use a local FalkorDB module instead of Docker.
+
+### Connect a real GitHub repository
+
+See [docs/PUBLISH.md](docs/PUBLISH.md) for the sandbox repository, token permissions, branch
+protection and the red to green rehearsal.
+
+```bash
+premise assess --pr 1 --json      # assess and save, no GitHub writes
+premise assess --pr 1 --execute   # post the real status and comment; fix PR only if AUTO_FIX_PR=true
+premise poll-once                 # ingest main, assess changed open PRs, execute
+premise serve                     # starts the poller only when enabled and a token is present
+```
+
+The intake fetches `refs/pull/N/head`, checks the expected SHA, and diffs against the PR's own
+merge base, so unrelated changes on main are never attributed to the PR. Malformed YAML produces
+`R_UNPARSEABLE` and requires review. The fix branch is one atomic commit that preserves comments
+and formatting, and its base is the original PR branch.
 
 ## Environment variables
 
-Copy `.env.example` to `.env` for local configuration; never commit tokens. Existing
-environment values override `.env`. Credentials are excluded from settings repr, images,
-remote URLs, graph records and application logs.
+Copy `.env.example` to `.env`; never commit tokens. Credentials are excluded from settings repr,
+images, remote URLs, graph records and logs.
 
 | Variable | Default / purpose |
 | --- | --- |
@@ -331,19 +491,20 @@ remote URLs, graph records and application logs.
 | POLL_SECONDS | 15 |
 | AUTO_FIX_PR | false; explicitly enable verified fix PRs |
 | STEWARD_ENABLED | false; opt in to maintenance issue writes after a new main graph revision |
-| PUBLIC_BASE_URL | http://localhost:8000; use a reachable deployment URL for judges |
-| ANTHROPIC_API_KEY | Optional; no key means deterministic tools and repair |
+| PUBLIC_BASE_URL | http://localhost:8000; use a reachable deployment URL for links in PR comments |
+| LLM_PROVIDER | anthropic (default), codex-cli or none; no working provider means deterministic mode |
+| ANTHROPIC_API_KEY | Optional |
 | LLM_MODEL | claude-sonnet-5-5, configurable through the adapter |
 | SINCE_DAYS | 180-day expertise evidence horizon |
 
 ## Tests and scenarios
 
-Run `python -m pytest -q` and `premise scenarios` against a real FalkorDB server.
-[docs/VALIDATION.md](docs/VALIDATION.md) records actual results and external work still
-pending. GitHub tests use HTTP-level `httpx.MockTransport`, not fake graph reasoning.
-The model is scripted in tests, and the MCP test opens a real official-SDK stdio session.
+`python -m pytest -q` (348 tests) and `premise scenarios` run against a real FalkorDB server, in
+CI on every push. GitHub tests use HTTP-level `httpx.MockTransport`, not fake graph reasoning;
+the model is scripted in tests; the MCP test opens a real SDK stdio session.
+[docs/VALIDATION.md](docs/VALIDATION.md) records actual results.
 
-| Scenario | Expected / verified verdict |
+| Scenario | Expected and verified verdict |
 | --- | --- |
 | S1 partner retry 72 h | BLOCKED |
 | S1_FIXED TTL and Redis max 72 h | CLEAR_WITHIN_SCOPE |
@@ -360,73 +521,48 @@ The model is scripted in tests, and the MCP test opens a real official-SDK stdio
 
 ## Scope and limitations
 
-This is a single-process, single-company prototype. Predicates support numeric ordering
-and same-type string equality; there is no OR or weighted risk score. Changes to the
-decision model get review and take effect only after merge. Polling replaces webhooks.
-The local web interface has no authentication and binds to loopback through Compose;
-public deployment needs an access-control boundary. Mermaid uses a pinned CDN version,
-with readable graph text available if offline. Hosted status links require a public URL.
+This is a single-process, single-company prototype. Predicates support numeric ordering and
+same-type string equality; there is no OR and no weighted risk score. Changes to the decision
+model take effect only after review and merge. Polling replaces webhooks. The local web app has no
+authentication and binds to loopback; a public deployment needs an access-control boundary, which
+is why the public site is a read-only replay. The benchmark and the v2 evaluation are synthetic
+and await human label review.
 
-The real GitHub red-to-green rehearsal succeeded: the user merged fix PR #2 into PR #1's
-branch, and PRs #1 and #3 reported success. Branch protection, live provider calls,
-interactive MCP client setup, recording/uploading the demo, and submission remain pending.
-The local reset command deliberately does not force-reset remote scenario branches.
-The fictional dataset includes 20 tickets, 40 chat messages and four runbooks. The added
-text preserves the flagship decision lexical gap and the original reviewer-evidence counts.
+## Hackathon notes
 
-PR intake selects edits by comparing fact values at the PR head and merge base, then applies
-only those edits to the current main facts. Malformed YAML produces `R_UNPARSEABLE` and
-requires review, with a source location. Other files can still be assessed, but no fix is
-offered for incomplete intake. Unexpected failures retain tracebacks in application logs;
-error cursors retry after 60 seconds with exponential backoff capped at 15 minutes.
+* **Tracks:** Track 1, Agents That Act on Connected Data (the PR agent, verified fix PRs, MCP
+  preflight for coding agents) and Track 3, Company Brain (decisions, guarantees, people and
+  sources in one graph that answers what holds, who knows and what breaks).
+* **Timeline:** the repository history begins on 16 October 2026 (IST), inside the event window.
+* **Data:** Kestrel, its people, partners, tickets, chats and runbooks are fictional and synthetic.
 
-Share tracked source with `git archive --format=zip --output premise-source.zip HEAD`;
-do not zip the workspace. `.env` is ignored by Git but ordinary folder ZIPs still include it.
-Any credential included in a previously shared ZIP must be revoked and replaced by its owner.
+## AI use disclosure
 
-## Experimental v2: a brain that keeps itself current
+AI coding assistants were used heavily, and this is how:
 
-Branch `v2/self-maintaining-brain` adds `premise_v2/`, which reads Slack and Jira (fixtures in Phase 1), finds claims
-such as "Paylane now retries webhooks for 72 hours", verifies every quote in code, counts independent sources, and
-proposes a model update as a pull request that v1 then checks. v2 never writes the decision graph and never decides
-a verdict. See [docs/V2.md](docs/V2.md) and [docs/V2_EVAL.md](docs/V2_EVAL.md).
+* **Claude** (Anthropic): the product design and specification, the v2 research report and
+  architecture, the v2 Phase 1 code, code reviews and fix specifications, the original synthetic
+  company text, and this README with its screenshots and benchmark chart.
+* **OpenAI Codex**: most of the implementation, tests and documentation of the main product, the
+  v2 review fixes and Phase 2, and V3 (Explorer, replay site, benchmark, red team), plus six tickets,
+  34 chat messages and two runbooks of synthetic data.
+* **Claude Code**: the final UI refinement of the web app.
+* **Codex CLI** is also an optional runtime provider for proposals and answers.
 
-```bash
-premise-v2 run     # dry run; proposals land in .runtime/v2/proposals/
-premise-v2 eval --gold
-```
+**Razeef's role:** chose the problem and both tracks; set the product direction and what to build
+in each phase (including the self-maintaining v2 pipeline, the relation management question that
+shaped its design, and running the model locally through Codex CLI instead of a paid API);
+coordinated the AI agents and decided which reviews to act on; tested the builds; and ran the real
+GitHub rehearsal on the Kestrel repository.
 
-Phase 2 on `v2/phase-2` adds source connectors, reversible identity links, grounded
-attestation evidence, descriptive relations, a local review page and inactive decision drafts.
-The frozen **40-snippet holdout** currently gives E2/E3/Kind 2/E1 precision and recall of
-1.00, with zero grounded injection outputs. E3 annotated-field accuracy is 0.75 and E1 is
-0.857 (literal title punctuation). These are small synthetic examples, **awaiting
-Razeef's hand review**, not production accuracy. Actual Codex responses are recorded and
-replayed offline; see [the complete evaluation](docs/V2_EVAL.md).
+**What models never do in the product:** decide a verdict, write the decision graph, execute
+Cypher from text, or authorize a GitHub action. Verdicts are deterministic Python over parameterized
+Cypher, and every model proposal is verified on the graph before it is used.
 
-## V3: interactive verification (in progress)
+## Attribution
 
-The V3 design is [docs/Premise_V3_Design.md](docs/Premise_V3_Design.md); see the
-[phase tracker and verified API contract](docs/V3_STATUS.md). V3.1 lives on
-`v3/query-recorder-graph-api`, with read-only `/api/graph/overview`, `/neighborhood`,
-`/path` and `/node/<id>` endpoints. Responses include the actual Cypher, parameters,
-row counts and client timings. The interactive Explorer is the next phase.
-
-## Attribution and AI use
-
-Kestrel, its people and partners are fictional. Its service naming and selected call edges
-follow Google's [Online Boutique](https://github.com/GoogleCloudPlatform/microservices-demo),
-licensed Apache-2.0, with fictional webhookingress and refundworker services added. No
-Online Boutique implementation code is redistributed.
-
-The supplied milestone, specification and original synthetic company text were produced with AI
-assistance (Claude, as disclosed in the supplied README). This continuation used OpenAI
-Codex for implementation, tests, documentation, six additional tickets, 34 chat messages
-and two runbooks. Those examples were checked against the authored model and should be
-reviewed by the project author before demonstration. Deterministic parsing builds the graph;
-no LLM extracts production facts or decides verdicts. Synthetic data and automated test
-evidence should be reviewed before the public demonstration.
-
-The experimental v2 branch (`premise_v2/`, its fixtures, tests and docs) was written with Claude, from a design
-and research report produced with Claude and reviewed by the project author. The Phase 1
-review fixes and Phase 2 implementation, tests and recorded evaluation were completed with Codex.
+Kestrel's service naming and selected call edges follow Google's
+[Online Boutique](https://github.com/GoogleCloudPlatform/microservices-demo) (Apache-2.0), with
+fictional webhookingress and refundworker services added. No Online Boutique code is redistributed.
+The landing page brain model is [3DPX-003765 by Nevit Dilmen](https://commons.wikimedia.org/wiki/File:3DPX-003765_3DModel_of_Brain_Nevit_Dilmen.stl)
+([CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)); icons are [Lucide](https://lucide.dev).
