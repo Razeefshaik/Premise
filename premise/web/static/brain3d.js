@@ -249,6 +249,9 @@ async function main() {
       else if (statusOf.has(node.id)) color = stateColor(statusOf.get(node.id));
       else if (fired.has(node.id)) color = COLORS.broken;
       node.color.copy(color);
+      // Materials copy the colour at creation, so update them too or fired cells keep their resting colour.
+      node.core.material.color.copy(color);
+      node.halo.material.color.copy(color);
       const active = trace ? trace.has(node.id) : firedCheck ? (touched.has(node.id) || fired.has(node.id) || reached.has(node.id)) : true;
       node.core.material.opacity = active ? 1 : 0.18;
       node.halo.material.opacity = active ? 0.95 : 0.12;
