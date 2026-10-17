@@ -5,7 +5,9 @@
 [V3 recorded replay](https://razeefshaik.github.io/Premise/) **(deployment pending)** ·
 [V3 build and checks](docs/V3_STATUS.md) · [Replay instructions](docs/REPLAY.md)
 
-![Actual Explorer browser captures: healthy, S1 blocked, verified repair healthy](docs/media/explorer.gif)
+![Recorded Explorer propagation: Paylane retries rise to 72 hours, failure travels through the graph, and the verified fix heals it](docs/media/propagation.gif)
+
+12-second recording from the local Explorer and real FalkorDB checks. [Record it again](scripts/record_propagation.py).
 
 Authored synthetic test macro F1: **graph 0.789**, keyword **0.178–0.247**, vector
 **0.206–0.297** across k=3,5,10. [Full results and limitations](docs/BENCHMARK.md).
