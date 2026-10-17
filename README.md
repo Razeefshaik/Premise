@@ -12,6 +12,10 @@
 
 ### [▶&nbsp; Try the live replay](https://razeefshaik.github.io/Premise/) &nbsp;·&nbsp; [🎬&nbsp; Watch the demo](#) &nbsp;·&nbsp; [🔴→🟢&nbsp; See a real PR go red, then green](#the-real-github-flow)
 
+<sub>The live replay is a <b>read-only recording</b> of real FalkorDB results, so anyone can explore it without installing anything.<br>
+For the <b>full version</b> (live What if checks, Ask the company, PR assessments, verified fix PRs and the MCP server for coding agents),
+<a href="#run-locally"><b>run it locally in two commands</b></a>.</sub>
+
 [How it works](#how-it-works) · [Graph data model](#graph-data-model) · [Cypher and algorithms](#cypher-and-graph-algorithms) · [Benchmark](#benchmark-what-does-structure-buy) · [Run locally](#run-locally)
 
 </div>
