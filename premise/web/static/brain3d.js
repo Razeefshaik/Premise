@@ -15,6 +15,9 @@ const hash = text => [...text].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0
 
 async function main() {
   if (!stage || !source) return;
+  const palette = getComputedStyle(stage);
+  const linkColor = new THREE.Color(palette.getPropertyValue('--brain-link').trim());
+  const signalColor = new THREE.Color(palette.getPropertyValue('--brain-signal').trim());
   const data = JSON.parse(source.textContent);
   let renderer;
   try {
@@ -131,7 +134,7 @@ async function main() {
     const casing = new THREE.Mesh(new THREE.TubeGeometry(curve, 40, 0.036, 6),
       new THREE.MeshBasicMaterial({color: 0x090a12, transparent: true, opacity: 0.9, depthTest: false, depthWrite: false}));
     casing.renderOrder = 2;
-    const material = new THREE.MeshBasicMaterial({color: COLORS.ice, transparent: true, opacity: 0.8, depthTest: false, depthWrite: false});
+    const material = new THREE.MeshBasicMaterial({color: linkColor, transparent: true, opacity: 0.9, depthTest: false, depthWrite: false});
     const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 40, 0.018, 6), material);
     mesh.renderOrder = 3;
     network.add(casing, mesh);
@@ -165,11 +168,13 @@ async function main() {
 
   // Signals travelling along real paths
   const pulses = Array.from({length: 7}, () => {
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map: glowTexture, color: COLORS.ice, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false}));
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map: glowTexture, color: signalColor, transparent: true, opacity: 0, depthTest: false, depthWrite: false}));
     sprite.renderOrder = 6;
-    sprite.scale.setScalar(0.22);
-    network.add(sprite);
-    return {sprite, route: null, t: 0, speed: 0};
+    sprite.scale.setScalar(0.32);
+    const core = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 10), new THREE.MeshBasicMaterial({color: signalColor, transparent: true, opacity: 0, depthTest: false, depthWrite: false}));
+    core.renderOrder = 7;
+    network.add(sprite, core);
+    return {sprite, core, route: null, t: 0, speed: 0};
   });
   const routes = () => {
     const firedEdges = edges.filter(e => e.state === 'fired');
@@ -181,7 +186,6 @@ async function main() {
     pulse.route = options[Math.floor(Math.random() * options.length)];
     pulse.t = 0;
     pulse.speed = pulse.route[0].state === 'fired' ? 0.9 : 0.35 + Math.random() * 0.2;
-    pulse.sprite.material.color.copy(pulse.route[0].state === 'fired' ? COLORS.broken : COLORS.ice);
   }
   pulses.forEach((p, i) => { p.delay = i * 0.6; });
 
@@ -213,8 +217,8 @@ async function main() {
         else if ((edge.kind === 'fa' && touched.has(edge.from)) || (edge.kind === 'ag' && reached.has(edge.from))) edge.state = 'checked';
       }
       const lit = trace ? trace.has(edge.from) && trace.has(edge.to) : null;
-      edge.material.color.copy(edge.state === 'fired' ? COLORS.broken : edge.state === 'checked' ? COLORS.holds : COLORS.ice);
-      edge.material.opacity = edge.state || lit ? 1 : (trace || firedCheck) ? 0.08 : 0.8;
+      edge.material.color.copy(edge.state === 'fired' ? COLORS.broken : edge.state === 'checked' ? COLORS.holds : linkColor);
+      edge.material.opacity = edge.state || lit ? 1 : (trace || firedCheck) ? 0.08 : 0.9;
       edge.casing.material.opacity = (trace || firedCheck) && !edge.state && !lit ? 0.1 : 0.9;
     }
     for (const node of nodes.values()) {
@@ -309,7 +313,9 @@ async function main() {
         p.t += dt * p.speed;
         const leg = Math.min(Math.floor(p.t), p.route.length - 1), local = Math.min(p.t - leg, 1);
         p.sprite.position.copy(p.route[leg].curve.getPoint(local));
+        p.core.position.copy(p.sprite.position);
         p.sprite.material.opacity = Math.sin(Math.PI * Math.min(p.t / p.route.length, 1)) * 0.95;
+        p.core.material.opacity = p.sprite.material.opacity;
         if (p.t >= p.route.length) { p.delay = Math.random() * 0.8; launch(p); }
       }
     }

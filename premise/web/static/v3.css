@@ -1,13 +1,12 @@
 /* V3 surfaces (Explorer, Benchmark, Continuity, time machine, Cypher inspector), built only on tokens.css. */
 
 /* Showcase: preserve the Cortex world, lead with the product and its real result. */
-/* Keep the Cortex composition, with a separate health row below copy and brain. */
+/* Keep the Cortex composition; company health lives in its own card after the hero. */
 .showcase-hero .hero-copy h1 { font-size:clamp(24px,2.2vw,32px); line-height:1.32; max-width:none; margin-bottom:var(--space-5); }
 @media(min-width:1101px) {
- .showcase-hero .hero-copy { bottom:180px; width:min(480px,36%); }
+ .showcase-hero .hero-copy { bottom:var(--space-8); width:min(480px,36%); }
  .showcase-hero .hero-copy h1 { max-width:480px; }
- .showcase-hero .brain-stage { bottom:140px; }
- .showcase-hero .showcase-stats { position:absolute; z-index:3; bottom:var(--space-6); left:40px; right:40px; }
+ .showcase-hero .brain-stage { bottom:var(--space-6); }
 }
 .showcase-hero h1 span { color:var(--ice); }
 .page-brain .bar nav { min-width:0; overflow-x:auto; }
@@ -15,7 +14,11 @@
 .page-assessment .page-head-copy { min-width:0; }
 .page-assessment .page-head h1 { font-size:clamp(24px,4.5vw,64px); max-width:none; overflow-wrap:anywhere; }
 .showcase-hero .statement { font-size:var(--text-base); line-height:1.65; max-width:42ch; margin-bottom:var(--space-6); }
-.showcase-story { margin:0; }
+.showcase-story.button { margin:0; min-height:60px; padding:var(--space-4) var(--space-6); gap:var(--space-3); background:var(--brain-signal); color:var(--frame); font-size:var(--text-lg); box-shadow:0 12px 32px -18px rgb(255 180 84 / .65); transition:background-color var(--dur-feedback) ease, box-shadow var(--dur-feedback) ease, transform var(--dur-feedback) var(--ease-out); }
+.showcase-story.button .i { width:22px; height:22px; }
+.showcase-story.button:hover { background:var(--unknown); filter:none; box-shadow:0 16px 36px -18px rgb(255 180 84 / .8); }
+.showcase-story.button:focus-visible { outline:3px solid var(--ink); outline-offset:5px; }
+.showcase-health { padding:var(--space-6) var(--space-7); margin-bottom:var(--space-6); border:1px solid var(--line); border-radius:var(--r-card); background:var(--panel-solid); }
 .showcase-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--space-7); margin:0; }
 .showcase-stats>div { min-width:0; }
 .showcase-stats dt { color:var(--ink-2); font-size:var(--text-sm); }
@@ -64,14 +67,16 @@
 .continuity-bridge-panel p,#continuity-projection,#continuity-graph-status { font-size:var(--text-sm); }
 #continuity-canvas { height:440px; background:var(--frame); border-radius:var(--r-card); }
 @media(max-width:1100px) {
- .showcase-hero .hero-copy { padding:var(--space-6) var(--space-6) 0; }
- .showcase-hero .showcase-stats { padding:var(--space-6); gap:var(--space-5); }
+ .showcase-hero .hero-copy { padding:var(--space-6); }
+ .showcase-health { padding:var(--space-6); }
+ .showcase-stats { gap:var(--space-5); }
 }
 @media(max-width:760px) {
- .showcase-hero .hero-copy { padding:var(--space-5); padding-bottom:0; }
+ .showcase-hero .hero-copy { padding:var(--space-5); }
  .showcase-hero .hero-copy h1 { font-size:clamp(24px,6vw,36px); max-width:none; line-height:1.32; }
  .showcase-hero .statement { font-size:var(--text-base); }
- .showcase-hero .showcase-stats { grid-template-columns:minmax(0,1fr); padding:var(--space-6) var(--space-5); gap:var(--space-5); }
+ .showcase-health { padding:var(--space-6) var(--space-5); }
+ .showcase-stats { grid-template-columns:minmax(0,1fr); gap:var(--space-5); }
  .showcase-stats dd { display:flex; align-items:baseline; gap:var(--space-3); }
  .showcase-stats>div:first-child dd { gap:var(--space-1); }
  .showcase-stats small { margin:0; }
