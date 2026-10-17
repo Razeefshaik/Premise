@@ -1,5 +1,9 @@
 # UI refinement for the showcase
 
+**Finished on `ui/showcase`, 2026-10-17.** All remaining pages, the propagation GIF and
+validation are complete. See [Final verification](#final-verification--2026-10-17).
+The audit and original handoff below are retained as the lifecycle record.
+
 Branch `ui/showcase`, created from local `main` after fast-forwarding it to the complete V3 stack
 (`v3/public-replay`, `f28fad3`). Every local and remote branch was confirmed to be contained in that
 commit before the fast-forward. Nothing is pushed.
@@ -145,7 +149,7 @@ order and ARIA, JS budget) plus the existing web/graph-API/v2-web tests: 35 pass
 Known limits: overview labels stay small at 1440 (30 nodes, width-limited); story and checks zoom to the affected
 area where labels are readable.
 
-## Handoff: remaining work (not started unless noted)
+## Original handoff: remaining work before this completion pass
 
 1. **Landing (`/`)** — started: `premise/web/app.py` adds `expiring_attestations(health)` to the brain context
    (active attestations due for review within 180 days; currently A_STABLE_EVENT_ID, Anika Rao, 1 Mar 2027). Still to
@@ -174,3 +178,107 @@ area where labels are readable.
 How to run what this pass used: `premise --graph premise_showcase ingest && premise --graph premise_showcase demo`,
 then `premise --graph premise_showcase serve --web-port 8040` with `POLL_ENABLED=false`; checkers take
 `PREMISE_BASE_URL`; replay: `scripts/export_replay.py` then `python -m http.server 8031 --directory site`.
+
+## Remaining showcase pages — implemented
+
+This section supersedes the unfinished page and GIF items above; the audit and earlier verification remain
+historical evidence. Page work is in local commit `b09fe50`, and the recording is in `edcd9e8`. Work stays on
+`ui/showcase`, under the existing sole author, with no push. Final verification is recorded separately below
+when completed; implementation is not a claim that every finish check has passed.
+
+The direction remains an ordinary refinement of Cortex: Persuade for the landing hero, Operate for the
+working pages. Near-black surfaces, indigo light, Unbounded display type, Manrope interface text, technical
+monospace, the existing MRI brain and glass materials remain the visual authority. This work introduces
+no replacement world, composition seed or new design-system rules. `PRODUCT.md` and `docs/DESIGN.md`
+were checked against the finished source and preserved; system/sidecar drift is not repaired as a side effect.
+
+- **Landing:** the exact hook is now “Search finds documents. Premise finds consequences.” The brain stays,
+  followed by the existing decision-network and guarantee content, including “What still holds?” and the
+  Analyst. Three live health statistics show guarantees healthy / total, attestations expiring within 180 days,
+  and orphaned decisions. One primary “Play the story” action opens `/explore?story=1`. The four proposed-change
+  chips and `#fire-result` move into the network section, preserving the existing fire interaction while
+  giving the first viewport one clear action.
+- **Benchmark:** the headline comparison comes from the committed benchmark response: test macro F1
+  **0.789** for graph reasoning versus **0.297** for the best passage retriever, vector **k=3**. The client
+  selects the graph and best retriever from the returned test/all rows rather than hardcoding those scores.
+  Bars retain system, k and numeric labels and grow once on first view; reduced motion shows settled values
+  immediately. The recording date is readable and explicitly UTC. Authored-label, synthetic-company,
+  structural-advantage and pending-human-review caveats stay visible before a collapsed disclosure containing
+  all **21 test measurement rows**. The result does not claim general QA superiority.
+- **Continuity:** active people have one-tap chips with an explicit pressed state; the original
+  `#departure-person` select still works. Three impact sections expose returned counts and a busy state.
+  Person nodes use names, and links touching the departing person are dashed red with a written explanation.
+  Bridge scores round to at most two decimal places; the text keeps centrality separate from guarantee health.
+  Connection loading, empty and error messages are explicit, stale requests are ignored, and errors clear
+  previous results instead of leaving a healthy-looking graph. All departures remain hypothetical.
+- **Assessment and Entity:** reviewer, unavailable-person, candidate and attestation presentation uses names.
+  A read-only person-name helper and template filter resolve display text without mutating graph identities
+  or stored assessment ids. The remaining What-if page retains its existing behavior and was included in
+  the capture set. A page-scoped assessment heading size/wrapping correction fixes the clipped mobile title.
+- **Responsive scope:** landing copy and brain stack below 1100px, with phone sizing below 760px. Landing
+  navigation can scroll within its container, preventing page overflow at tablet width. These corrections
+  live in `premise/web/static/v3.css`; they do not redefine shared tokens or the base stylesheet.
+  The coordinating build pass verified an empty diff against incoming `3cf535c` for both apps' `style.css`
+  and `tokens.css`; each pair remains byte-identical.
+- **Recording:** [`docs/media/propagation.gif`](media/propagation.gif) shows the real S1 retry-window break
+  and verified-fix heal. The artifact is **11.98 seconds, 33 frames, 4,543,211 bytes**; README embeds it and
+  links [`scripts/record_propagation.py`](../scripts/record_propagation.py) for reproduction. It was captured
+  from the local Explorer and real FalkorDB checks, not fabricated verdicts or a UI-only animation.
+
+Verification available at this documentation handoff: focused web checks **16 passed** and expanded showcase
+checks **6 passed**. The initial 18 page/viewport captures reported zero page/console errors and no horizontal
+overflow at 1440×900 and 390×844. The final landing capture at 768×1024 has no page overflow or copy/brain
+overlap. The final live UI check after the responsive corrections passed with zero page/console errors,
+including assessment title fit, tablet landing layout, story playback and reduced motion at both sizes,
+and the new page controls. The full suite, isolated scenarios and fresh replay check had not yet run in
+this pass. These are the handoff's actual limits, not final finish results.
+
+Evidence: [`artifacts/ui-after/`](../artifacts/ui-after/) contains `landing`, `benchmark`, `continuity`,
+`assessment`, `entity` and `whatif` captures at widths 1440 and 390, plus their `-full.png` versions and
+`landing-768.png`. The independent fresh reviewer initially identified the clipped mobile assessment title;
+the correction verdict scored it resolved with no introduced regressions and disposition **ship**, scoped to
+the correction captures.
+
+The raw taste report at `.runtime/showcase-taste/report.json` retains findings about pinned Cortex decoration
+and exact headline wraps; its tablet overflow finding was corrected in the build. The Jinja/CSS detector's
+unresolved-variable contrast findings assumed a light background and its type-ramp findings remain advisory;
+the actual AA state/token checks passed. These findings are recorded as limits, not promoted into new design
+rules or used to rewrite the incumbent design record.
+
+## Final verification — 2026-10-17
+
+| Check | Actual final result |
+| --- | --- |
+| Full `python -m pytest -q` suite | **348 passed**, zero failures/errors/skips; **373.86 seconds** |
+| `premise scenarios` | **12/12 passed** on the isolated validation graph |
+| `scripts/check_ui.py` | Passed, zero page/console errors; story and reduced motion at desktop/mobile, names, new controls, mobile title fit and tablet landing assertions |
+| Fresh `scripts/export_replay.py` | **3,333** real recorded responses across **8** dates |
+| `scripts/check_replay.py` | Passed; **208** local requests, **zero external requests**, zero errors; story, reduced motion, benchmark and departure controls |
+| After captures | **38 PNGs**, covering **19** page/viewport combinations; zero reported console errors or document overflow |
+| Propagation GIF | **11.98 seconds**, **33 frames**, 4,543,211 bytes; real S1 break and engine-verified repair |
+
+The suite emitted 35 warnings because the existing red-team tests' `record_property` metadata
+is incompatible with JUnit's default `xunit2` report format. These are reporting warnings;
+all tests passed. Logs/JUnit and the copied live/replay reports are under ignored
+`.runtime/showcase-validation/`; replay screenshots/report are under `.runtime/v3-replay/`.
+The committed captures and their machine-readable results are in
+[`artifacts/ui-after/`](../artifacts/ui-after/).
+
+Validation used a uniquely named `premise_showcase_finish_<uuid>` graph and loopback server,
+with GitHub polling and model calls disabled. The temporary server and graph were removed
+after verification. The pre-existing `premise_showcase` graph and running FalkorDB service
+were preserved. Replay export and tests clean up their own graph namespaces.
+
+Local checkpoints: `b09fe50` (page refinements and regressions), `edcd9e8` (GIF and recorder),
+`fe57901` (responsive corrections), `7e06d63` (all after captures), followed by this finish
+record. Commits use Shaik Mohammad Razeef as the sole author, without co-author trailers.
+This pass did not merge into `main`, push, deploy Pages, or record a hackathon submission video.
+
+The known 30-node overview label limitation remains: use the inspector or story focus for
+readable detail. The requested exact landing hook wraps to three desktop/four phone lines;
+it was retained rather than shortened to satisfy the generic taste meter. Existing Cortex
+glass, light and technical typography were preserved as required. Raw detector/taste reports
+are not claimed to be clean; their real tablet overflow finding was fixed and other scoped
+exceptions remain documented above. The fresh finish reviewer scored the mobile title fix
+resolved, with no introduced regressions in the supplied captures; disposition **ship** applies
+to that correction review.
