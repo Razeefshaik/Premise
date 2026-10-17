@@ -1,35 +1,46 @@
-# Premise
+<div align="center">
 
-**Search finds documents. Premise finds consequences.**
+<a href="https://razeefshaik.github.io/Premise/"><img src="docs/media/banner.png" alt="Premise: a pull request changes the Paylane retry window from 24 to 72 hours, and the Kestrel company brain lights the broken path through four guarantees" width="100%"></a>
 
-Premise is a pull request check for engineering decisions, built on FalkorDB. It connects
-architecture decisions to the guarantees they promise, guarantees to the assumptions they
-require, and assumptions to live config values and dated human attestations. When a pull
-request changes a fact, FalkorDB traces what breaks, Premise blocks or passes the PR, names
-the people who must review, and opens a fix PR only after verifying on the graph that the fix works.
+<br><br>
 
-**[Live replay](https://razeefshaik.github.io/Premise/)** ·
-**[Real PR that went red, then green](#the-real-github-flow)** ·
-**[Benchmark](#benchmark-what-does-structure-buy)** ·
-**[Graph data model](#graph-data-model)** ·
-**[Cypher and algorithms](#cypher-and-graph-algorithms)** ·
-**Demo video:** _link added on submission_
+[![Tests](https://github.com/Razeefshaik/Premise/actions/workflows/tests.yml/badge.svg)](https://github.com/Razeefshaik/Premise/actions/workflows/tests.yml)
+[![Live replay](https://github.com/Razeefshaik/Premise/actions/workflows/pages.yml/badge.svg)](https://razeefshaik.github.io/Premise/)
+![FalkorDB 4.18.3](https://img.shields.io/badge/FalkorDB-4.18.3-5b63ff)
+![Red team 35/35 safe](https://img.shields.io/badge/red%20team-35%2F35%20safe-2ea043)
+![Python 3.12](https://img.shields.io/badge/python-3.12-3776ab)
 
-Built for WeMakeDevs × FalkorDB Graph Hacks, entering **Track 1: Agents That Act on Connected
-Data** and **Track 3: Company Brain**.
+### [▶&nbsp; Try the live replay](https://razeefshaik.github.io/Premise/) &nbsp;·&nbsp; [🎬&nbsp; Watch the demo](#) &nbsp;·&nbsp; [🔴→🟢&nbsp; See a real PR go red, then green](#the-real-github-flow)
+
+[How it works](#how-it-works) · [Graph data model](#graph-data-model) · [Cypher and algorithms](#cypher-and-graph-algorithms) · [Benchmark](#benchmark-what-does-structure-buy) · [Run locally](#run-locally)
+
+</div>
+
+---
+
+> **One config value changes. Four engineering promises quietly break. No search, test or reviewer notices,
+> because none of the affected decisions ever mention the value that changed.**
+>
+> Premise keeps the *reasons* behind decisions in a FalkorDB graph, so every pull request is checked
+> against everything that depends on it.
+
+| 🔎 Trace | 🛑 Decide | 🩹 Heal |
+| :-- | :-- | :-- |
+| A changed fact flows up `REQUIRES` edges to every guarantee and decision that depends on it | The PR gets **BLOCKED**, **NEEDS_REVIEW** or **CLEAR**, with the broken chain and the right people to review | A fix PR opens **only after the graph proves** every affected guarantee holds again |
 
 ![A partner's retry window rises to 72 hours, the failure travels through the graph, and the verified fix heals it](docs/media/propagation.gif)
 
-<sub>Recorded from the local Explorer against a real FalkorDB. [Record it again](scripts/record_propagation.py).</sub>
+<sub>12 seconds from the Explorer, recorded against a real FalkorDB. [Record it again](scripts/record_propagation.py).</sub>
 
 | Result | Evidence |
 | --- | --- |
-| **348 tests pass**, 12/12 scenarios match | [CI workflow](.github/workflows/tests.yml) runs them against FalkorDB v4.18.3 |
-| **Graph F1 1.00** vs 0.46 vector RAG on change impact questions | [Synthetic benchmark with its limits](docs/BENCHMARK.md) |
+| **348 tests pass**, 12/12 scenarios match | [CI workflow](.github/workflows/tests.yml) runs them against FalkorDB v4.18.3 on every push |
+| **Graph F1 1.00** vs 0.46 for vector RAG on change impact questions | [Synthetic benchmark with its limits](docs/BENCHMARK.md) |
 | **35/35** red team attacks end in the expected safe outcome | [Red team report](docs/REDTEAM.md) |
 | **0** verdicts decided by a language model | Verdicts are parameterized Cypher plus deterministic Python |
 
----
+Built for **WeMakeDevs × FalkorDB Graph Hacks**, entering **Track 1: Agents That Act on Connected Data**
+and **Track 3: Company Brain**.
 
 ## The problem
 
