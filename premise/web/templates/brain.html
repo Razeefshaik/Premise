@@ -14,12 +14,12 @@
     <h1 id="hero-title" class="rise">Search finds documents.<br><span>Premise finds consequences.</span></h1>
     <p class="statement rise">Change one fact. See which engineering promises break, who needs to review, and which fix holds up.</p>
     <a class="button showcase-story rise" href="/explore?story=1">{{ icon('play') }}Play the story</a>
-    <dl class="showcase-stats rise" aria-label="Current company health">
+  </div>
+  <dl class="showcase-stats rise" aria-label="Current company health">
       <div><dt>Guarantees healthy</dt><dd><b class="t-holds">{{ tally.holds }}</b><span> / {{ health.guarantees|length }}</span></dd></div>
       <div><dt>Promises expiring soon</dt><dd class="t-unknown">{{ expiring|length }}<small>Attestations due within 180 days</small></dd></div>
       <div><dt>Orphaned decisions</dt><dd>{{ orphaned|length }}<small>No active accountable person</small></dd></div>
-    </dl>
-  </div>
+  </dl>
 </section>
 <script type="application/json" id="plate-data">{{ plate|tojson }}</script>
 
