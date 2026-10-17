@@ -322,23 +322,3 @@ spacing, hover tracing, real S1 `BLOCKED` and verified-fix `CLEAR_WITHIN_SCOPE`;
 drag rotation and reduced motion were exercised. Captures and the report are under ignored
 `.impeccable/review/hero-readability/`. The full suite/scenarios were not rerun for this visual
 change. `scripts/showcase_checks.py` retains spacing checks for subsequent live/replay runs.
-
-## Separate health card and story emphasis - 2026-10-17
-
-Moved the live health summary into its own card immediately after the hero, retaining its three
-desktop columns and stacked phone rows. The story action is now a 60px gold button with a larger
-play icon, stronger type, hover treatment and a visible keyboard focus outline. The story URL,
-copy and graph-derived counts remain unchanged.
-
-Brain connections use cyan `--brain-link` (`#47ddec`); travelling signals use gold
-`--brain-signal` (`#ffb454`), with a small solid core so movement stays visible against the brain.
-The existing red failure and green checked paths retain their meanings. These two colour roles
-live in the shared token files; both copies remain identical. No new animation was added to the
-story button, and reduced motion still disables the travelling signals.
-
-Validation: **6 showcase tests passed in 6.19s**, including contrast checks for both new colours.
-Live browser checks passed at 390x844, 768x1024, 1440x900 and 1920x1080: separate health card,
-CTA size/colour/focus, actual click into the story, hover tracing, S1 failure and verified fix,
-normal/reduced motion and drag rotation. No horizontal overflow or page/console errors occurred.
-Captures and report: `.impeccable/review/hero-action/` (ignored). The full suite and scenarios
-were not rerun for this visual change.

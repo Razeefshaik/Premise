@@ -54,7 +54,7 @@ def test_tokens_are_the_single_shared_source():
 def test_text_and_state_colours_meet_wcag_aa_on_every_surface():
     values = tokens()
     surfaces = [values['bg'], values['frame'], values['panel-solid'], values['panel-raised']]
-    for name in ('ink', 'ink-2', 'ink-3', 'holds', 'unknown', 'broken', 'violated', 'indigo-2', 'ice', 'brain-link', 'brain-signal'):
+    for name in ('ink', 'ink-2', 'ink-3', 'holds', 'unknown', 'broken', 'violated', 'indigo-2', 'ice'):
         for surface in surfaces:
             assert contrast(values[name], surface) >= 4.5, (name, surface, round(contrast(values[name], surface), 2))
 

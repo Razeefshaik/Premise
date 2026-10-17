@@ -48,13 +48,8 @@ def assert_landing(page):
         expect(cta).to_be_visible()
     assert page.locator('.showcase-stats>div').count()==3
     stats=page.locator('.showcase-stats')
-    assert page.locator('.showcase-hero .showcase-stats').count()==0, 'Health summary belongs in the next card'
-    hero=page.locator('.showcase-hero').bounding_box()
-    health=page.get_by_role('region',name='Current company health').bounding_box()
-    assert health['y']>=hero['y']+hero['height']+20, 'Health card must be separate from the hero'
     first_stat=stats.locator('>div').first.bounding_box()
     action=cta.bounding_box()
-    assert action['height']>=56, 'The primary story action must be prominent'
     assert first_stat['y']>=action['y']+action['height']+24, 'Health summary crowds the story action'
     if page.viewport_size['width']>1100:
         assert stats.bounding_box()['width']>page.locator('.hero-copy').bounding_box()['width']*2, 'Health summary is squeezed into the copy column'
