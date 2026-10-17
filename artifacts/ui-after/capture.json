@@ -58,5 +58,71 @@
       "width": 362,
       "height": 482
     }
+  },
+  "landing-1440": {
+    "errors": [],
+    "overflow": false,
+    "canvas": null
+  },
+  "benchmark-1440": {
+    "errors": [],
+    "overflow": false,
+    "canvas": null
+  },
+  "continuity-1440": {
+    "errors": [],
+    "overflow": false,
+    "canvas": null
+  },
+  "whatif-1440": {
+    "errors": [],
+    "overflow": false,
+    "canvas": null
+  },
+  "assessment-1440": {
+    "errors": [],
+    "overflow": false,
+    "canvas": null
+  },
+  "entity-1440": {
+    "errors": [],
+    "overflow": false,
+    "canvas": null
+  },
+  "landing-390": {
+    "errors": [],
+    "overflow": false,
+    "canvas": null
+  },
+  "benchmark-390": {
+    "errors": [],
+    "overflow": false,
+    "canvas": null
+  },
+  "continuity-390": {
+    "errors": [],
+    "overflow": false,
+    "canvas": null
+  },
+  "whatif-390": {
+    "errors": [],
+    "overflow": false,
+    "canvas": null
+  },
+  "assessment-390": {
+    "errors": [],
+    "overflow": false,
+    "canvas": null
+  },
+  "entity-390": {
+    "errors": [],
+    "overflow": false,
+    "canvas": null
+  },
+  "landing-768": {
+    "errors": [],
+    "overflow": false,
+    "canvas": null,
+    "copy_and_brain_overlap": false
   }
 }
