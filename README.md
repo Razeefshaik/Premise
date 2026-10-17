@@ -538,25 +538,18 @@ and await human label review.
 
 ## AI use disclosure
 
-AI coding assistants were used heavily, and this is how:
+Premise was built with AI coding assistants, as the hackathon rules allow:
 
-* **Claude** (Anthropic): the product design and specification, the v2 research report and
-  architecture, the v2 Phase 1 code, code reviews and fix specifications, the original synthetic
-  company text, and this README with its screenshots and benchmark chart.
-* **OpenAI Codex**: most of the implementation, tests and documentation of the main product, the
-  v2 review fixes and Phase 2, and V3 (Explorer, replay site, benchmark, red team), plus six tickets,
-  34 chat messages and two runbooks of synthetic data.
-* **Claude Code**: the final UI refinement of the web app.
-* **Codex CLI** is also an optional runtime provider for proposals and answers.
+* **Claude** (Anthropic) and **OpenAI Codex** were used throughout development to move fast:
+  drafting and refining designs, writing and reviewing code, tests and documentation, and
+  generating the synthetic Kestrel company data.
+* **Claude Code** was used for frontend polish and for preparing this README.
+* **Codex CLI** can optionally run as the local model provider for proposals and answers.
 
-**Razeef's role:** chose the problem and both tracks; set the product direction and what to build
-in each phase (including the self-maintaining v2 pipeline, the relation management question that
-shaped its design, and running the model locally through Codex CLI instead of a paid API);
-coordinated the AI agents and decided which reviews to act on; tested the builds; and ran the real
-GitHub rehearsal on the Kestrel repository.
+Changes were reviewed and tested against a real FalkorDB before being kept.
 
-**What models never do in the product:** decide a verdict, write the decision graph, execute
-Cypher from text, or authorize a GitHub action. Verdicts are deterministic Python over parameterized
+Inside the product, models never decide a verdict, write the decision graph, execute Cypher
+from text, or authorize a GitHub action. Verdicts are deterministic Python over parameterized
 Cypher, and every model proposal is verified on the graph before it is used.
 
 ## Attribution
