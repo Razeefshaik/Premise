@@ -108,3 +108,69 @@ verdict above the canvas, names for reviewers and person nodes.
 ## Progress
 
 Updated after each page below.
+
+### 1. Tokens and Explorer — done (this commit)
+
+- `premise/web/static/tokens.css` (copied byte-identical to `premise_v2/web/static/`) is the single source for
+  colour (holds/unknown/broken/violated with fields), space, radius, type scale, elevation and motion
+  (`--dur-feedback 140ms`, `--dur-state 240ms`, `--dur-hop 220ms`, ease-out/in/in-out). Reduced motion sets every
+  duration to 0. `style.css` imports it; `v3.css` was rewritten on tokens only (no literals, no `--muted` gap).
+- Explorer: compact toolbar (search, depth, include, time machine) above the stage; on phones depth/include/time
+  fold behind an Options toggle. Verdict banner above the canvas is the ARIA live region, coloured by verdict with an
+  icon, counts and reviewer names, plus "Apply verified fix". On-canvas shape/state legend. Layered layout
+  (facts → assumptions → guarantees by REQUIRES depth → decisions/services) so failure reads bottom-up; row gap adapts
+  to the canvas aspect.
+- Propagation (`consequences.js`, class `Run`): visualises one real `/api/check` result. The camera frames the
+  affected area, the touched assumption pulses, a signal travels each REQUIRES edge (220 ms per hop) and guarantees
+  turn red in chain order, affected decisions light up, then the verdict lands. A fix heals in reverse order. Runs
+  diff against what the graph currently shows, are cancelled by any newer change, and apply states instantly under
+  reduced motion. Every final state comes from the response or the recorded baseline.
+- Story mode (`story.js`): "Play the story" runs ten captioned steps on real data (overview → G_DEDUPE → Paylane
+  24→72 → propagation → BLOCKED → reviewers → verified fix → heal → 2027-03-02 → Anika Rao's attestation and amber
+  G_DEDUPE). Pause/resume (Space), previous/next (arrows), exit (Escape); `?story=1` autostarts. Skipping or going back
+  replays earlier steps instantly. Works on the replay site.
+- Time machine: track with attestation ticks, spring-following date bubble, debounced requests; in the Explorer the
+  verdict banner names the expiring attestation and person.
+- Show Cypher: highlighted Cypher, per-query timing bars, row counts, parameters toggle, copy with feedback.
+- Names: the verdict and story use names from the API (`names`), not ids.
+
+Verification (actual): `scripts/check_ui.py` passed against a live app on an isolated graph (no page/console
+errors; canvas and verdict in the first screen at 1440×900 and 390×844; hypothetical labels; story start to finish
+at both sizes; reduced motion at both sizes; Continuity names). `scripts/check_replay.py` passed on a fresh export
+(3,333 responses, 8 dates; 211 local requests, zero external; story and reduced motion included). New
+`tests/test_showcase_ui.py` (tokens shared, WCAG AA for all text/state colours on four surfaces, Explorer markup
+order and ARIA, JS budget) plus the existing web/graph-API/v2-web tests: 35 passed. The full suite and
+`premise scenarios` have **not** been run since these changes. After screenshots: `artifacts/ui-after/explore*`.
+
+Known limits: overview labels stay small at 1440 (30 nodes, width-limited); story and checks zoom to the affected
+area where labels are readable.
+
+## Handoff: remaining work (not started unless noted)
+
+1. **Landing (`/`)** — started: `premise/web/app.py` adds `expiring_attestations(health)` to the brain context
+   (active attestations due for review within 180 days; currently A_STABLE_EVENT_ID, Anika Rao, 1 Mar 2027). Still to
+   do in `brain.html`: hook "Search finds documents. Premise finds consequences." as the h1; three stat chips (guarantees
+   healthy = holds / total; promises expiring soon = `expiring|length`; orphaned decisions = `orphaned|length`); one
+   primary CTA "Play the story" → `/explore?story=1`. Keep the 3D brain, keep a heading named "What still holds?"
+   (checked by `check_ui.py` and `tests/test_agents_and_web.py`) and the Analyst ("Model provider configured" is tested).
+   Move the four fire chips and `#fire-result` out of the hero into the network section (`fire.js` only needs
+   `[data-fire]` and `#fire-result`).
+2. **Benchmark** — headline number (graph F1 0.789 vs best retriever, vector k=3 0.297), bars that grow once on first
+   view (transform `scaleY`, origin bottom; instant under reduced motion), system name + value labels on bars, quieter
+   caveats, compact table (test split only by default), readable record date. `check_ui.py` expects 21 rows in
+   `#benchmark-rows`.
+3. **Continuity** — person chips instead of the select (keep `#departure-person` working for the checkers), impact
+   cards with counts that fill in, highlight cut connections in the Cytoscape view, round the bridge score, use names
+   everywhere (already for reviewers and person nodes).
+4. **What if / Assessment / Entity** — replace remaining person ids with names (Assessment "Who should review",
+   attestation "(p_anika)", Entity "Current reviewers" and "Reviewer evidence"). The assessment result has reviewer ids;
+   names can be looked up read-only as `graph_api.py` does for node details.
+5. **GIF** — record 10–15 s of S1 propagation and the verified-fix heal into `docs/media/propagation.gif` and link it
+   from the README (no ffmpeg/ImageMagick here; Pillow can assemble Playwright frames: `pip install --target` a
+   scratch dir as done for screenshots).
+6. **Finish** — full `pytest`, `premise scenarios` on an isolated graph, both checkers, after screenshots of every page
+   into `artifacts/ui-after/` (`scripts/capture_ui.py artifacts/ui-after --base <url> [--pages …]`), then update this file.
+
+How to run what this pass used: `premise --graph premise_showcase ingest && premise --graph premise_showcase demo`,
+then `premise --graph premise_showcase serve --web-port 8040` with `POLL_ENABLED=false`; checkers take
+`PREMISE_BASE_URL`; replay: `scripts/export_replay.py` then `python -m http.server 8031 --directory site`.

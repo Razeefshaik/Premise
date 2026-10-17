@@ -1,0 +1,62 @@
+{
+  "explore-1440": {
+    "errors": [],
+    "overflow": false,
+    "canvas": {
+      "x": 36,
+      "y": 381.265625,
+      "width": 992,
+      "height": 514
+    }
+  },
+  "explore-blocked-1440": {
+    "errors": [],
+    "overflow": false,
+    "canvas": {
+      "x": 36,
+      "y": 381.265625,
+      "width": 992,
+      "height": 514
+    }
+  },
+  "explore-forecast-1440": {
+    "errors": [],
+    "overflow": false,
+    "canvas": {
+      "x": 36,
+      "y": 381.265625,
+      "width": 992,
+      "height": 514
+    }
+  },
+  "explore-390": {
+    "errors": [],
+    "overflow": false,
+    "canvas": {
+      "x": 14,
+      "y": 330.59375,
+      "width": 362,
+      "height": 482
+    }
+  },
+  "explore-blocked-390": {
+    "errors": [],
+    "overflow": false,
+    "canvas": {
+      "x": 14,
+      "y": 330.59375,
+      "width": 362,
+      "height": 482
+    }
+  },
+  "explore-forecast-390": {
+    "errors": [],
+    "overflow": false,
+    "canvas": {
+      "x": 14,
+      "y": 330.59375,
+      "width": 362,
+      "height": 482
+    }
+  }
+}

@@ -1,37 +1,11 @@
 /* Premise · Cortex. Shared, byte for byte, by the v1 brain and the v2 review app (tests assert it). */
+@import url('tokens.css');
 @font-face { font-family: 'Unbounded'; src: url('fonts/unbounded.woff2') format('woff2'); font-weight: 400 800; font-display: swap; }
 @font-face { font-family: 'Manrope'; src: url('fonts/manrope.woff2') format('woff2'); font-weight: 400 700; font-display: swap; }
 @font-face { font-family: 'JetBrains Mono'; src: url('fonts/jetbrains-mono.woff2') format('woff2'); font-weight: 400 500; font-display: swap; }
 @view-transition { navigation: auto; }
 
-:root {
-  --bg: #030305;
-  --frame: #090a12;
-  --panel: rgb(150 160 230 / 0.07);
-  --panel-2: rgb(150 160 230 / 0.12);
-  --panel-solid: #0e1019;
-  --line: rgb(200 210 255 / 0.12);
-  --line-2: rgb(200 210 255 / 0.24);
-  --ink: #f2f4ff;
-  --ink-2: #b9bfda;
-  --ink-3: #8a90ad;
-  --indigo: #5b63ff;
-  --indigo-2: #8b92ff;
-  --ice: #dfe4ff;
-  --holds: #7cf0c8;
-  --unknown: #ffd27a;
-  --broken: #ff6b8b;
-  --display: 'Unbounded', 'Segoe UI', system-ui, sans-serif;
-  --ui: 'Manrope', 'Segoe UI', system-ui, sans-serif;
-  --mono: 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
-  --gutter: clamp(14px, 2.6vw, 36px);
-  --max: 1480px;
-  --r-frame: 28px;
-  --r-card: 22px;
-  --r-control: 12px;
-  --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-io: cubic-bezier(0.76, 0, 0.24, 1);
-}
+/* Tokens live in tokens.css (imported above); this sheet only consumes them. */
 
 *, *::before, *::after { box-sizing: border-box; }
 html { background: var(--bg); color-scheme: dark; scrollbar-color: #232744 var(--bg); -webkit-text-size-adjust: 100%; }

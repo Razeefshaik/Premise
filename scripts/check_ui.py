@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 import os
 from playwright.sync_api import sync_playwright
-from explorer_checks import assert_canvas_in_first_screen, assert_hypothetical_status, assert_continuity_names
+from explorer_checks import assert_canvas_in_first_screen, assert_hypothetical_status, assert_continuity_names, assert_verdict_visible, assert_story_runs, assert_reduced_motion
 
 
 def main():
@@ -66,6 +66,7 @@ def main():
             page.goto(base+'/explore?focus=G_DEDUPE&depth=2',wait_until='networkidle')
             page.wait_for_function('window.premiseExplorer?.cy.nodes().length >= 5')
             assert_canvas_in_first_screen(page)
+            assert_verdict_visible(page, 'Baseline')
             page.locator('#graph-message').filter(has_text='nodes').wait_for()
             position=page.evaluate("window.premiseExplorer.cy.getElementById('G_DEDUPE').renderedPosition()")
             box=page.locator('#explorer-canvas').bounding_box()
@@ -82,6 +83,8 @@ def main():
             page.get_by_role('tab',name='What if',exact=True).click()
             page.locator('[data-explorer-preset="S1"]').click()
             page.locator('#explorer-verdict').filter(has_text='BLOCKED').wait_for()
+            page.evaluate('window.scrollTo(0,0)')
+            assert_verdict_visible(page, 'BLOCKED')
             assert page.evaluate('window.premiseExplorer.cy.nodes(".broken").length')==4
             assert_hypothetical_status(page)
             page.screenshot(path=str(artifact/f"explorer-blocked-{size['width']}.png"),full_page=True)
@@ -125,10 +128,21 @@ def main():
         page.screenshot(path=str(artifact/'continuity-mobile.png'),full_page=True)
         page.goto(base+'/explore?at=2027-03-02',wait_until='networkidle')
         page.wait_for_function('window.premiseExplorer?.cy.getElementById("G_DEDUPE").data("health")==="unknown"')
-        page.locator('.explorer-controls summary').click()
+        if page.locator('#xp-more-toggle').is_visible():
+            page.locator('#xp-more-toggle').click()
         page.locator('#time-label').filter(has_text='Forecast').wait_for()
+        page.locator('#explorer-verdict').filter(has_text='Anika Rao').wait_for()
         page.locator('#time-live').click()
         page.wait_for_function('window.premiseExplorer?.cy.getElementById("G_DEDUPE").data("health")==="holds"')
+        for size in [{'width':1440,'height':900},{'width':390,'height':844}]:
+            page.set_viewport_size(size)
+            page.goto(base+'/explore',wait_until='networkidle')
+            page.wait_for_function('window.premiseStory && window.premiseExplorer?.cy.nodes().length >= 5')
+            assert_story_runs(page)
+        page.set_viewport_size({'width':1440,'height':1050})
+        assert_reduced_motion(browser, base+'/explore')
+        assert_reduced_motion(browser, base+'/explore', {'width':390,'height':844})
+        print('Story mode and reduced motion passed',flush=True)
         page.goto(base+'/',wait_until='networkidle')
         page.locator('#time-date').fill('2027-03-02')
         page.locator('#time-date').dispatch_event('change')
@@ -136,7 +150,7 @@ def main():
         page.locator('#time-live').click()
         page.locator('[data-guarantee="G_DEDUPE"] .badge').filter(has_text='holds').wait_for()
         browser.close()
-        report={'page_errors':errors,'console_errors':console_errors,'mermaid_svg_rendered':graph,'desktop':[1440,1050],'explorer_desktop':[1440,900],'mobile':[390,844], 'hypothetical_labels':['broken','violated','unknown','holds'],'canvas_in_first_screen':True,'reviewer_names':True}
+        report={'page_errors':errors,'console_errors':console_errors,'mermaid_svg_rendered':graph,'desktop':[1440,1050],'explorer_desktop':[1440,900],'mobile':[390,844], 'hypothetical_labels':['broken','violated','unknown','holds'],'canvas_in_first_screen':True,'reviewer_names':True,'verdict_visible':True,'story_mode':True,'reduced_motion':True}
         (artifact/'ui-check.json').write_text(json.dumps(report,indent=2))
         print(json.dumps(report))
         assert not errors

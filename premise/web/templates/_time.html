@@ -1,1 +1,16 @@
-<section class="v3-controls" aria-label="Time machine"><div><label for="time-date">Time machine · evaluation date</label><div class="v3-date"><input type="date" id="time-date"><input type="range" id="time-range" min="0" max="545" value="180" aria-label="Evaluation date slider" list="time-marks"><datalist id="time-marks"></datalist><button type="button" id="time-live">Live today</button><output id="time-label" role="status">Today</output></div><p>Forecast attestation expiry using the current graph. This changes the guarantee view; it does not reconstruct old revisions.</p><p id="time-events"></p></div></section>
+<section class="v3-controls tm" aria-label="Time machine">
+  <div class="tm-row">
+    <label class="tm-label" for="time-date">Time machine · evaluation date</label>
+    <input type="date" id="time-date">
+    <div class="tm-track">
+      <input type="range" id="time-range" min="0" max="545" value="180" aria-label="Evaluation date slider" list="time-marks">
+      <datalist id="time-marks"></datalist>
+      <ol class="tm-marks" id="tm-marks" aria-hidden="true"></ol>
+      <span class="tm-bubble" id="tm-bubble" aria-hidden="true"></span>
+    </div>
+    <button type="button" id="time-live" class="chip">Live today</button>
+    <output id="time-label" role="status">Today</output>
+  </div>
+  <p id="time-events" class="tm-events"></p>
+  <p class="tm-note">Forecasts attestation expiry on the current graph. It changes the guarantee view; it does not reconstruct old revisions.</p>
+</section>

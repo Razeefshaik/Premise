@@ -3,7 +3,7 @@ import json
 import os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
-from explorer_checks import assert_canvas_in_first_screen, assert_hypothetical_status, assert_continuity_names
+from explorer_checks import assert_canvas_in_first_screen, assert_hypothetical_status, assert_continuity_names, assert_verdict_visible, assert_story_runs, assert_reduced_motion
 
 
 def main():
@@ -24,6 +24,8 @@ def main():
             page.wait_for_function('window.premiseExplorer?.cy.nodes().length>5')
             assert page.locator('.v3-replay').is_visible()
             assert_canvas_in_first_screen(page)
+            assert_verdict_visible(page, 'Baseline')
+            assert_story_runs(page)
             page.locator('#node-picker').select_option('G_DEDUPE')
             page.locator('#node-details').filter(has_text='Each Paylane webhook').wait_for()
             page.get_by_role('tab',name='What if',exact=True).click()
@@ -48,10 +50,11 @@ def main():
             assert_continuity_names(page)
             page.screenshot(path=str(artifact/f'continuity-{width}.png'),full_page=True)
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+        assert_reduced_motion(browser, base+'/index.html')
         browser.close()
     assert not errors,errors
     assert all(url.startswith(base) or url.startswith(('blob:','data:')) for url in network),network
-    result={'errors':errors,'requests':len(network),'external_requests':0,'desktop':[1440,900],'mobile':[390,844],'hypothetical_labels':['broken','violated','holds'],'canvas_in_first_screen':True,'reviewer_names':True}
+    result={'errors':errors,'requests':len(network),'external_requests':0,'desktop':[1440,900],'mobile':[390,844],'hypothetical_labels':['broken','violated','holds'],'canvas_in_first_screen':True,'reviewer_names':True,'verdict_visible':True,'story_mode':True,'reduced_motion':True}
     (artifact/'browser.json').write_text(json.dumps(result,indent=2))
     print(json.dumps(result))
 

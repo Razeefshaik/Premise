@@ -63,6 +63,18 @@ def scenario_presets(graph, keys=('S1','S1_FIXED','S6','S12')):
                    for key in keys]
 
 
+def expiring_attestations(health, days=180):
+    """Active attestations whose review date falls within the next `days`, soonest first (display only)."""
+    now, horizon = health["now_ms"], health["now_ms"] + days * 86400000
+    def label(ms):
+        day = dt.datetime.fromtimestamp(ms / 1000, dt.timezone.utc)
+        return f"{day.day} {day:%b %Y}"
+    rows = [{"assumption": a["id"], "person": att["person"], "review_by": att["review_by"], "date": label(att["review_by"])}
+            for a in health["assumptions"] for att in a["attestations"]
+            if att.get("status") == "active" and att.get("review_by") is not None and now < att["review_by"] <= horizon]
+    return sorted(rows, key=lambda r: r["review_by"])
+
+
 class Question(BaseModel):
     question: str = Field(min_length=1,max_length=2000)
 
@@ -118,7 +130,7 @@ def create_app(client=None, config=None, *, graph_api_at_ms=None, graph_node_cap
                  "assumptions":[{k:a.get(k) for k in ("id","state","text","kind","lhs_fact","rhs_fact")} for a in health["assumptions"]],
                  "facts":[{k:f[k] for k in ("id","value","controlled_by")} for f in facts],"presets":presets}
         return templates.TemplateResponse(request=request,name="brain.html",context={"health":health,"state":state,
-            "orphaned":tools.call("orphaned_decisions",{}),"recent":store.recent(),"plate":plate,
+            "orphaned":tools.call("orphaned_decisions",{}),"recent":store.recent(),"plate":plate,"expiring":expiring_attestations(health),
             "warnings":json.loads(state["warnings_json"] or "[]"),"llm":s.llm_enabled,"provider":s.llm_provider})
 
     @app.post("/api/ask")

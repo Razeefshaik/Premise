@@ -1,0 +1,94 @@
+/* Premise design tokens: the single source for colour, space, radius, type, elevation and motion.
+   Imported by style.css (shared with the v2 review app) and read by scripts through getComputedStyle.
+   Contrast notes are against --bg (#030305); every text colour here meets WCAG AA (4.5:1) on it. */
+:root {
+  /* Surfaces */
+  --bg: #030305;
+  --frame: #090a12;
+  --panel: rgb(150 160 230 / 0.07);
+  --panel-2: rgb(150 160 230 / 0.12);
+  --panel-solid: #0e1019;
+  --panel-raised: #141729;
+  --line: rgb(200 210 255 / 0.12);
+  --line-2: rgb(200 210 255 / 0.24);
+
+  /* Ink: 17.9:1, 11.0:1, 6.4:1 */
+  --ink: #f2f4ff;
+  --ink-2: #b9bfda;
+  --ink-3: #8a90ad;
+  --muted: var(--ink-2);
+
+  /* Brand light */
+  --indigo: #5b63ff;
+  --indigo-2: #8b92ff;
+  --ice: #dfe4ff;
+
+  /* Health states. Colour is never the only signal: every state is also written, and nodes keep
+     their shape. Text contrast on --bg: holds 14.8:1, unknown 14.1:1, broken 7.6:1, violated 8.4:1. */
+  --holds: #7cf0c8;
+  --holds-field: rgb(124 240 200 / 0.12);
+  --unknown: #ffd27a;
+  --unknown-field: rgb(255 210 122 / 0.12);
+  --broken: #ff6b8b;
+  --broken-field: rgb(255 107 139 / 0.13);
+  --violated: #ff8a65;
+  --violated-field: rgb(255 138 101 / 0.14);
+  --decision: #1b1f3d;
+  --edge: rgb(139 146 255 / 0.38);
+
+  /* Type */
+  --display: 'Unbounded', 'Segoe UI', system-ui, sans-serif;
+  --ui: 'Manrope', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Cascadia Mono', Consolas, monospace;
+  --text-xs: 12px;
+  --text-sm: 13.5px;
+  --text-md: 15px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: clamp(1.25rem, 1.8vw, 1.6rem);
+  --text-2xl: clamp(1.6rem, 2.6vw, 2.35rem);
+  --text-hero: clamp(2.4rem, 5.2vw, 4.8rem);
+
+  /* Space: a 4px base, doubling past 16 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --gutter: clamp(14px, 2.6vw, 36px);
+  --max: 1480px;
+
+  /* Radius */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-control: 12px;
+  --r-card: 22px;
+  --r-frame: 28px;
+  --r-pill: 999px;
+
+  /* Elevation */
+  --shadow-1: 0 0 0 1px var(--line) inset, 0 1px 0 rgb(255 255 255 / 0.12) inset, 0 24px 50px -34px #000;
+  --shadow-2: 0 0 0 1px var(--line-2) inset, 0 1px 0 rgb(255 255 255 / 0.22) inset, 0 40px 80px -34px rgb(91 99 255 / 0.7);
+  --shadow-pop: 0 0 0 1px var(--line-2) inset, 0 18px 40px -12px #000;
+
+  /* Motion: feedback 120-200ms, state 200-300ms, one propagation hop 220ms. Ease-out to enter,
+     ease-in to leave. Scripts read these values; reduced motion sets them to zero below. */
+  --dur-feedback: 140ms;
+  --dur-state: 240ms;
+  --dur-hop: 220ms;
+  --dur-enter: 320ms;
+  --dur-exit: 180ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease: var(--ease-out);
+  --ease-io: var(--ease-in-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-feedback: 0ms; --dur-state: 0ms; --dur-hop: 0ms; --dur-enter: 0ms; --dur-exit: 0ms; }
+}

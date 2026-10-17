@@ -52,12 +52,26 @@
   targets.forEach(el => observer.observe(el));
 })();
 
+// Static assets resolve next to the stylesheet, so icons also work on the replay site's sub-path.
+const premiseStatic = (document.querySelector('link[rel="stylesheet"][href*="style.css"]')?.href || '/static/style.css').replace(/style\.css.*$/, '');
+
+// Motion tokens for scripts: durations come from tokens.css; reduced motion (or automation) zeroes them.
+window.premiseMotion = {
+  reduced: () => matchMedia('(prefers-reduced-motion: reduce)').matches,
+  ms(name, fallback = 0) {
+    if (this.reduced()) return 0;
+    const value = getComputedStyle(document.documentElement).getPropertyValue(`--dur-${name}`).trim();
+    return value ? parseFloat(value) * (value.endsWith('s') && !value.endsWith('ms') ? 1000 : 1) : fallback;
+  },
+  token: name => getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim(),
+};
+
 window.premiseIcon = name => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'i');
   svg.setAttribute('aria-hidden', 'true');
   const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-  use.setAttribute('href', `/static/icons.svg#${name}`);
+  use.setAttribute('href', `${premiseStatic}icons.svg#${name}`);
   svg.append(use);
   return svg;
 };

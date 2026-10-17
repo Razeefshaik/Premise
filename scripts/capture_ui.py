@@ -15,6 +15,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('output')
     parser.add_argument('--base', default='http://127.0.0.1:8000')
+    parser.add_argument('--pages', default='', help='comma-separated names to capture (default: all)')
     args = parser.parse_args()
     out = Path(args.output); out.mkdir(parents=True, exist_ok=True)
     base = args.base.rstrip('/')
@@ -38,6 +39,8 @@ def main():
             ('assessment', assessment, "document.querySelector('.mermaid svg')"),
             ('entity', '/entities/G_DEDUPE', None),
         ]
+        wanted = set(filter(None, args.pages.split(',')))
+        pages = [page for page in pages if not wanted or page[0] in wanted]
         for size, viewport in SIZES.items():
             for name, path, ready in pages:
                 page = browser.new_page(viewport=viewport)
@@ -55,7 +58,8 @@ def main():
                                             'canvas': canvas}
                 page.close()
         browser.close()
-    (out / 'capture.json').write_text(json.dumps(report, indent=2))
+    previous = json.loads((out / 'capture.json').read_text()) if (out / 'capture.json').exists() else {}
+    (out / 'capture.json').write_text(json.dumps({**previous, **report}, indent=2))
     print(json.dumps({k: {'errors': len(v['errors']), 'overflow': v['overflow']} for k, v in report.items()}))
 
 

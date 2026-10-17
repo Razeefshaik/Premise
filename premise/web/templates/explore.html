@@ -1,31 +1,71 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %}{% from '_ui.html' import icon %}
 {% block title %}Decision Explorer · Premise{% endblock %}
-{% block page %}v3-app{% endblock %}
+{% block page %}v3-app xp-page{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ url_for('static',path='v3.css') }}">{% endblock %}
 {% block content %}
-<section class="v3-head explorer-head"><h1>Decision Explorer</h1><p>Follow a promise to its facts, evidence and people.</p></section>
-<div class="v3-explorer explorer-workspace">
-  <section class="v3-network">
-    <div id="explorer-verdict" class="v3-verdict" role="status" aria-live="polite">Baseline · choose What if to test a change</div>
-    <div id="explorer-canvas" role="img" aria-label="Interactive decision dependency graph"></div>
-    <p id="graph-message" role="status" aria-live="polite">Loading graph…</p>
-    <p class="v3-legend">Rectangle: decision · circle: guarantee · diamond: assumption · triangle: fact. Green: holds · red: broken · amber: unknown.</p>
-    <p>Click a node for evidence. Shift+click two nodes to highlight their path.</p>
-  </section>
-  <aside class="v3-detail">
-    <details class="explorer-controls"><summary>Search, depth &amp; time</summary>
-      <section class="v3-controls" aria-label="Graph controls">
-        <form id="focus-form"><label for="entity-search">Find an entity</label><div class="v3-inline"><input id="entity-search" list="entity-options" placeholder="G_DEDUPE or service id" autocomplete="off"><datalist id="entity-options"></datalist><button type="submit">Focus</button><button type="button" id="overview-button">Overview</button></div></form>
-        <label for="graph-depth">Depth <output id="depth-value">1</output><input type="range" id="graph-depth" min="1" max="4" value="1"></label>
-        <fieldset id="graph-kinds"><legend>Include</legend>{% for kind in ['reasoning','services','people','facts'] %}<label><input type="checkbox" value="{{ kind }}" {{ 'checked' if kind in ['reasoning','services'] else '' }}>{{ kind }}</label>{% endfor %}</fieldset>
-      </section>
-      {% include '_time.html' %}
-    </details>
-    <label class="explorer-picker" for="node-picker">Inspect a visible node<select id="node-picker"><option value="">Choose a node</option></select></label>
-    <div class="v3-tabs" role="tablist" aria-label="Inspector"><button type="button" role="tab" id="tab-evidence" aria-controls="evidence-panel" aria-selected="true">Evidence</button><button type="button" role="tab" id="tab-whatif" aria-controls="explorer-whatif" aria-selected="false">What if</button></div>
-    <section id="evidence-panel" role="tabpanel" aria-labelledby="tab-evidence"><h2 id="node-heading">Choose a node</h2><div id="node-details"><p>Its statement, evidence lines, owners and reviewers appear here.</p></div><button type="button" id="focus-node" disabled>Focus here</button></section>
-    <div id="explorer-whatif" role="tabpanel" aria-labelledby="tab-whatif" hidden></div>
-  </aside>
+<div class="xp">
+  <header class="xp-head">
+    <div class="xp-title">
+      <h1>Decision Explorer</h1>
+      <p>Change a fact. Watch what breaks, who reviews it, and the verified fix that heals it.</p>
+    </div>
+    <button type="button" class="metal xp-play" id="story-play" aria-describedby="story-hint">{{ icon('play') }}<span>Play the story</span></button>
+    <span id="story-hint" class="sr-only">A one-minute guided walkthrough on real graph results. Space pauses, the arrow keys step, Escape exits.</span>
+  </header>
+
+  <div class="xp-toolbar explorer-controls" id="xp-toolbar">
+    <form id="focus-form" class="xp-search" role="search">
+      <label for="entity-search" class="sr-only">Find an entity</label>
+      {{ icon('search') }}
+      <input id="entity-search" list="entity-options" placeholder="Find G_DEDUPE, ADR-012 or a service" autocomplete="off">
+      <datalist id="entity-options"></datalist>
+      <button type="submit" class="chip">Focus</button>
+      <button type="button" class="chip quiet-chip" id="overview-button">Overview</button>
+    </form>
+    <section class="xp-scope" aria-label="Graph scope">
+      <label for="graph-depth" class="xp-depth"><span>Depth <output id="depth-value">1</output></span><input type="range" id="graph-depth" min="1" max="4" value="1"></label>
+      <fieldset id="graph-kinds" class="xp-kinds"><legend>Include</legend>{% for kind in ['reasoning','services','people','facts'] %}<label class="toggle"><input type="checkbox" value="{{ kind }}" {{ 'checked' if kind in ['reasoning','services'] else '' }}><span>{{ kind }}</span></label>{% endfor %}</fieldset>
+    </section>
+    <button type="button" class="chip quiet-chip xp-more-toggle" id="xp-more-toggle" aria-expanded="false" aria-controls="xp-toolbar" aria-label="Depth, include and time">{{ icon('layers') }}<span>Options</span></button>
+    {% include '_time.html' %}
+  </div>
+
+  <div class="v3-explorer explorer-workspace xp-main">
+    <section class="v3-network xp-stage" aria-label="Decision graph">
+      <div id="explorer-verdict" class="xp-verdict" role="status" aria-live="polite" data-state="baseline">Baseline · choose What if to test a change</div>
+      <div class="xp-canvas-wrap">
+        <div id="explorer-canvas" role="img" aria-label="Interactive decision dependency graph"></div>
+        <ul class="xp-legend" aria-label="Legend">
+          <li class="shape"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="4" width="12" height="8" rx="2"/></svg>Decision</li>
+          <li class="shape"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/></svg>Guarantee</li>
+          <li class="shape"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 14 8 8 14 2 8Z"/></svg>Assumption</li>
+          <li class="shape"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3 14 13H2Z"/></svg>Fact</li>
+          <li class="s-holds"><i></i>holds</li><li class="s-unknown"><i></i>unknown</li><li class="s-broken"><i></i>broken</li>
+        </ul>
+        <div id="story-bar" class="story-bar" role="region" aria-label="Story" hidden>
+          <ol class="story-progress" id="story-progress" aria-hidden="true"></ol>
+          <p id="story-caption" class="story-caption" aria-live="polite"></p>
+          <div class="story-controls">
+            <button type="button" id="story-prev" class="icon-button" aria-label="Previous step">{{ icon('chevron-left') }}</button>
+            <button type="button" id="story-pause" class="icon-button" aria-label="Pause">{{ icon('pause') }}</button>
+            <button type="button" id="story-next" class="icon-button" aria-label="Next step">{{ icon('chevron-right') }}</button>
+            <span id="story-count" class="story-count">1 / 10</span>
+            <button type="button" id="story-exit" class="icon-button" aria-label="Exit story">{{ icon('x') }}</button>
+          </div>
+        </div>
+      </div>
+      <p id="graph-message" role="status" aria-live="polite">Loading graph…</p>
+    </section>
+
+    <aside class="v3-detail xp-inspector" aria-label="Inspector">
+      <label class="explorer-picker" for="node-picker">Inspect a visible node<select id="node-picker"><option value="">Choose a node</option></select></label>
+      <div class="v3-tabs" role="tablist" aria-label="Inspector"><button type="button" role="tab" id="tab-evidence" aria-controls="evidence-panel" aria-selected="true">Evidence</button><button type="button" role="tab" id="tab-whatif" aria-controls="explorer-whatif" aria-selected="false">What if</button></div>
+      <section id="evidence-panel" role="tabpanel" aria-labelledby="tab-evidence"><h2 id="node-heading">Choose a node</h2><div id="node-details"><p>Click a node in the graph, or choose one above. Its statement, evidence lines, owners and reviewers appear here. Shift+click two nodes to trace the path between them.</p></div><button type="button" id="focus-node" class="chip" disabled>Focus here</button></section>
+      <div id="explorer-whatif" role="tabpanel" aria-labelledby="tab-whatif" hidden></div>
+    </aside>
+  </div>
+
+  <details id="cypher-drawer" class="v3-cypher"><summary>{{ icon('braces') }}<span>Show Cypher</span> <span id="cypher-count"></span></summary><div id="cypher-queries"></div></details>
 </div>
-<details id="cypher-drawer" class="v3-cypher"><summary>Show Cypher <span id="cypher-count"></span></summary><div id="cypher-queries"></div></details><link rel="stylesheet" href="{{ url_for('static',path='v3.css') }}">
 {% endblock %}
 {% block scripts %}<script src="{{ url_for('static',path='vendor/cytoscape-3.30.4.min.js') }}"></script><script type="module" src="{{ url_for('static',path='explore.js') }}"></script>{% endblock %}
