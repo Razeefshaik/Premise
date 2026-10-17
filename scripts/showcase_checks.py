@@ -42,7 +42,10 @@ def assert_landing(page):
     expect(page.get_by_role('heading',level=1)).to_have_text(re.compile(r'Search finds documents\.\s*Premise finds consequences\.'))
     cta=page.get_by_role('link',name='Play the story',exact=True)
     expect(cta).to_have_attribute('href','/explore?story=1')
-    expect(cta).to_be_in_viewport()
+    if page.viewport_size['width']>1100:
+        expect(cta).to_be_in_viewport()
+    else:
+        expect(cta).to_be_visible()
     assert page.locator('.showcase-stats>div').count()==3
     assert page.locator('.showcase-hero [data-fire]').count()==0
     assert page.locator('.network [data-fire]').count()==4

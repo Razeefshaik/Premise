@@ -282,3 +282,24 @@ are not claimed to be clean; their real tablet overflow finding was fixed and ot
 exceptions remain documented above. The fresh finish reviewer scored the mobile title fix
 resolved, with no introduced regressions in the supplied captures; disposition **ship** applies
 to that correction review.
+
+## Landing composition correction - 2026-10-17
+
+The supplied screenshot showed the unwanted current composition. Restored the earlier Cortex hero:
+large bright PREMISE wordmark above the central MRI brain, with copy at the lower left; tablet and
+phone stack the brain before the copy and story action. Removing the showcase layout overrides in
+`premise/web/static/v3.css` lets the existing shared `style.css` own this composition. The current
+hook, real health statistics, `/explore?story=1` action and interactions remain. This supersedes the
+earlier showcase hero composition only; `PRODUCT.md`, `docs/DESIGN.md`, shared styles and tokens
+were checked and preserved. UI checkers now expect the restored responsive ordering.
+
+Verification for this correction: `.runtime/check_centered_hero.py` passed against the existing
+local app at 1440x900, 768x1024 and 390x844, checking brain readiness, live statistics, story action,
+ordering and zero horizontal overflow, with zero console/page errors. Six viewport/full-page
+captures are in `.impeccable/review/centered-hero/`; the scoped detector returned `[]` in
+`.runtime/centered-hero-detector.json`. `pytest tests/test_showcase_ui.py -q`: **6 passed in 6.87s**.
+The full suite and scenarios were not rerun for this CSS correction; their earlier totals remain
+historical. Existing system-record drift and decoration exceptions were not canonized or repaired.
+The finish review caught text touching the brain; a desktop-only heading measure restored clear
+separation. Fresh captures resolved that finding with no regressions: disposition **ship** for
+the scored heading-clearance correction.

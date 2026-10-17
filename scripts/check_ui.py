@@ -50,7 +50,7 @@ def main():
         assert_landing(page)
         page.set_viewport_size({'width':768,'height':1024})
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'), 'Tablet landing overflows'
-        assert page.locator('.hero-copy').bounding_box()['y']+page.locator('.hero-copy').bounding_box()['height']<=page.locator('#brain').bounding_box()['y'], 'Tablet brain overlaps copy'
+        assert page.locator('#brain').bounding_box()['y']+page.locator('#brain').bounding_box()['height']<=page.locator('.hero-copy').bounding_box()['y'], 'Tablet brain overlaps copy'
         page.set_viewport_size({'width':390,'height':844})
         page.screenshot(path=str(artifact/'brain-mobile.png'),full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
