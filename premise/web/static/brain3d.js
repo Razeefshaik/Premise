@@ -139,7 +139,7 @@ async function main() {
       float band = fract(vU * 2.0 - uTime * 0.45);
       float pulse = smoothstep(0.0, 0.18, band) * (1.0 - smoothstep(0.18, 0.5, band));
       vec3 col = mix(uColor * 0.8, vec3(1.0), pulse * 0.55 * uFlow);
-      gl_FragColor = vec4(col, uOpacity * (0.72 + 0.28 * pulse * uFlow));
+      gl_FragColor = vec4(col, uOpacity * (0.6 + 0.9 * pulse * uFlow));
     }`;
   const link = (from, to, kind) => {
     const a = nodes.get(from).pos, b = nodes.get(to).pos;
@@ -150,7 +150,7 @@ async function main() {
       uniforms: {uColor: {value: new THREE.Color()}, uOpacity: {value: 0.8}, uTime: uniforms.uTime, uFlow: {value: reduce ? 0 : 1}},
       vertexShader: edgeVertex, fragmentShader: edgeFragment, transparent: true, depthWrite: false, depthTest: false,
     });
-    const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, 0.016, 8), material);
+    const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 48, 0.013, 8), material);
     mesh.renderOrder = 2;
     network.add(mesh);
     edges.push({from, to, kind, curve, mesh, material});
@@ -240,7 +240,7 @@ async function main() {
       const target = byId.get(edge.to);
       const resting = target ? stateColor(target.state) : COLORS.ice;
       edge.material.uniforms.uColor.value.copy(edge.state === 'fired' ? COLORS.broken : edge.state === 'checked' ? COLORS.holds : lit ? COLORS.ice : resting);
-      edge.material.uniforms.uOpacity.value = edge.state ? 1 : lit ? 1 : (trace || firedCheck) ? 0.1 : 0.7;
+      edge.material.uniforms.uOpacity.value = edge.state ? 0.95 : lit ? 0.9 : (trace || firedCheck) ? 0.06 : 0.34;
     }
     for (const node of nodes.values()) {
       const info = byId.get(node.id);
