@@ -1,8 +1,8 @@
 # Validation record
 
-V3's separate local branch build, batch runs, browser checks, benchmark and security
+V3's build, batch runs, browser checks, benchmark and security
 reports are recorded in [V3_STATUS.md](V3_STATUS.md). The earlier main-branch runs below
-are historical records; V3 has not been merged or pushed.
+are historical validation records.
 
 Run date: October 16, 2026 (IST). Initial build checks and subsequent live checks are distinguished below.
 
@@ -103,7 +103,7 @@ See [LOCAL_CODEX.md](LOCAL_CODEX.md) to run the branch locally.
 - The existing app on port 8000 was not recreated with the exposed token. Replace the token and
   run `docker compose up --build -d` to activate the final changes in that long-running app.
 
-Detailed finding dispositions are in [REVIEW_FIXES.md](REVIEW_FIXES.md).
+The review findings are covered by the regression checks summarized above.
 
 ## Live follow-up: repeated assessment status repair
 

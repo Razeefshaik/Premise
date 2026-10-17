@@ -66,16 +66,17 @@ a later demonstration instead of bypassing the evaluator.
 
 ## MCP setup
 
-The official SDK stdio server has eleven read tools, including the read-only preflight checks. On Windows, configure your MCP client
-with the absolute virtual-environment Python executable and `cwd` set to this repository:
+The official SDK stdio server has eleven read tools, including the read-only preflight checks.
+Configure your MCP client with the absolute virtual-environment Python executable and `cwd`
+set to this repository. On Windows, use the equivalent `.venv/Scripts/python.exe` path.
 
 ```json
 {
   "mcpServers": {
     "premise": {
-      "command": "S:/StudyResource/TechBoooo/Hackathons/weMakeDevs-FolkoreDB/Premise/.venv/Scripts/python.exe",
+      "command": "/absolute/path/to/Premise/.venv/bin/python",
       "args": ["-m", "premise.cli", "mcp"],
-      "cwd": "S:/StudyResource/TechBoooo/Hackathons/weMakeDevs-FolkoreDB/Premise",
+      "cwd": "/absolute/path/to/Premise",
       "env": {"FALKORDB_HOST": "localhost", "FALKORDB_PORT": "6379", "GRAPH_NAME": "premise_kestrel"}
     }
   }

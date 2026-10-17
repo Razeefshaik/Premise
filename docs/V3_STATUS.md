@@ -2,7 +2,8 @@
 
 Design: [Premise_V3_Design.md](Premise_V3_Design.md). V3 is roadmap Phase A.
 Each phase has its own branch and local commits. The agent did not merge or push the original V3 build.
-The 2026-10-17 Explorer correction and its checks are recorded in [V3_EXPLORER_FIXES.md](V3_EXPLORER_FIXES.md).
+The 2026-10-17 Explorer correction passed browser checks for hypothetical labels,
+visible verdicts, canvas placement and reviewer names.
 
 | Phase | Status | Branch |
 | --- | --- | --- |
@@ -244,7 +245,7 @@ All eight required V3 phases are implemented on the stacked local branch
   library, and confirmed `/app/.env` absent. This is a packaging probe, not a claim that
   the entire pytest suite ran inside the container.
 - Fresh UI finish review scored its three material corrections resolved, disposition
-  **ship** for those fixes. Documentation check is in [V3_UI_REVIEW.md](V3_UI_REVIEW.md).
+  **ship** for those fixes.
 - The final audit found **no remaining temporary V3 benchmark/projection/replay/validation
   graphs**. The user's application graphs and Docker volumes were preserved.
 
@@ -252,4 +253,5 @@ Evidence is local and ignored: `.runtime/v3-final.xml`, `.runtime/v3-verificatio
 `.runtime/v3-validation/`, `.runtime/v3-replay/` and `.impeccable/review/v3/`.
 The [walkthrough](DEMO_V3.md) and [publishing handoff](REPLAY.md) explain how to demonstrate
 and publish the result. Public Pages deployment and human review of authored benchmark
-labels remain pending; neither is represented as completed. `main` remains at `6fb78aa`.
+labels remain pending; neither is represented as completed. These results describe
+the original V3 validation snapshot at `6fb78aa`.
