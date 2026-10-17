@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     tracked = set(subprocess.check_output(
         ['git', 'ls-files', '-z'], cwd=ROOT).decode('utf8').split('\0')) - {''}
-    documents = sorted(p for p in tracked if p == 'README.md' or
+    documents = sorted(p for p in tracked if p in {'README.md', 'README_DETAILED.md'} or
                        (p.startswith('docs/') and p.endswith(('.md', '.html'))))
     checked, broken = 0, []
     patterns = [r'!?\[[^\]\n]*\]\(\s*(<[^>]+>|[^\s)]+)',
