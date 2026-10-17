@@ -67,7 +67,7 @@
   </section>
   <section aria-labelledby="review-title">
     <h2 id="review-title" class="reveal">Who should review</h2>
-    {% for d in result.decisions %}<details class="review reveal"><summary>{{ icon('users') }}<span><span class="id"><code>{{ d.id }}</code></span> · {{ d.reviewers|join(', ') or 'No active reviewer' }}</span></summary><p>Roles: {{ d.roles|join(', ') }}. Unavailable: {{ d.departed|join(', ') or 'none' }}.</p><ul>{% for c in d.candidates %}<li>{{ c.person }}: {{ c.evidence }} recent authored sources</li>{% endfor %}</ul></details>{% endfor %}
+    {% for d in result.decisions %}<details class="review reveal"><summary>{{ icon('users') }}<span><span class="id"><code>{{ d.id }}</code></span> · {{ d.reviewers|person_names(names) or 'No active reviewer' }}</span></summary><p>Roles: {{ d.roles|join(', ') }}. Unavailable: {{ d.departed|person_names(names) or 'none' }}.</p><ul>{% for c in d.candidates %}<li>{{ names.get(c.person, c.person) }}: {{ c.evidence }} recent authored sources</li>{% endfor %}</ul></details>{% endfor %}
   </section>
 </div>
 
@@ -89,7 +89,7 @@
     <tbody>{% for a in result.assumptions %}<tr>
       <td><a class="id" href="/entities/{{ a.id }}"><code>{{ a.id }}</code></a><small>{{ a.text }}</small></td>
       <td data-label="State">{{ badge(a.state) }}</td>
-      <td data-label="Predicate / attestation" class="wide">{% if a.kind == 'predicate' %}<code class="predicate">{{ a.lv }} {{ a.op }} {{ a.rv }}</code><small>{{ a.lhs_fact }}{% if a.rhs_fact %} / {{ a.rhs_fact }}{% endif %}</small>{% else %}{% for evidence in attestations[a.id] %}<p class="attest">{{ evidence.name }} ({{ evidence.person }}) · {{ evidence.status }}<small>{{ icon('clock') }}Attested: {{ evidence.attested_on or 'not recorded' }}<br>Review by: {{ evidence.review_date or 'no expiry recorded' }}</small></p>{% else %}No attestation recorded{% endfor %}{% endif %}</td>
+      <td data-label="Predicate / attestation" class="wide">{% if a.kind == 'predicate' %}<code class="predicate">{{ a.lv }} {{ a.op }} {{ a.rv }}</code><small>{{ a.lhs_fact }}{% if a.rhs_fact %} / {{ a.rhs_fact }}{% endif %}</small>{% else %}{% for evidence in attestations[a.id] %}<p class="attest">{{ evidence.name }} · {{ evidence.status }}<small>{{ icon('clock') }}Attested: {{ evidence.attested_on or 'not recorded' }}<br>Review by: {{ evidence.review_date or 'no expiry recorded' }}</small></p>{% else %}No attestation recorded{% endfor %}{% endif %}</td>
     </tr>{% endfor %}</tbody>
   </table></div>
 </section>

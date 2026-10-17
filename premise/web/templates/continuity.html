@@ -1,5 +1,22 @@
 {% extends 'base.html' %}
 {% block title %}Continuity · Premise{% endblock %}
 {% block page %}v3-app{% endblock %}
-{% block content %}<div class="v3-page"><h1>When someone leaves</h1><p>Explore a hypothetical departure. The company graph stays unchanged.</p><label for="departure-person">Person</label><select id="departure-person"></select><p id="continuity-status" role="status">Checking continuity…</p><div class="v3-stats"><article><h2>Accountability gaps</h2><div id="continuity-orphans"></div></article><article><h2>Unverified promises</h2><div id="continuity-promises"></div></article><article><h2>Next reviewers</h2><div id="continuity-reviewers"></div></article><article><h2>Knowledge bridges</h2><div id="continuity-bridge"></div></article></div><h2>Affected connections</h2><div id="continuity-canvas" style="height:440px" role="img" aria-label="Connections affected by departure"></div><p id="continuity-projection"></p><details class="v3-cypher"><summary>Show Cypher <span id="cypher-count"></span></summary><div id="cypher-queries"></div></details></div><link rel="stylesheet" href="{{ url_for('static',path='v3.css') }}">{% endblock %}
+{% block content %}
+<div class="v3-page continuity-page">
+ <h1>When someone leaves</h1><p>Explore a hypothetical departure. The company graph stays unchanged.</p>
+ <div id="departure-choices" class="departure-choices" role="group" aria-label="Choose a hypothetical departure"></div>
+ <div class="departure-fallback"><label for="departure-person">Person</label><select id="departure-person"></select></div>
+ <p id="continuity-status" role="status">Checking continuity…</p>
+ <div class="continuity-impact" aria-label="Departure impact">
+  <section><h2>Accountability gaps <span id="continuity-orphan-count" class="impact-count">—</span></h2><div id="continuity-orphans"></div></section>
+  <section><h2>Unverified promises <span id="continuity-promise-count" class="impact-count">—</span></h2><div id="continuity-promises"></div></section>
+  <section><h2>Next reviewers <span id="continuity-reviewer-count" class="impact-count">—</span></h2><div id="continuity-reviewers"></div></section>
+ </div>
+ <div class="continuity-analysis">
+  <section class="continuity-connections"><h2>Affected connections</h2><p class="quiet">Dashed red links touch the departing person. The remaining links show who is still connected.</p><p id="continuity-graph-status" role="status">Loading connections…</p><div id="continuity-canvas" role="img" aria-label="Connections affected by departure"></div><p id="continuity-projection" class="quiet"></p></section>
+  <section class="continuity-bridge-panel"><h2>Knowledge bridges</h2><div id="continuity-bridge"></div><p class="quiet">Betweenness describes connection paths. It does not decide guarantee health.</p></section>
+ </div>
+ <details id="cypher-drawer" class="v3-cypher"><summary>Show Cypher <span id="cypher-count"></span></summary><div id="cypher-queries"></div></details>
+</div><link rel="stylesheet" href="{{ url_for('static',path='v3.css') }}">
+{% endblock %}
 {% block scripts %}<script src="{{ url_for('static',path='vendor/cytoscape-3.30.4.min.js') }}"></script><script type="module" src="{{ url_for('static',path='continuity.js') }}"></script>{% endblock %}

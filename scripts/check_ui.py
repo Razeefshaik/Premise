@@ -4,6 +4,7 @@ import json
 import os
 from playwright.sync_api import sync_playwright
 from explorer_checks import assert_canvas_in_first_screen, assert_hypothetical_status, assert_continuity_names, assert_verdict_visible, assert_story_runs, assert_reduced_motion
+from showcase_checks import assert_landing, assert_benchmark, assert_continuity_controls
 
 
 def main():
@@ -23,6 +24,7 @@ def main():
         page.goto(base+'/',wait_until='networkidle')
         print('Brain loaded',flush=True)
         page.get_by_role('heading',name='What still holds?').wait_for()
+        assert_landing(page)
         assert page.locator('.g-card').count()>=9
         page.screenshot(path=str(artifact/'brain-desktop.png'),full_page=True)
         page.get_by_label('Your question').fill('Why ADR-012, and who owns it now?')
@@ -37,10 +39,14 @@ def main():
         graph=page.locator('.mermaid svg').count()>0
         page.screenshot(path=str(artifact/'assessment-desktop.png'),full_page=True)
         assert 'ADR-016' in page.locator('main').inner_text()
+        reviewers=page.locator('[aria-labelledby="review-title"]').inner_text()
+        assert 'Jun Park' in reviewers and 'p_jun' not in reviewers and 'p_anika' not in reviewers
+        assert '(p_anika)' not in page.locator('[aria-labelledby="evidence-title"]').inner_text()
         page.set_viewport_size({'width':390,'height':844})
         page.screenshot(path=str(artifact/'assessment-mobile.png'),full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
         page.goto(base+'/',wait_until='networkidle')
+        assert_landing(page)
         page.screenshot(path=str(artifact/'brain-mobile.png'),full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
         page.set_viewport_size({'width':1440,'height':1050})
@@ -120,12 +126,18 @@ def main():
         page.goto(base+'/benchmark',wait_until='networkidle')
         page.locator('#benchmark-chart svg').wait_for()
         assert page.locator('#benchmark-rows tr').count()==21
+        assert_benchmark(page)
         page.screenshot(path=str(artifact/'benchmark-mobile.png'),full_page=True)
         page.goto(base+'/continuity?person=p_anika',wait_until='networkidle')
         page.locator('#continuity-promises').filter(has_text='A_STABLE_EVENT_ID').wait_for()
         page.locator('#continuity-canvas canvas').first.wait_for()
         assert_continuity_names(page)
+        assert_continuity_controls(page)
         page.screenshot(path=str(artifact/'continuity-mobile.png'),full_page=True)
+        page.goto(base+'/entities/ADR-012',wait_until='networkidle')
+        assert 'Jun Park' in page.locator('.entity-head').inner_text()
+        assert 'p_jun' not in page.locator('.entity-head').inner_text()
+        assert 'p_anika' not in page.locator('[aria-labelledby="reviewer-title"]').inner_text()
         page.goto(base+'/explore?at=2027-03-02',wait_until='networkidle')
         page.wait_for_function('window.premiseExplorer?.cy.getElementById("G_DEDUPE").data("health")==="unknown"')
         if page.locator('#xp-more-toggle').is_visible():

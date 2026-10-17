@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from explorer_checks import assert_canvas_in_first_screen, assert_hypothetical_status, assert_continuity_names, assert_verdict_visible, assert_story_runs, assert_reduced_motion
+from showcase_checks import assert_benchmark, assert_continuity_controls
 
 
 def main():
@@ -44,10 +45,12 @@ def main():
             page.wait_for_function('window.premiseExplorer?.cy.getElementById("G_DEDUPE").data("health")==="unknown"')
             page.goto(base+'/benchmark.html',wait_until='networkidle')
             page.locator('#benchmark-chart svg').wait_for()
+            assert_benchmark(page)
             page.screenshot(path=str(artifact/f'benchmark-{width}.png'),full_page=True)
             page.goto(base+'/continuity.html?person=p_anika',wait_until='networkidle')
             page.locator('#continuity-promises').filter(has_text='A_STABLE_EVENT_ID').wait_for()
             assert_continuity_names(page)
+            assert_continuity_controls(page)
             page.screenshot(path=str(artifact/f'continuity-{width}.png'),full_page=True)
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         assert_reduced_motion(browser, base+'/index.html')

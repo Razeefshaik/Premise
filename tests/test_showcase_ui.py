@@ -12,6 +12,10 @@ from fastapi.testclient import TestClient
 from conftest import NOW, ROOT
 from premise.config import Settings
 from premise.web.app import create_app
+from premise.web.app import expiring_attestations
+from premise.github.store import Store
+from premise.scenarios import run_scenario
+from conftest import SCENARIOS, SANDBOX
 
 STATIC = ROOT / 'premise/web/static'
 
@@ -73,3 +77,29 @@ def test_hypothetical_banner_text_and_js_budget():
     added = ['explore.js', 'consequences.js', 'story.js', 'time.js', 'source.js', 'premise.js']
     size = sum(len(gzip.compress((STATIC / name).read_bytes())) for name in added)
     assert size < 150 * 1024, size
+
+
+def test_expiring_stat_excludes_expired_inactive_and_undated_attestations():
+    day=86400000
+    evidence=[{'person':'reviewer','status':status,'review_by':due} for status,due in
+              [('active',day),('active',181*day),('active',-day),('revoked',day),('active',None)]]
+    rows=expiring_attestations({'now_ms':0,'assumptions':[{'id':'assumption','attestations':evidence}]})
+    assert len(rows)==1 and rows[0]['review_by']==day
+
+
+def test_landing_uses_live_stats_and_review_pages_show_names(kestrel):
+    result=run_scenario(kestrel,SANDBOX,SCENARIOS['scenarios']['S1'],NOW)
+    result.pr='pr:8301';result.head_sha='showcase-name-check'
+    aid=Store(kestrel).save(result,{'number':8301,'title':'Showcase names','state':'open',
+        'head':{'sha':result.head_sha,'ref':'names','repo':{'full_name':'example/kestrel'}},
+        'base':{'ref':'main','repo':{'full_name':'example/kestrel'}}})
+    with TestClient(create_app(kestrel,replace(Settings(),poll_enabled=False,llm_provider='none'))) as http:
+        page=http.get('/').text
+        assert 'Search finds documents.' in page and 'Premise finds consequences.' in page
+        assert '/explore?story=1' in page and 'Attestations due within 180 days' in page
+        assert page.index('id="network-title"') < page.index('id="fire-result"')
+        assessment=http.get('/assessments/'+aid).text
+        assert 'Jun Park' in assessment and 'Anika Rao' in assessment
+        assert 'p_jun' not in assessment and '(p_anika)' not in assessment
+        entity=http.get('/entities/ADR-012').text.split('<details class="raw">')[0]
+        assert 'Jun Park' in entity and 'p_jun' not in entity and 'p_anika' not in entity

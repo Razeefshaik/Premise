@@ -1,5 +1,31 @@
 {% extends 'base.html' %}
 {% block title %}Benchmark · Premise{% endblock %}
 {% block page %}v3-app{% endblock %}
-{% block content %}<div class="v3-page"><h1>What does structure buy?</h1><p>Graph reasoning, keyword and vector retrieval over the same fictional company. Recorded measurements; no model generates the answers.</p><p id="benchmark-status" role="status">Loading recorded results…</p><h2 id="benchmark-metric">Test macro F1 · all test questions</h2><p>Higher F1 means closer agreement with the authored expected ids. Scroll the chart and table horizontally on smaller screens.</p><div id="benchmark-chart" class="v3-chart-scroll"></div><div class="v3-table"><table><thead><tr><th>Test subset</th><th>System</th><th>k</th><th>Precision</th><th>Recall</th><th>F1</th><th>Exact</th><th>p50 ms</th><th>p95 ms</th></tr></thead><tbody id="benchmark-rows"></tbody></table></div><section><h2>Read the limits</h2><p>We wrote these 60 questions and their expected ids. Human review is pending. Test questions include related parameter and paraphrase variants; they are not independent companies. The graph knows the dependency structure by construction. This measures structured reasoning against passage retrieval, not general QA ability.</p><p>Both retrievers use the same ADR passages. All k values are shown. Extra entity ids reduce precision. The local MiniLM checkpoint uses 384-dimensional embeddings in a real FalkorDB vector index.</p><p id="benchmark-latency"></p><a id="benchmark-questions" href="/api/benchmark/questions">Read all 60 questions and labels</a></section><details id="cypher-drawer" class="v3-cypher"><summary>Show recorded Cypher <span id="cypher-count"></span></summary><div id="cypher-queries"></div></details></div><link rel="stylesheet" href="{{ url_for('static',path='v3.css') }}">{% endblock %}
+{% block content %}
+<div class="v3-page benchmark-page">
+  <h1>What does structure buy?</h1>
+  <p class="benchmark-intro">Graph reasoning, keyword and vector retrieval over the same fictional company. Recorded measurements; no model generates the answers.</p>
+  <p id="benchmark-status" class="quiet" role="status">Loading recorded results…</p>
+  <div class="benchmark-result" aria-label="Recorded test macro F1 comparison">
+    <div><span>Graph reasoning</span><strong id="benchmark-graph-score">—</strong></div>
+    <span class="benchmark-versus">versus</span>
+    <div><span id="benchmark-best-system">Best passage retriever</span><strong id="benchmark-best-score">—</strong></div>
+  </div>
+  <h2 id="benchmark-metric">Test macro F1 · all test questions</h2>
+  <p>Higher F1 means closer agreement with the authored expected ids. Every recorded k is shown; system names and scores accompany each bar.</p>
+  <div id="benchmark-chart" class="v3-chart-scroll"></div>
+  <section class="benchmark-limits" aria-labelledby="limits-title">
+    <h2 id="limits-title">Read the limits</h2>
+    <p>We wrote these 60 questions and their expected ids. Human review is pending. Test questions include related parameter and paraphrase variants; they are not independent companies. The graph knows the dependency structure by construction. This measures structured reasoning against passage retrieval, not general QA ability.</p>
+    <p>Both retrievers use the same ADR passages. Extra entity ids reduce precision. The local MiniLM checkpoint uses 384-dimensional embeddings in a real FalkorDB vector index.</p>
+    <p id="benchmark-latency"></p>
+    <a id="benchmark-questions" href="/api/benchmark/questions">Read all 60 questions and labels</a>
+  </section>
+  <details class="benchmark-details"><summary>All test measurements · 21 rows</summary>
+    <p>Test split only. Includes all, lexical and multi-hop subsets. Scroll horizontally on smaller screens.</p>
+    <div class="v3-table"><table><thead><tr><th scope="col">Test subset</th><th scope="col">System</th><th scope="col">k</th><th scope="col">Precision</th><th scope="col">Recall</th><th scope="col">F1</th><th scope="col">Exact</th><th scope="col">p50 ms</th><th scope="col">p95 ms</th></tr></thead><tbody id="benchmark-rows"></tbody></table></div>
+  </details>
+  <details id="cypher-drawer" class="v3-cypher"><summary>Show recorded Cypher <span id="cypher-count"></span></summary><div id="cypher-queries"></div></details>
+</div><link rel="stylesheet" href="{{ url_for('static',path='v3.css') }}">
+{% endblock %}
 {% block scripts %}<script type="module" src="{{ url_for('static',path='benchmark.js') }}"></script>{% endblock %}

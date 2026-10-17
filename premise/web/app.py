@@ -23,6 +23,13 @@ from ..reasoning.models import AssessmentResult, GuaranteeResult
 
 ROOT = Path(__file__).parent
 templates = Jinja2Templates(directory=str(ROOT/"templates"))
+templates.env.filters['person_names'] = lambda ids, names: ', '.join(names.get(id, id) for id in ids)
+
+
+def person_names(graph):
+    """Names for presentation; graph identities and stored assessments stay unchanged."""
+    return {row['id']: row['name'] for row in graph.read(
+        'MATCH (p:Person) WHERE p.retired_rev IS NULL RETURN p.id AS id, p.name AS name')}
 
 
 def attestation_evidence(graph, assumptions):
@@ -215,6 +222,7 @@ def create_app(client=None, config=None, *, graph_api_at_ms=None, graph_node_cap
         return templates.TemplateResponse(request=request,name="assessment.html",context={"result":result,"aid":aid,
             "mermaid":mermaid(result),"styled":coloured(mermaid(result),[g.model_dump() for g in result.guarantees if g.status != "holds"]),"sources":provenance(graph,ids),"lexical":lexical,"lexical_query":lexical_query,
             "attestations":attestation_evidence(graph,result.assumptions),
+            "names":person_names(graph),
             "graph_only":sorted(set(d.id for d in result.decisions)-set(lexical))})
 
     @app.get("/api/assessments/{aid}")
@@ -233,6 +241,6 @@ def create_app(client=None, config=None, *, graph_api_at_ms=None, graph_node_cap
             raise HTTPException(404,"Entity not found")
         labels=exact["labels"]
         data=tools.call("decision_lineage",{"id":id}) if "Decision" in labels else tools.call("guarantee_health",{"id":id}) if "Guarantee" in labels else tools.call("who_knows",{"id":id}) if "Service" in labels else tools.call("impact_if_broken",{"id":id}) if "Assumption" in labels else exact
-        return templates.TemplateResponse(request=request,name="entity.html",context={"id":id,"data":data,"history":tools.call("recall",{"id":id}),"sources":provenance(graph,[id])})
+        return templates.TemplateResponse(request=request,name="entity.html",context={"id":id,"data":data,"names":person_names(graph),"history":tools.call("recall",{"id":id}),"sources":provenance(graph,[id])})
 
     return app

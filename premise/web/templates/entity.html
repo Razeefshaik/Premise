@@ -6,9 +6,9 @@
 <header class="frame page-head entity-head">
   <span class="orb" aria-hidden="true"></span>
   <div class="page-head-copy">
-    <h1 class="rise entity-id">{{ id }}</h1>
+    <h1 class="rise entity-id">{{ names.get(id, id) }}</h1>
     {% if data is mapping and data.decision %}<p class="statement rise">{{ data.decision.title }}</p>
-    <p class="meta rise"><span>{{ icon('layers') }}Lifecycle: {{ data.decision.status }}</span><span>{{ icon('users') }}Current reviewers: {{ data.reviewers|join(', ') or 'No active reviewer' }}</span></p>
+    <p class="meta rise"><span>{{ icon('layers') }}Lifecycle: {{ data.decision.status }}</span><span>{{ icon('users') }}Current reviewers: {{ data.reviewers|person_names(names) or 'No active reviewer' }}</span></p>
     {% elif data is mapping and data.guarantees is defined and data.guarantees %}<p class="statement rise">{{ data.guarantees[0].statement }}</p>
     {% elif data is mapping and data.text %}<p class="statement rise">{{ data.text }}</p>{% endif %}
   </div>
@@ -26,8 +26,8 @@
   </section>
   <section aria-labelledby="reviewer-title">
     <h2 id="reviewer-title" class="reveal">Reviewer evidence</h2>
-    {% if data.unavailable %}<p class="warning">{{ icon('user-x') }}Unavailable accountable people: {{ data.unavailable|join(', ') }}</p>{% endif %}
-    <ul class="people">{% for c in data.candidates %}<li class="reveal"><span class="person">{{ c.person }}</span><span class="num">{{ c.evidence }}</span><small>recent authored sources</small></li>{% endfor %}</ul>
+    {% if data.unavailable %}<p class="warning">{{ icon('user-x') }}Unavailable accountable people: {{ data.unavailable|person_names(names) }}</p>{% endif %}
+    <ul class="people">{% for c in data.candidates %}<li class="reveal"><span class="person">{{ names.get(c.person, c.person) }}</span><span class="num">{{ c.evidence }}</span><small>recent authored sources</small></li>{% endfor %}</ul>
     {% for s in data.supersession %}<p>{{ s.newer }} supersedes {{ s.id if s.newer == id else id }}</p>{% endfor %}
   </section>
 </div>

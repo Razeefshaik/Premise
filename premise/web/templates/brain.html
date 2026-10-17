@@ -4,34 +4,22 @@
 {% set tally = namespace(holds=0, unknown=0, broken=0) %}
 {% for g in health.guarantees %}{% if g.status == 'holds' %}{% set tally.holds = tally.holds + 1 %}{% elif g.status == 'broken' %}{% set tally.broken = tally.broken + 1 %}{% else %}{% set tally.unknown = tally.unknown + 1 %}{% endif %}{% endfor %}
 {% set states = {} %}{% for a in health.assumptions %}{% set _ = states.update({a.id: a.state}) %}{% endfor %}
-<section class="frame hero" aria-labelledby="hero-title">
+<section class="frame hero showcase-hero" aria-labelledby="hero-title">
   <p class="wordmark" aria-hidden="true">PREMISE</p>
   <div class="brain-stage" id="brain">
     <p class="brain-fallback">Loading the company brain…</p>
     <p class="brain-hint">Drag to turn the brain · point at a cell to trace it</p>
   </div>
   <div class="hero-copy">
-    <h1 id="hero-title" class="rise">What still holds?</h1>
-    <p class="statement rise">Premise connects every architecture decision to the guarantees it relies on, and checks each change against the facts you have today.</p>
-    <ul class="readout rise">
-      <li><span class="live" aria-hidden="true"></span>Ready at revision <b>{{ state.rev }}</b></li>
-      <li>Main <code>{{ state.main_sha[:10] }}</code></li>
-      <li><b class="t-holds" data-count="{{ tally.holds }}">{{ tally.holds }}</b> hold</li>
-      {% if tally.unknown %}<li><b class="t-unknown" data-count="{{ tally.unknown }}">{{ tally.unknown }}</b> unknown</li>{% endif %}
-      {% if tally.broken %}<li><b class="t-broken" data-count="{{ tally.broken }}">{{ tally.broken }}</b> broken</li>{% endif %}
-    </ul>
-    <div class="fire rise" id="fire">
-      <p class="fire-label" id="fire-label">Fire a proposed change through the brain. Nothing is stored or posted.</p>
-      <div class="fire-presets" role="group" aria-labelledby="fire-label">
-        {% for p in plate.presets %}<button type="button" class="chip" data-fire="{{ p.id }}">{{ icon('zap') }}<span>{{ p.title }}</span></button>{% endfor %}
-      </div>
-    </div>
+    <h1 id="hero-title" class="rise">Search finds documents.<br><span>Premise finds consequences.</span></h1>
+    <p class="statement rise">Change one fact. See which engineering promises break, who needs to review, and which fix holds up.</p>
+    <a class="button showcase-story rise" href="/explore?story=1">{{ icon('play') }}Play the story</a>
+    <dl class="showcase-stats rise" aria-label="Current company health">
+      <div><dt>Guarantees healthy</dt><dd><b class="t-holds">{{ tally.holds }}</b><span> / {{ health.guarantees|length }}</span></dd></div>
+      <div><dt>Promises expiring soon</dt><dd class="t-unknown">{{ expiring|length }}<small>Attestations due within 180 days</small></dd></div>
+      <div><dt>Orphaned decisions</dt><dd>{{ orphaned|length }}<small>No active accountable person</small></dd></div>
+    </dl>
   </div>
-  <aside class="hud glass rise" aria-live="polite">
-    <h2>Live from FalkorDB</h2>
-    <p>Kestrel Platform, revision {{ state.rev }}</p>
-    <div id="fire-result"><p class="hud-idle"><b data-count="{{ plate.facts|length }}">{{ plate.facts|length }}</b> facts · <b data-count="{{ plate.assumptions|length }}">{{ plate.assumptions|length }}</b> assumptions · <b data-count="{{ plate.guarantees|length }}">{{ plate.guarantees|length }}</b> guarantees. Fire a change to see what breaks.</p></div>
-  </aside>
 </section>
 <script type="application/json" id="plate-data">{{ plate|tojson }}</script>
 
@@ -44,6 +32,13 @@
     <div>
       <h2 id="network-title">The decision network</h2>
       <p>The same nerves as the brain above, laid flat. Point at a cell to trace everything it touches; fire a change and watch the signal travel from the fact to every guarantee it breaks.</p>
+      <div class="fire" id="fire">
+        <p class="fire-label" id="fire-label">Try a proposed change. Nothing is stored or posted.</p>
+        <div class="fire-presets" role="group" aria-labelledby="fire-label">
+          {% for p in plate.presets %}<button type="button" class="chip" data-fire="{{ p.id }}">{{ icon('zap') }}<span>{{ p.title }}</span></button>{% endfor %}
+        </div>
+      </div>
+      <div id="fire-result" class="fire-result" aria-live="polite"><p class="quiet">Choose a change to trace its consequences.</p></div>
     </div>
     <ul class="legend">
       <li class="t-holds"><i></i><span>Holds on its full prerequisite set</span></li>
@@ -56,7 +51,7 @@
 <section aria-labelledby="guarantees-title">
   {% include '_time.html' %}
   <link rel="stylesheet" href="/static/v3.css">
-  <div class="section-head reveal"><h2 id="guarantees-title">Guarantees</h2><p>Ordered by graph PageRank</p></div>
+  <div class="section-head reveal"><h2 id="guarantees-title">What still holds?</h2><p>Ordered by graph PageRank</p></div>
   <div class="bento">
     {% for g in health.guarantees %}<a class="card g-card reveal is-{{ g.status }}" href="/entities/{{ g.id }}" data-guarantee="{{ g.id }}">
       <div class="g-top"><span class="id"><code>{{ g.id }}</code></span>{{ badge(g.status) }}</div>
