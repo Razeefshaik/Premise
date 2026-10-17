@@ -15,3 +15,21 @@ bench/cache/
 site/
 .impeccable/review/
 
+# Local AI tooling and accidental exports
+*.patch
+*.bundle
+.claude/
+.agents/
+.codex/
+skills-lock.json
+PRODUCT.md
+
+# Internal review records and unused review media
+/docs/REVIEW_FIXES.md
+/docs/UI_REFINE.md
+/docs/V3_UI_REVIEW.md
+/docs/V3_EXPLORER_FIXES.md
+/docs/V2_FIX_VALIDATION.md
+/docs/V2_PHASE2_VALIDATION.md
+/docs/media/explorer.gif
+
