@@ -24,17 +24,15 @@ For the <b>full version</b> (live What if checks, Ask the company, PR assessment
 
 ## The company brain
 
-**Premise connects what your company decided, why it decided it, who knows the context, and what must remain true.** Decision records, config, tickets, chat and runbooks become a connected, queryable model in FalkorDB.
+**Premise is a company brain for engineering decisions: a connected memory of why your systems work, who understands them, and what could make them stop working.**
 
-A decision links to the promises it makes. Each promise links to its assumptions and real config values. People, teams and source passages supply ownership and evidence. You can follow those connections to understand a decision, find a reviewer, or see which knowledge is becoming unreliable.
+Engineering knowledge outlives the conversation that created it. The rationale sits in a decision record, the constraint in a config file, and the latest context in a ticket or chat. People move teams. Assumptions expire. The next engineer has to reconstruct the connections before making a change.
 
-![The real Decision Explorer connects decisions, guarantees, services, people and teams](docs/media/10-brain-people.jpg)
-
-*Explore the relationships, click a node for evidence, or trace the path between two nodes.*
+**Premise makes those connections explicit.** It brings decisions, promises, assumptions, people and evidence into FalkorDB, so a team can ask why something exists, find who knows about it, and check what a change would affect.
 
 ## How the brain is built
 
-**Read supported sources → connect their meaning → answer from the graph.**
+**Company knowledge becomes a model that people and coding agents can question, explore and check.**
 
 ```mermaid
 flowchart LR
@@ -45,36 +43,50 @@ flowchart LR
   G --> C["Change checks and verified fixes"]
 ```
 
-1. **Read and validate.** Parsers extract typed entities from reviewed files, validate references and dependency chains, and retain source locations.
-2. **Connect.** Explicit relationships capture what a decision provides, what a guarantee requires, who is accountable, and which passages mention it. Service names and aliases connect related evidence.
-3. **Query and explain.** Shared graph tools power the web app, answers and coding-agent checks. The Explorer exposes the Cypher, parameters and timing behind its results.
+1. **Build the memory.** Deterministic parsers read supported decision records, config, tickets, chat, runbooks and company files. They retain source locations and validate the model before loading it.
+2. **Connect the reasons.** Decisions make promises; promises depend on assumptions; assumptions depend on real values or dated human attestations. People, teams and source passages connect those dependencies to responsibility and evidence.
+3. **Put the memory to work.** The same graph powers cited answers, an interactive Explorer, knowledge-gap analysis and change checks. Every Explorer result can expose its Cypher, parameters and timing.
 
-The included fictional company demonstrates **88 sources → 275 nodes and 488 relationships**, with 120 source passages. It is a working dataset for exploring the product, not the boundary of the idea.
+**Keep it current:** an experimental evidence pipeline detects when new source claims disagree with the model, checks their quotes and independence, and proposes updates for human review. It stages evidence separately; only approved changes update the decision model. Slack/Jira intake currently uses fixtures, while GitHub supports read-only live intake. [Pipeline details](docs/V2.md).
 
-**Keeping knowledge current:** the experimental v2 pipeline consumes source events, grounds claims in quotes, groups independent evidence, and proposes reviewed updates. Slack/Jira use fixtures; GitHub supports read-only live intake. Evidence stays separate from the decision graph until a human-approved change is ingested. [Pipeline details](docs/V2.md).
-
-**Why FalkorDB:** dependency paths, evidence lookup, assessment history, continuity algorithms and the vector-search benchmark all use the same datastore. **Models may propose or explain; deterministic queries and code decide verdicts.**
+**Why this approach matters:** a downstream decision can depend on a fact without mentioning it anywhere in its text. Explicit graph paths let Premise trace that relationship and explain it. FalkorDB powers those traversals, evidence lookup, assessment history, continuity algorithms and the vector-search benchmark. **Models may propose or explain; deterministic queries and code decide verdicts.**
 
 ## Ask the company
 
-| Your question | What Premise connects |
+**Recover context, find the right people, and expose uncertainty before it becomes an incident.**
+
+| What your team needs to know | What Premise gives you |
 | --- | --- |
 | **Why did we make this decision?** | Decision history, promised guarantees, assumptions and cited source passages. |
 | **Who should review it now?** | Current people, accountability and recent authored evidence. |
 | **What if this person leaves?** | Orphaned decisions, unverified promises and alternative reviewers. |
 | **What becomes uncertain next month?** | Attestation expiry dates and the guarantees that depend on them. |
+| **Can an agent safely make this edit?** | A hypothetical check of tracked facts and affected promises before it edits a file. |
+
+The **Explorer** makes relationships navigable, **Continuity** simulates departures, and the **Time machine** evaluates future dates. Coding agents access the same knowledge through **11 read-only MCP tools**. [MCP setup](README_DETAILED.md#agents-and-mcp).
+
+## See it in action: Kestrel
+
+Kestrel is the fictional company we built to demonstrate Premise. Its **88 sources become 275 nodes and 488 relationships**, connecting 120 source passages to decisions, services, people and their dependencies.
+
+![Premise Explorer showing the connected decisions, services, people and teams in the Kestrel demo](docs/media/10-brain-people.jpg)
+
+*A real product view: click a node for its evidence or trace a path between two nodes.*
+
+<details>
+<summary><strong>See a decision's reasoning paths and reviewer evidence</strong></summary>
 
 ![A real decision page shows reasoning paths, current reviewers and evidence counts](docs/media/11-entity-adr012.jpg)
 
-*The decision page brings dependency paths and reviewer evidence together. Ask the company provides cited answers in the local app; continuity and the time machine let you explore departures and future dates.*
+The decision page brings its dependencies and reviewer evidence together. Ask the company uses the same graph to provide cited answers in the local app.
 
-Coding agents use the same knowledge through **11 read-only MCP tools**, including checks before editing files. [MCP setup](README_DETAILED.md#agents-and-mcp).
+</details>
 
-## When a change arrives
+### When a change arrives
 
 Because the brain records dependencies, it can trace the consequences of a changed fact, even when a downstream decision never mentions that fact.
 
-**One demonstration:** a partner's retry window changes from 24 to 72 hours. Four guarantees fail. Raising deduplication alone would exceed the Redis limit, so Premise verifies a remedy that raises both limits.
+In this demo, a partner's retry window changes from 24 to 72 hours. Four guarantees fail. Raising deduplication alone would exceed the Redis limit, so Premise verifies a remedy that raises both limits.
 
 ![Failure travels through the real graph, then the verified remedy restores the affected guarantees](docs/media/propagation.gif)
 

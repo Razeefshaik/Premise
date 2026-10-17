@@ -1,3 +1,5 @@
+> **Detailed implementation guide.** Start with the [main README](README.md) for the product introduction, approach and demo. This guide retains the full dataset, implementation and validation details.
+
 <div align="center">
 
 <a href="https://razeefshaik.github.io/Premise/"><img src="docs/media/banner.png" alt="Premise: a pull request changes the Paylane retry window from 24 to 72 hours, and the Kestrel company brain lights the broken path through four guarantees" width="100%"></a>
