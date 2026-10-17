@@ -16,7 +16,7 @@
 For the <b>full version</b> (live What if checks, Ask the company, PR assessments, verified fix PRs and the MCP server for coding agents),
 <a href="#run-locally"><b>run it locally in two commands</b></a>.</sub>
 
-[The company brain](#the-company-brain) · [How it is built](#how-the-brain-is-built) · [Ask the company](#ask-the-company) · [When a change arrives](#when-a-change-arrives) · [Graph data model](README_DETAILED.md#graph-data-model) · [Cypher and algorithms](README_DETAILED.md#cypher-and-graph-algorithms) · [Benchmark](#benchmark-what-does-structure-buy) · [Run locally](#run-locally)
+[The company brain](#the-company-brain) · [How it is built](#how-the-brain-is-built) · [Ask the company](#ask-the-company) · [When a change arrives](#when-a-change-arrives) · [Graph data model](#graph-data-model) · [Cypher and algorithms](#cypher-and-graph-algorithms) · [Benchmark](#benchmark-what-does-structure-buy) · [Run locally](#run-locally)
 
 </div>
 
@@ -53,48 +53,336 @@ flowchart LR
 
 ## Ask the company
 
-**Recover context, find the right people, and expose uncertainty before it becomes an incident.**
+Ask why a decision exists, what it relies on, who should review it now, or what becomes
+unverified when someone leaves. Answers use the same graph and cite its source files and lines.
 
-| What your team needs to know | What Premise gives you |
-| --- | --- |
-| **Why did we make this decision?** | Decision history, promised guarantees, assumptions and cited source passages. |
-| **Who should review it now?** | Current people, accountability and recent authored evidence. |
-| **What if this person leaves?** | Orphaned decisions, unverified promises and alternative reviewers. |
-| **What becomes uncertain next month?** | Attestation expiry dates and the guarantees that depend on them. |
-| **Can an agent safely make this edit?** | A hypothetical check of tracked facts and affected promises before it edits a file. |
+The following walkthrough uses **Kestrel, our fictional demonstration company**, to show how those connections work.
 
-The **Explorer** makes relationships navigable, **Continuity** simulates departures, and the **Time machine** evaluates future dates. Coding agents access the same knowledge through **11 read-only MCP tools**. [MCP setup](README_DETAILED.md#agents-and-mcp).
+For example, Anika Rao's [chat message](sandbox/kestrel-platform/chat/chat.jsonl) mentions
+`ADR-012` and `G_DEDUPE`. Its passage links to both; the decision connects that conversation
+to the payment service, the payments team and the promises behind charging once:
 
-## See it in action: Kestrel
+```mermaid
+flowchart LR
+  Anika["Anika Rao"] -->|AUTHORED| Source["Chat source c2"]
+  Passage["Chat passage<br/>ADR-012 and G_DEDUPE"] -->|PART_OF| Source
+  Passage -->|MENTIONS| Decision["ADR-012"]
+  Passage -->|MENTIONS| Dedupe["G_DEDUPE"]
+  Anika -->|MEMBER_OF| Team["Payments team"]
+  Jun["Jun Park"] -->|MEMBER_OF| Team
+  Team -->|OWNS| Service["paymentservice"]
+  Decision -->|GOVERNS| Service
+  Decision -->|PROVIDES| Charge["G_CHARGE_ONCE"]
+  Decision -->|RELIES_ON| Dedupe
+  Decision -->|SUPERSEDES| Older["ADR-010"]
+```
 
-Kestrel is the fictional company we built to demonstrate Premise. Its **88 sources become 275 nodes and 488 relationships**, connecting 120 source passages to decisions, services, people and their dependencies.
+With the 180-day evidence window on 17 October 2026, current reviewer candidates are **Jun Park
+(7 distinct recent authored sources)**, then **Anika Rao (2)**. The graph also flags an
+**accountability gap**: ADR-012's author Marco Ruiz and approver Lena Fischer have both departed.
+These roles and memberships come from the [decision](sandbox/kestrel-platform/adr/ADR-012.md)
+and [people file](sandbox/kestrel-platform/company/people.yaml), rather than a model's guess.
 
-![Premise Explorer showing the connected decisions, services, people and teams in the Kestrel demo](docs/media/10-brain-people.jpg)
+The real local Ask endpoint returned HTTP 200 in deterministic mode for
+"Why ADR-012, and who owns it now?" Its opening lines were:
 
-*A real product view: click a node for its evidence or trace a path between two nodes.*
+> ADR-012: Payment service skips its own idempotency check. Lifecycle: accepted.
+> Provides G_CHARGE_ONCE; relies on G_DEDUPE. Current reviewers: p_jun, p_anika.
+
+The IDs in that exact response correspond to Jun Park and Anika Rao above. The response also
+includes reviewer evidence counts, requirement paths and source citations.
+
+![Ask the company answering why ADR-012 exists and who should review it now, with cited sources](docs/media/12-ask-the-company.png)
+
+![Entity page for ADR-012 with its guarantees, owners and sources](docs/media/11-entity-adr012.jpg)
+
+## When a change arrives
+
+Because the brain knows what every promise rests on, it can tell what a change will break.
+
+| 🔎 Trace | 🛑 Decide | 🩹 Heal |
+| :-- | :-- | :-- |
+| A changed fact flows up `REQUIRES` edges to every guarantee and decision that depends on it | The PR gets **BLOCKED**, **NEEDS_REVIEW** or **CLEAR**, with the broken chain and the right people to review | A fix PR opens **only after the graph proves** every affected guarantee holds again |
+
+![A partner's retry window rises to 72 hours, the failure travels through the graph, and the verified fix heals it](docs/media/propagation.gif)
+
+<sub>12 seconds from the Explorer, recorded against a real FalkorDB. [Record it again](scripts/record_propagation.py).</sub>
+
+### The problem
+
+A team decides "we deduplicate partner webhooks in Redis for 24 hours, because the partner
+stops retrying after 24 hours". Three other decisions quietly build on that promise: charging
+once, matching refunds, keeping the ledger consistent. Months later someone records that the
+partner now retries for 72 hours. Every test passes. Nothing in those three decisions mentions
+the partner, so search and code review never find them, and duplicate charges start.
+
+Premise keeps the *reasons* behind decisions as a graph, so a change is checked against
+everything that depends on it.
+
+### What Premise does
+
+1. **Answers company brain questions** from the same graph: what still holds, who knows about
+   this, what breaks if this person leaves, which promises expire next month.
+2. **Traces consequences.** A changed fact makes an assumption false, and the failure travels
+   up `REQUIRES` edges to every guarantee and decision that depends on it, even when their text
+   never mentions the changed value.
+3. **Acts on the pull request.** Posts a `premise/decisions` commit status (BLOCKED, NEEDS_REVIEW
+   or CLEAR_WITHIN_SCOPE) and one comment with the broken chain, the evidence lines, the
+   decisions checked and not affected, and the people who should review.
+4. **Fixes only what it has verified.** A bounded repair search tests candidate fixes on the graph
+   and opens a fix PR only when the complete remedy turns every affected guarantee green.
+5. **Stops coding agents before they edit.** An MCP server lets Claude Code or Codex ask
+   Premise whether a change is safe before writing it.
+
+### How it works
+
+```mermaid
+flowchart LR
+  D[Decision<br/>ADR-007] -- PROVIDES --> G1[Guarantee<br/>G_DEDUPE]
+  D2[Decision<br/>ADR-012] -- RELIES_ON --> G1
+  G2[Guarantee<br/>G_CHARGE_ONCE] -- REQUIRES --> G1
+  G1 -- REQUIRES --> A[Assumption<br/>A_RETRY_WINDOW]
+  A -- LHS --> F1[Fact<br/>paylane.retry_window_hours]
+  A -- RHS --> F2[Fact<br/>webhook.dedupe_ttl_hours]
+  G1 -- REQUIRES --> A2[Assumption<br/>A_STABLE_EVENT_ID]
+  P[Person<br/>Anika Rao] -- ATTESTED --> A2
+```
+
+1. **Facts** are values in config files, ingested deterministically with their file and line.
+2. **Assumptions** are predicates over two facts (`retry_window <= dedupe_ttl`) or a human
+   attestation with a review date. An attestation only counts while it is current and the person is active.
+3. **Guarantees** `REQUIRES` assumptions or other guarantees. `REQUIRES` is the only edge failure
+   can travel along, so a broken assumption never leaks into unrelated decisions.
+4. **Three valued logic.** A guarantee is *broken* if any prerequisite is violated, else *unknown*
+   if any is unverifiable, else *holds*. Broken beats unknown beats holds. An expired attestation
+   makes a guarantee unknown, never healthy.
+5. **A pull request is an overlay.** Premise reads the changed values from the PR's own diff and
+   evaluates them without mutating the main graph. The main graph changes only after merge.
+6. **Every affected guarantee is judged on its full prerequisite closure**, not only the path
+   the change touched, and sibling guarantees are evaluated before a decision is reported as unaffected.
+
+```mermaid
+sequenceDiagram
+  participant Dev as Developer or agent
+  participant GH as GitHub PR
+  participant P as Premise
+  participant DB as FalkorDB
+  Dev->>GH: change paylane retry window to 72
+  P->>GH: fetch the PR head and its merge base
+  P->>DB: facts in the diff, touched assumptions
+  P->>DB: three valued rollup over REQUIRES*1..6
+  DB-->>P: G_DEDUPE broken via A_RETRY_WINDOW, and 3 more
+  P->>DB: test candidate fixes on the overlay
+  P->>GH: status BLOCKED, comment with chain and reviewers
+  P->>GH: fix PR, only for a verified complete remedy
+```
+
+## A tour in screenshots
 
 <details>
-<summary><strong>See a decision's reasoning paths and reviewer evidence</strong></summary>
+<summary><strong>Explore all eight product views: brain, failure, fix, Cypher, time machine and continuity</strong></summary>
 
-![A real decision page shows reasoning paths, current reviewers and evidence counts](docs/media/11-entity-adr012.jpg)
+**1. The company brain.** A fictional company, Kestrel: 12 tracked facts feed assumptions that
+support 9 guarantees across its architecture decisions.
 
-The decision page brings its dependencies and reviewer evidence together. Ask the company uses the same graph to provide cited answers in the local app.
+![Premise landing page with the 3D company brain](docs/media/01-landing.jpg)
+
+**2. Change one fact.** The partner retry window goes from 24 to 72 hours. `A_RETRY_WINDOW`
+is violated and the failure travels up the `REQUIRES` chain.
+
+![Explorer tracing failure from A_RETRY_WINDOW through G_DEDUPE to G_CHARGE_ONCE](docs/media/02-propagation.png)
+
+**3. The verdict.** BLOCKED: 4 guarantees broken, 4 decisions affected, review routed to
+Anika Rao, Ravi Menon and Jun Park, people who are still at the company.
+
+![BLOCKED verdict banner with reviewers and an Apply verified fix button](docs/media/03-blocked.png)
+
+**4. The verified fix.** Raising the dedupe TTL alone would break the Redis maximum, so the
+complete remedy raises both to 72 hours. Applying it turns every affected guarantee green.
+
+![Explorer after the verified fix: CLEAR, every affected guarantee holds](docs/media/04-verified-fix.png)
+
+**5. Every verdict shows its Cypher.** The Explorer records each query it ran, with timings,
+row counts and parameters. This is the query that decides guarantee health:
+
+![The rollup_guarantees Cypher query shown in the Explorer](docs/media/05-show-cypher.png)
+
+**6. Time machine.** Move the date to 2 March 2027. No code changes, but Anika's attestation
+behind `A_STABLE_EVENT_ID` expires, so `G_DEDUPE` and four more guarantees become *unknown*.
+
+![Time machine forecast showing guarantees turning unknown after an attestation expires](docs/media/06-time-machine.png)
+
+**7. When someone leaves.** A hypothetical departure shows accountability gaps, promises that
+become unverified, the next reviewers, and FalkorDB betweenness for knowledge bridges.
+
+![Continuity page for a hypothetical departure of Anika Rao](docs/media/07-continuity.png)
+
+**8. The assessment record.** Every assessment is stored in FalkorDB with its reasons, the
+changed facts and the shortest chain to each failure.
+
+![Assessment page: BLOCKED with four R_BROKEN_T1 reasons and their chains](docs/media/09-assessment.png)
 
 </details>
 
-### When a change arrives
+## The real GitHub flow
 
-Because the brain records dependencies, it can trace the consequences of a changed fact, even when a downstream decision never mentions that fact.
+This ran on the fictional company's repository,
+[Razeefshaik/kestrel-platform](https://github.com/Razeefshaik/kestrel-platform), on 16 October 2026 (times in IST):
 
-In this demo, a partner's retry window changes from 24 to 72 hours. Four guarantees fail. Raising deduplication alone would exceed the Redis limit, so Premise verifies a remedy that raises both limits.
+| Time | Event | Evidence |
+| --- | --- | --- |
+| 12:25:59 | PR #1 "Record Paylane new 72 hour retry policy" is assessed: **failure**, `BLOCKED: G_CHARGE_ONCE is broken via G_CHARGE_ONCE -> G_DEDUPE -> A_RETRY_WINDOW` | [status on commit a2d6537](https://github.com/Razeefshaik/kestrel-platform/commit/a2d6537d62f8cd2e94d8a8e4ad4949329d25e4be) |
+| 12:26:06 | Premise opens **fix PR #2** into PR #1's branch: `redis.max_ttl_hours = 72`, `webhook.dedupe_ttl_hours = 72`, "Graph-verified complete remedy" | [PR #2](https://github.com/Razeefshaik/kestrel-platform/pull/2) |
+| 12:26:34 | The fix PR's own check: **success**, `CLEAR_WITHIN_SCOPE: 4 prerequisite assumptions checked` | [PR #2](https://github.com/Razeefshaik/kestrel-platform/pull/2) |
+| 12:39:33 | A human merges the fix into PR #1's branch | [merge commit 7693573](https://github.com/Razeefshaik/kestrel-platform/commit/76935738b0279b1ee3f9985a10eaf7911cde961f) |
+| 12:39:55 | PR #1 is re-assessed: **success**, every affected guarantee holds | [PR #1](https://github.com/Razeefshaik/kestrel-platform/pull/1) |
 
-![Failure travels through the real graph, then the verified remedy restores the affected guarantees](docs/media/propagation.gif)
+The PR comment is a single comment that Premise updates in place, so PR #1 now shows the
+green version. The red result is kept in the commit status history linked above.
+Screenshot 8 shows the same change assessed by the local demo. [PR #3](https://github.com/Razeefshaik/kestrel-platform/pull/3)
+is a safe change (email retries within the provider budget) that passes.
 
-**Trace the affected promises → report BLOCKED with reviewers → propose a verified fix → reassess after human merge.** Fixes are verified within the recorded model; Premise never merges them automatically. Missing or expired evidence produces uncertainty rather than a false assurance.
+Fixes and the original PRs are never merged automatically. Fork PRs never get fix branches.
 
-### The real GitHub flow
+## Graph data model
 
-[Original PR #1](https://github.com/Razeefshaik/kestrel-platform/pull/1) → [verified fix PR #2](https://github.com/Razeefshaik/kestrel-platform/pull/2) → human merge → **CLEAR_WITHIN_SCOPE**. [Recorded status timeline](README_DETAILED.md#the-real-github-flow).
+```mermaid
+flowchart TB
+  subgraph Reasoning
+    Decision -- PROVIDES --> Guarantee
+    Decision -- RELIES_ON --> Guarantee
+    Guarantee -- REQUIRES --> Guarantee
+    Guarantee -- REQUIRES --> Assumption
+    Assumption -- LHS / RHS --> Fact
+    Decision -- SUPERSEDES --> Decision
+  end
+  subgraph Accountability
+    Person -- ATTESTED --> Assumption
+    Person -- ACCOUNTABLE_FOR --> Decision
+    Person -- MEMBER_OF --> Team
+    Team -- OWNS --> Service
+    Decision -- GOVERNS --> Service
+    Guarantee -- ABOUT --> Service
+    Service -- DEPENDS_ON --> Service
+  end
+  subgraph Provenance
+    Decision -- STATED_IN --> Source
+    Fact -- DEFINED_IN --> Source
+    Passage -- PART_OF --> Source
+    Person -- AUTHORED --> Source
+    Passage -- MENTIONS --> Entity[Any entity]
+  end
+  subgraph Memory
+    Assessment -- OF --> ChangeProposal
+    ChangeProposal -- CHANGES --> Fact
+    Assessment -- FOUND / FLAGGED --> Guarantee
+  end
+```
+
+Every domain node has an `Entity` label and a fulltext-searchable description. Derived
+health is computed on demand; only authored decision lifecycle is stored on domain nodes.
+Historical assessments store their result snapshots for audit.
+
+<details>
+<summary><strong>Node types, relationship meanings and review routing</strong></summary>
+
+| Nodes | Purpose |
+| --- | --- |
+| Decision, Guarantee, Assumption, Fact | Reasoning model and tracked configuration |
+| Person, Team, Service | Accountability, ownership, expertise and service exposure |
+| Source, Passage | Exact source commits, paths, lines, text and mentions |
+| GraphState, ChangeProposal, Assessment, Action | Revisions, cursors, overlays, audit and execution memory |
+| LLMCache | Request-hashed provider response replay; contains no API keys |
+
+| Relationships | Meaning |
+| --- | --- |
+| PROVIDES, RELIES_ON | A decision promises or depends on a specific guarantee |
+| REQUIRES | The only failure-propagation edge; AND semantics, acyclic, depth ≤6 |
+| LHS, RHS, ATTESTED | Predicate operands and dated attestation by an active person |
+| GOVERNS, ABOUT, DEPENDS_ON | Decision/service scope and caller exposure up to three hops |
+| ACCOUNTABLE_FOR, MEMBER_OF, OWNS | Authored accountability and current ownership |
+| STATED_IN, DEFINED_IN, PART_OF, AUTHORED, MENTIONS | Source provenance and deterministic text mentions |
+| SUPERSEDES | Decision lifecycle linkage; superseded decisions never gate |
+| CHANGES, OF, FOUND, FLAGGED, TOOK | Assessment and action history; never revision-swept |
+
+Review routing prefers active authors and approvers. Otherwise active members of the current
+owning team rank by distinct recent authored sources, then by ID.
+
+</details>
+
+## Cypher and graph algorithms
+
+The verdict is a graph traversal. This is the query that decides guarantee health
+([rollup_guarantees.cypher](premise/graph/queries/rollup_guarantees.cypher)):
+
+```cypher
+// Three valued AND over every prerequisite of each guarantee.
+// broken if any reachable assumption is violated, else unknown if any is unknown, else holds.
+// The witness is the shortest chain to a violated assumption if one exists, else to an unknown one.
+UNWIND $guarantees AS gid
+MATCH (g:Guarantee {id: gid})
+OPTIONAL MATCH p = (g)-[:REQUIRES*1..6]->(a:Assumption)
+WHERE a.id IN $violated OR a.id IN $unknown
+WITH g, p, CASE WHEN a IS NULL THEN 2 WHEN a.id IN $violated THEN 0 ELSE 1 END AS rank
+ORDER BY rank, length(p)
+WITH g, collect(rank) AS ranks, head(collect(p)) AS witness
+RETURN g.id AS guarantee, g.statement AS statement,
+       CASE WHEN 0 IN ranks THEN 'broken' WHEN 1 IN ranks THEN 'unknown' ELSE 'holds' END AS status,
+       CASE WHEN witness IS NULL THEN [] ELSE [n IN nodes(witness) | n.id] END AS chain
+ORDER BY guarantee
+```
+
+Ranking each path (0 violated, 1 unknown, 2 fine) and sorting by rank then length gives both
+the three valued result and the shortest witness chain in one query. That chain is what the
+PR comment, the assessment page and the Explorer animation show.
+
+All query arguments are parameters. Read tools use `GRAPH.RO_QUERY`; no user or LLM
+input is executed as Cypher. Authored schema writes and operational memory writes are
+fixed in the ingestor and store; their vocabulary cannot be selected by a model.
+
+<details>
+<summary><strong>Query-by-query responsibilities</strong></summary>
+
+| Query | Responsibility |
+| --- | --- |
+| [graph_state](premise/graph/queries/graph_state.cypher) | Ready revision and main SHA |
+| [facts_in_files](premise/graph/queries/facts_in_files.cypher) | Registered facts in the PR diff |
+| [facts_by_id](premise/graph/queries/facts_by_id.cypher) | Fact values, control, paths and lines |
+| [touched_assumptions](premise/graph/queries/touched_assumptions.cypher) | Inputs touched by the overlay |
+| [guarantee_assumption_pairs](premise/graph/queries/guarantee_assumption_pairs.cypher) | Upward impact and complete downward prerequisites |
+| [siblings](premise/graph/queries/siblings.cypher) | Related guarantees requiring independent evaluation |
+| [evaluate_assumptions](premise/graph/queries/evaluate_assumptions.cypher) | Numeric/string predicates and current attestations |
+| [rollup_guarantees](premise/graph/queries/rollup_guarantees.cypher) | Three-valued AND and shortest witness paths |
+| [guarantee_impact](premise/graph/queries/guarantee_impact.cypher) | Accepted decisions, tiers, services and callers |
+| [route_decision](premise/graph/queries/route_decision.cypher) | Review routing and evidence counts |
+| [load_bearing_guarantees](premise/graph/queries/load_bearing_guarantees.cypher) | FalkorDB PageRank; display order only |
+| [search_decision_passages](premise/graph/queries/search_decision_passages.cypher) | Lexical-gap baseline |
+| [resolve](premise/graph/queries/resolve.cypher) | Fulltext entity resolution |
+| [decision_lineage](premise/graph/queries/decision_lineage.cypher) | Requirements and facts supporting a decision |
+| [who_knows](premise/graph/queries/who_knows.cypher) | Current service owners and evidence-ranked experts |
+| [search_evidence](premise/graph/queries/search_evidence.cypher) | Source-grounded passage search |
+| [evidence_sources](premise/graph/queries/evidence_sources.cypher) | Authored source citations |
+| [orphaned_decisions](premise/graph/queries/orphaned_decisions.cypher) | Accountability gaps |
+| [recall](premise/graph/queries/recall.cypher) | Historical assessments by entity |
+
+**
+
+</details>
+
+FalkorDB features used, and where:**
+
+| Feature | Used for | Where |
+| --- | --- | --- |
+| Variable length paths `[:REQUIRES*1..6]` | Failure propagation and witness chains | [rollup_guarantees](premise/graph/queries/rollup_guarantees.cypher) |
+| `algo.pageRank('Guarantee', 'REQUIRES')` | Ordering "What still holds?" by how load bearing a guarantee is | [load_bearing_guarantees](premise/graph/queries/load_bearing_guarantees.cypher) |
+| `algo.betweenness`, `algo.WCC` | Knowledge bridges and disconnection when a person leaves | [continuity.py](premise/web/continuity.py) |
+| Fulltext index | Resolving names like "Paylane" or "ADR-012" to entities | [resolve](premise/graph/queries/resolve.cypher) |
+| Vector index, `db.idx.vector.queryNodes` (cosine) | The vector RAG baseline in the benchmark, on the same database | [premise/benchmark](premise/benchmark) |
+| `GRAPH.RO_QUERY` | Every read tool used by the MCP server, Analyst and web app | [premise/graph](premise/graph) |
+| Redis Streams next to the graph | The v2 ingestion stream (XADD, consumer groups, XAUTOCLAIM) | [premise_v2/stream.py](premise_v2/stream.py) |
+
+FalkorDB is the only datastore. It also holds graph revisions, PR cursors, assessments,
+action history and the model replay cache, so the audit trail of every verdict lives in the graph.
 
 ## Benchmark: what does structure buy?
 
@@ -112,8 +400,8 @@ Across all 30 test questions, macro F1 is **0.79 graph · 0.30 vector · 0.25 ke
 | --- | --- |
 | **348 tests passed · 12/12 scenarios** | [Validation record](docs/VALIDATION.md) · [CI workflow](.github/workflows/tests.yml) |
 | **35/35 red-team cases reached the expected safe outcome** | [Attacks and report](docs/REDTEAM.md); a regression suite, not security certification. |
-| **Real statuses and a stacked fix PR** | [GitHub rehearsal](README_DETAILED.md#the-real-github-flow); fixes require human merge. |
-| **Inspectable reasoning** | [Cypher queries and graph algorithms](README_DETAILED.md#cypher-and-graph-algorithms), source provenance and recorded assessments. |
+| **Real statuses and a stacked fix PR** | [GitHub rehearsal](#the-real-github-flow); fixes require human merge. |
+| **Inspectable reasoning** | [Cypher queries and graph algorithms](#cypher-and-graph-algorithms), source provenance and recorded assessments. |
 
 ## Run locally
 
