@@ -6,6 +6,10 @@
 .showcase-hero .hero-copy { position:relative; left:auto; bottom:auto; width:auto; padding:var(--space-6) 0; }
 .showcase-hero .hero-copy h1 { font-size:clamp(30px,3.1vw,46px); line-height:1.18; max-width:20ch; margin-bottom:var(--space-5); }
 .showcase-hero h1 span { color:var(--ice); }
+.page-brain .bar nav { min-width:0; overflow-x:auto; }
+.page-brain .bar nav a { white-space:nowrap; }
+.page-assessment .page-head-copy { min-width:0; }
+.page-assessment .page-head h1 { font-size:clamp(24px,4.5vw,64px); max-width:none; overflow-wrap:anywhere; }
 .showcase-hero .statement { font-size:var(--text-lg); max-width:42ch; }
 .showcase-story { margin:var(--space-2) 0 var(--space-6); }
 .showcase-hero .brain-stage { left:49%; right:0; top:var(--space-8); bottom:var(--space-8); }
@@ -57,9 +61,9 @@
 .continuity-bridge-panel p,#continuity-projection,#continuity-graph-status { font-size:var(--text-sm); }
 #continuity-canvas { height:440px; background:var(--frame); border-radius:var(--r-card); }
 @media(max-width:1100px) {
- .showcase-hero.hero { min-height:620px; padding:var(--space-6); }
- .showcase-hero .brain-stage { position:absolute; height:auto; margin:0; }
- .showcase-hero .hero-copy { padding:var(--space-6) 0; }
+ .showcase-hero.hero { display:flex; flex-direction:column; align-items:stretch; min-height:0; padding:var(--space-6); }
+ .showcase-hero .brain-stage { position:relative; inset:auto; order:1; height:320px; margin:0; }
+ .showcase-hero .hero-copy { padding:0; order:0; }
 }
 @media(max-width:760px) {
  .showcase-hero.hero { display:flex; flex-direction:column; align-items:stretch; min-height:0; padding:var(--space-5); }

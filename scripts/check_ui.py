@@ -43,10 +43,15 @@ def main():
         assert 'Jun Park' in reviewers and 'p_jun' not in reviewers and 'p_anika' not in reviewers
         assert '(p_anika)' not in page.locator('[aria-labelledby="evidence-title"]').inner_text()
         page.set_viewport_size({'width':390,'height':844})
+        assert page.locator('.page-head h1').evaluate('(el)=>el.scrollWidth<=el.clientWidth'), 'Assessment title is clipped'
         page.screenshot(path=str(artifact/'assessment-mobile.png'),full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
         page.goto(base+'/',wait_until='networkidle')
         assert_landing(page)
+        page.set_viewport_size({'width':768,'height':1024})
+        assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'), 'Tablet landing overflows'
+        assert page.locator('.hero-copy').bounding_box()['y']+page.locator('.hero-copy').bounding_box()['height']<=page.locator('#brain').bounding_box()['y'], 'Tablet brain overlaps copy'
+        page.set_viewport_size({'width':390,'height':844})
         page.screenshot(path=str(artifact/'brain-mobile.png'),full_page=True)
         assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
         page.set_viewport_size({'width':1440,'height':1050})
