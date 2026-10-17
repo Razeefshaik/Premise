@@ -1,71 +1,107 @@
 <div align="center">
 
-<a href="https://razeefshaik.github.io/Premise/"><img src="docs/media/banner.png" alt="Premise traces a changed retry window through the company brain to the engineering promises it breaks" width="100%"></a>
+<a href="https://razeefshaik.github.io/Premise/"><img src="docs/media/banner.png" alt="Premise: a pull request changes the Paylane retry window from 24 to 72 hours, and the Kestrel company brain lights the broken path through four guarantees" width="100%"></a>
 
-# Premise
-
-**The company brain for engineering decisions.**
-
-Search finds documents. Premise finds consequences.
+<br><br>
 
 [![Tests](https://github.com/Razeefshaik/Premise/actions/workflows/tests.yml/badge.svg)](https://github.com/Razeefshaik/Premise/actions/workflows/tests.yml)
 [![Live replay](https://github.com/Razeefshaik/Premise/actions/workflows/pages.yml/badge.svg)](https://razeefshaik.github.io/Premise/)
-![FalkorDB](https://img.shields.io/badge/FalkorDB-4.18.3-5b63ff)
+![FalkorDB 4.18.3](https://img.shields.io/badge/FalkorDB-4.18.3-5b63ff)
+![Red team 35/35 safe](https://img.shields.io/badge/red%20team-35%2F35%20safe-2ea043)
+![Python 3.12](https://img.shields.io/badge/python-3.12-3776ab)
 
-**[Try the interactive replay](https://razeefshaik.github.io/Premise/) · [See the real fix PR](https://github.com/Razeefshaik/kestrel-platform/pull/2) · [Detailed guide](README_DETAILED.md)**
+### [▶&nbsp; Try the live replay](https://razeefshaik.github.io/Premise/) &nbsp;·&nbsp; [🎬&nbsp; Watch the demo](https://razeefshaik.github.io/Premise/explore.html?story=1) &nbsp;·&nbsp; [🔴→🟢&nbsp; See a real PR go red, then green](#the-real-github-flow)
 
-Built by **Shaik Mahammad Razeef** for **WeMakeDevs × FalkorDB Graph Hacks**
+<sub>The live replay is a <b>read-only recording</b> of real FalkorDB results, so anyone can explore it without installing anything.<br>
+For the <b>full version</b> (live What if checks, Ask the company, PR assessments, verified fix PRs and the MCP server for coding agents),
+<a href="#run-locally"><b>run it locally in two commands</b></a>.</sub>
 
-Track 1: Agents That Act on Connected Data · Track 3: Company Brain
+[The company brain](#the-company-brain) · [How it is built](#how-the-brain-is-built) · [Ask the company](#ask-the-company) · [When a change arrives](#when-a-change-arrives) · [Graph data model](README_DETAILED.md#graph-data-model) · [Cypher and algorithms](README_DETAILED.md#cypher-and-graph-algorithms) · [Benchmark](#benchmark-what-does-structure-buy) · [Run locally](#run-locally)
 
 </div>
 
-## Why Premise?
+---
 
-Your company knows why it built things. That knowledge is scattered across decision records, config files, tickets, chat and runbooks. When something changes, the promises that depend on it are easy to miss.
+## The company brain
 
-**Premise connects those sources, their owners and their dependencies in FalkorDB.** Ask why a decision exists, see who should review it, or check which promises a pull request would break. Every verdict comes from deterministic graph queries and code.
+**Premise connects what your company decided, why it decided it, who knows the context, and what must remain true.** Decision records, config, tickets, chat and runbooks become a connected, queryable model in FalkorDB.
 
-## Watch one change break four promises
+A decision links to the promises it makes. Each promise links to its assumptions and real config values. People, teams and source passages supply ownership and evidence. You can follow those connections to understand a decision, find a reviewer, or see which knowledge is becoming unreliable.
 
-A payment partner extends its retry window from **24 to 72 hours**, but webhook deduplication still lasts only 24 hours. Premise traces the dependency chain to **four broken guarantees**, flags the PR as **BLOCKED**, and identifies reviewers.
+![The real Decision Explorer connects decisions, guarantees, services, people and teams](docs/media/10-brain-people.jpg)
 
-Raising the deduplication window alone exceeds Redis's configured maximum. Premise verifies a fix that raises **both** limits before opening a fix PR. A human merges it; reassessment returns **CLEAR_WITHIN_SCOPE**.
+*Explore the relationships, click a node for evidence, or trace the path between two nodes.*
 
-![A changed retry window breaks dependent guarantees, then a verified fix heals them](docs/media/propagation.gif)
+## How the brain is built
 
-**Try it:** open the [replay](https://razeefshaik.github.io/Premise/), choose **Play the story**, and watch the failure travel through the graph. The replay contains recorded FalkorDB responses; live questions and GitHub actions require the local app.
+**Read supported sources → connect their meaning → answer from the graph.**
 
-**Real GitHub evidence:** [original PR #1](https://github.com/Razeefshaik/kestrel-platform/pull/1) → [verified fix PR #2](https://github.com/Razeefshaik/kestrel-platform/pull/2) → [assessment timeline](README_DETAILED.md#the-real-github-flow).
+```mermaid
+flowchart LR
+  S["Decisions, config, tickets<br/>chat, runbooks and people"] --> P["Deterministic parsing<br/>references and source lines"]
+  P --> G[(FalkorDB decision graph)]
+  G --> A["Answers with evidence"]
+  G --> K["Ownership and knowledge gaps"]
+  G --> C["Change checks and verified fixes"]
+```
 
-## What you can do
+1. **Read and validate.** Parsers extract typed entities from reviewed files, validate references and dependency chains, and retain source locations.
+2. **Connect.** Explicit relationships capture what a decision provides, what a guarantee requires, who is accountable, and which passages mention it. Service names and aliases connect related evidence.
+3. **Query and explain.** Shared graph tools power the web app, answers and coding-agent checks. The Explorer exposes the Cypher, parameters and timing behind its results.
 
-| Feature | What it gives you |
+The included fictional company demonstrates **88 sources → 275 nodes and 488 relationships**, with 120 source passages. It is a working dataset for exploring the product, not the boundary of the idea.
+
+**Keeping knowledge current:** the experimental v2 pipeline consumes source events, grounds claims in quotes, groups independent evidence, and proposes reviewed updates. Slack/Jira use fixtures; GitHub supports read-only live intake. Evidence stays separate from the decision graph until a human-approved change is ingested. [Pipeline details](docs/V2.md).
+
+**Why FalkorDB:** dependency paths, evidence lookup, assessment history, continuity algorithms and the vector-search benchmark all use the same datastore. **Models may propose or explain; deterministic queries and code decide verdicts.**
+
+## Ask the company
+
+| Your question | What Premise connects |
 | --- | --- |
-| **Ask the company** | Answers about decisions, dependencies and reviewers, with source citations. |
-| **Explore consequences** | An interactive graph, hypothetical checks, and the exact Cypher behind each result. |
-| **Check and repair PRs** | Commit statuses, an updatable explanation, and a fix PR only after complete verification within the model. |
-| **Forecast knowledge gaps** | A time machine for expiring attestations and a continuity view for hypothetical departures. |
-| **Guide coding agents** | 11 read-only MCP tools, including checks before an agent edits a config file. |
-| **Propose knowledge updates** | An experimental evidence pipeline that grounds claims in source quotes and proposes changes for human review. |
+| **Why did we make this decision?** | Decision history, promised guarantees, assumptions and cited source passages. |
+| **Who should review it now?** | Current people, accountability and recent authored evidence. |
+| **What if this person leaves?** | Orphaned decisions, unverified promises and alternative reviewers. |
+| **What becomes uncertain next month?** | Attestation expiry dates and the guarantees that depend on them. |
 
-## Why a graph? Why FalkorDB?
+![A real decision page shows reasoning paths, current reviewers and evidence counts](docs/media/11-entity-adr012.jpg)
 
-A downstream decision may never mention the config value it depends on. Premise follows explicit `REQUIRES` paths from changed facts through assumptions and guarantees to affected decisions. People and source passages explain who knows the context and where the reasoning came from.
+*The decision page brings dependency paths and reviewer evidence together. Ask the company provides cited answers in the local app; continuity and the time machine let you explore departures and future dates.*
 
-**FalkorDB is the only datastore:** it powers dependency traversal, evidence lookup, assessment history, continuity algorithms and the vector-search benchmark. Models can help propose or explain; they never decide verdicts or directly update the decision graph.
+Coding agents use the same knowledge through **11 read-only MCP tools**, including checks before editing files. [MCP setup](README_DETAILED.md#agents-and-mcp).
 
-**Stack:** Python · FastAPI · FalkorDB · Cypher · GitHub API · MCP
+## When a change arrives
 
-## Evidence and limits
+Because the brain records dependencies, it can trace the consequences of a changed fact, even when a downstream decision never mentions that fact.
 
-| Recorded result | Inspect it |
+**One demonstration:** a partner's retry window changes from 24 to 72 hours. Four guarantees fail. Raising deduplication alone would exceed the Redis limit, so Premise verifies a remedy that raises both limits.
+
+![Failure travels through the real graph, then the verified remedy restores the affected guarantees](docs/media/propagation.gif)
+
+**Trace the affected promises → report BLOCKED with reviewers → propose a verified fix → reassess after human merge.** Fixes are verified within the recorded model; Premise never merges them automatically. Missing or expired evidence produces uncertainty rather than a false assurance.
+
+### The real GitHub flow
+
+[Original PR #1](https://github.com/Razeefshaik/kestrel-platform/pull/1) → [verified fix PR #2](https://github.com/Razeefshaik/kestrel-platform/pull/2) → human merge → **CLEAR_WITHIN_SCOPE**. [Recorded status timeline](README_DETAILED.md#the-real-github-flow).
+
+## Benchmark: what does structure buy?
+
+We compared graph reasoning, keyword search and vector RAG on FalkorDB, including questions about both **company knowledge** and **change impact**.
+
+![Macro F1 comparison for change impact, company-brain questions and all test questions](docs/media/benchmark-f1.png)
+
+Across all 30 test questions, macro F1 is **0.79 graph · 0.30 vector · 0.25 keyword**. On the 15 company-brain questions, it is **0.58 · 0.14 · 0.24**; on the 15 change-impact questions, **1.00 · 0.46 · 0.27**. The chart shows the best tested retrieval setting for each subset.
+
+**Scope:** authored synthetic questions and company data, with human label review pending. The graph has explicit dependencies; retrieval searches ADR passages. These results measure the benefit of that structure, not general intelligence. [Methods, every setting and raw results](docs/BENCHMARK.md).
+
+## Results and evidence
+
+| Recorded result | Evidence |
 | --- | --- |
-| **348 tests passed · 12/12 scenarios** | [Validation](docs/VALIDATION.md) and [CI](.github/workflows/tests.yml) |
-| **35/35 red-team cases reached the expected safe outcome** | [Attack cases and report](docs/REDTEAM.md) |
-| **Change-impact F1: graph 1.00 · vector RAG 0.46 · keyword 0.27** | [Benchmark, methods and caveats](docs/BENCHMARK.md) |
-
-The benchmark uses 15 authored change-impact test questions about **Kestrel, a fictional company**; it is not a general QA claim. This is a single-company prototype. Slack/Jira intake uses fixtures; GitHub intake can run read-only. Knowledge updates require human review, and fix PRs are never merged automatically.
+| **348 tests passed · 12/12 scenarios** | [Validation record](docs/VALIDATION.md) · [CI workflow](.github/workflows/tests.yml) |
+| **35/35 red-team cases reached the expected safe outcome** | [Attacks and report](docs/REDTEAM.md); a regression suite, not security certification. |
+| **Real statuses and a stacked fix PR** | [GitHub rehearsal](README_DETAILED.md#the-real-github-flow); fixes require human merge. |
+| **Inspectable reasoning** | [Cypher queries and graph algorithms](README_DETAILED.md#cypher-and-graph-algorithms), source provenance and recorded assessments. |
 
 ## Run locally
 
@@ -76,8 +112,14 @@ docker compose up --build -d
 docker compose exec app premise demo
 ```
 
-Open **[localhost:8000](http://localhost:8000)**. No API keys are needed for the local demo. Real GitHub actions are opt-in and need a sandbox token: [setup instructions](docs/PUBLISH.md).
+Open **[localhost:8000](http://localhost:8000)**. No API keys are needed for the local demo. Real GitHub actions require explicit setup and a sandbox token: [publishing guide](docs/PUBLISH.md).
 
-**Go deeper:** [Full README](README_DETAILED.md) · [Architecture](docs/DESIGN.md) · [Evidence pipeline](docs/V2.md) · [Replay](docs/REPLAY.md) · [Demo guide](docs/DEMO.md)
+**Stack:** Python · FastAPI · FalkorDB · Cypher · GitHub API · MCP
 
-**AI use:** Claude and OpenAI Codex helped with implementation, review, tests, documentation and synthetic data. [Disclosure and attribution](README_DETAILED.md#ai-use-disclosure).
+**Hackathon:** built by Shaik Mahammad Razeef for WeMakeDevs × FalkorDB Graph Hacks. **Track 3: Company Brain** and **Track 1: Agents That Act on Connected Data**.
+
+**Current scope:** a single-company prototype using fictional data. The public site is a read-only replay; live questions and PR assessments run locally. [Full capabilities and limits](README_DETAILED.md).
+
+**AI use:** Claude and OpenAI Codex assisted with implementation, review, tests, documentation and synthetic data. [Disclosure and attribution](README_DETAILED.md#ai-use-disclosure).
+
+[Detailed README](README_DETAILED.md) · [Architecture](docs/DESIGN.md) · [Evidence pipeline](docs/V2.md) · [Replay](docs/REPLAY.md) · [Demo guide](docs/DEMO.md)
