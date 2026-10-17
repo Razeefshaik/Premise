@@ -62,17 +62,17 @@ async function main() {
 
   const brain = new THREE.Group();
   scene.add(brain);
-  const uniforms = {uTime: {value: 0}, uScan: {value: -10}, uReveal: {value: reduce ? 1 : 0}, uContext: {value: 1}};
+  const uniforms = {uTime: {value: 0}, uScan: {value: -10}, uReveal: {value: reduce ? 1 : 0}};
   const shell = new THREE.Mesh(geometry, new THREE.ShaderMaterial({
     uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: `varying vec3 vN; varying vec3 vV; varying vec3 vP;
       void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); vP = position; gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `uniform float uScan; uniform float uReveal; uniform float uContext; varying vec3 vN; varying vec3 vV; varying vec3 vP;
+    fragmentShader: `uniform float uScan; uniform float uReveal; varying vec3 vN; varying vec3 vV; varying vec3 vP;
       void main() {
         float f = pow(1.0 - abs(dot(vN, vV)), 2.4);
         float scan = smoothstep(0.16, 0.0, abs(vP.y - uScan));
-        vec3 col = mix(vec3(0.36, 0.39, 1.0), vec3(0.68, 0.73, 1.0), f) * (0.1 + f * 0.65) + vec3(0.55, 0.6, 1.0) * scan * 0.2;
-        gl_FragColor = vec4(col, (0.025 + f * 0.42 + scan * 0.12) * uReveal * uContext);
+        vec3 col = mix(vec3(0.36, 0.39, 1.0), vec3(0.87, 0.89, 1.0), f) * (0.12 + f * 1.25) + vec3(0.55, 0.6, 1.0) * scan * 0.55;
+        gl_FragColor = vec4(col, (0.05 + f * 0.85 + scan * 0.35) * uReveal);
       }`,
   }));
   brain.add(shell);
@@ -85,13 +85,11 @@ async function main() {
     uniforms, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     vertexShader: `uniform float uTime; attribute float seed; varying float vA;
       void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vA = 0.25 + 0.75 * pow(0.5 + 0.5 * sin(uTime * 1.6 + seed * 40.0), 6.0);
-        gl_PointSize = (1.1 + seed * 0.9) * (9.0 / -mv.z); gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `uniform float uReveal; uniform float uContext; varying float vA;
-      void main() { float d = length(gl_PointCoord - 0.5); if (d > 0.5) discard; gl_FragColor = vec4(0.68, 0.73, 1.0, (1.0 - d * 2.0) * vA * 0.28 * uReveal * uContext); }`,
+        gl_PointSize = (1.4 + seed * 1.6) * (9.0 / -mv.z); gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `uniform float uReveal; varying float vA;
+      void main() { float d = length(gl_PointCoord - 0.5); if (d > 0.5) discard; gl_FragColor = vec4(0.84, 0.87, 1.0, (1.0 - d * 2.0) * vA * 0.75 * uReveal); }`,
   }));
   brain.add(cloud);
-  shell.renderOrder = 0;
-  cloud.renderOrder = 1;
 
   // The decision network, laid inside the brain in three strata
   const glowTexture = (() => {
@@ -126,16 +124,10 @@ async function main() {
     const mid = a.clone().add(b).multiplyScalar(0.5);
     const out = new THREE.Vector3(mid.x, 0, mid.z).normalize().multiplyScalar(0.28 + hash(from + to) * 0.25);
     const curve = new THREE.QuadraticBezierCurve3(a.clone(), mid.add(out).add(new THREE.Vector3(0, 0.12, 0)), b.clone());
-    // A dark casing separates each graph connection from the anatomical surface.
-    // Draw the network after the shell so even paths inside the brain remain legible.
-    const casing = new THREE.Mesh(new THREE.TubeGeometry(curve, 40, 0.036, 6),
-      new THREE.MeshBasicMaterial({color: 0x090a12, transparent: true, opacity: 0.9, depthTest: false, depthWrite: false}));
-    casing.renderOrder = 2;
-    const material = new THREE.MeshBasicMaterial({color: COLORS.ice, transparent: true, opacity: 0.8, depthTest: false, depthWrite: false});
-    const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 40, 0.018, 6), material);
-    mesh.renderOrder = 3;
-    network.add(casing, mesh);
-    edges.push({from, to, kind, curve, mesh, material, casing});
+    const material = new THREE.MeshBasicMaterial({color: COLORS.indigo2, transparent: true, opacity: 0.42, blending: THREE.AdditiveBlending, depthWrite: false});
+    const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 40, 0.011, 6), material);
+    network.add(mesh);
+    edges.push({from, to, kind, curve, mesh, material});
   };
   for (const a of data.assumptions) for (const f of new Set([a.lhs_fact, a.rhs_fact])) if (f && nodes.has(f)) link(f, a.id, 'fa');
   for (const g of data.guarantees) for (const a of g.prerequisites) if (nodes.has(a)) link(a, g.id, 'ag');
@@ -146,11 +138,9 @@ async function main() {
     const radius = node.kind === 'guarantee' ? 0.085 : node.kind === 'assumption' ? 0.06 : 0.04;
     node.color = node.kind === 'fact' ? COLORS.ice.clone() : stateColor(info.state).clone();
     node.base = node.color.clone();
-    node.core = new THREE.Mesh(new THREE.SphereGeometry(radius, 20, 20), new THREE.MeshBasicMaterial({color: node.color, transparent: true, depthTest: false, depthWrite: false}));
-    node.halo = new THREE.Sprite(new THREE.SpriteMaterial({map: glowTexture, color: node.color, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false}));
-    node.core.renderOrder = 5;
-    node.halo.renderOrder = 4;
-    node.halo.scale.setScalar(radius * 5);
+    node.core = new THREE.Mesh(new THREE.SphereGeometry(radius, 20, 20), new THREE.MeshBasicMaterial({color: node.color, transparent: true}));
+    node.halo = new THREE.Sprite(new THREE.SpriteMaterial({map: glowTexture, color: node.color, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false}));
+    node.halo.scale.setScalar(radius * 7);
     node.group = new THREE.Group();
     node.group.position.copy(node.pos);
     node.group.add(node.core, node.halo);
@@ -165,8 +155,7 @@ async function main() {
 
   // Signals travelling along real paths
   const pulses = Array.from({length: 7}, () => {
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map: glowTexture, color: COLORS.ice, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false}));
-    sprite.renderOrder = 6;
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map: glowTexture, color: COLORS.ice, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false}));
     sprite.scale.setScalar(0.22);
     network.add(sprite);
     return {sprite, route: null, t: 0, speed: 0};
@@ -199,7 +188,6 @@ async function main() {
     return set;
   }
   function paint() {
-    uniforms.uContext.value = hovered || firedCheck ? 0.55 : 1;
     const trace = hovered ? connected(hovered) : null;
     const touched = new Set(firedCheck ? firedCheck.changed.map(c => c.fact) : []);
     const fired = new Set();
@@ -213,9 +201,8 @@ async function main() {
         else if ((edge.kind === 'fa' && touched.has(edge.from)) || (edge.kind === 'ag' && reached.has(edge.from))) edge.state = 'checked';
       }
       const lit = trace ? trace.has(edge.from) && trace.has(edge.to) : null;
-      edge.material.color.copy(edge.state === 'fired' ? COLORS.broken : edge.state === 'checked' ? COLORS.holds : COLORS.ice);
-      edge.material.opacity = edge.state || lit ? 1 : (trace || firedCheck) ? 0.08 : 0.8;
-      edge.casing.material.opacity = (trace || firedCheck) && !edge.state && !lit ? 0.1 : 0.9;
+      edge.material.color.copy(edge.state === 'fired' ? COLORS.broken : edge.state === 'checked' ? COLORS.holds : lit ? COLORS.ice : COLORS.indigo2);
+      edge.material.opacity = edge.state ? 0.95 : lit ? 0.9 : (trace || firedCheck) ? 0.08 : 0.42;
     }
     for (const node of nodes.values()) {
       const info = byId.get(node.id);
@@ -226,7 +213,7 @@ async function main() {
       node.color.copy(color);
       const active = trace ? trace.has(node.id) : firedCheck ? (touched.has(node.id) || fired.has(node.id) || reached.has(node.id)) : true;
       node.core.material.opacity = active ? 1 : 0.18;
-      node.halo.material.opacity = active ? 0.5 : 0.08;
+      node.halo.material.opacity = active ? 0.95 : 0.12;
       node.hot = fired.has(node.id) || touched.has(node.id);
       void info;
     }
@@ -301,7 +288,7 @@ async function main() {
       uniforms.uScan.value = bb.max.y + 0.4 - cycle * (bb.max.y - bb.min.y + 0.8) * 1.4;
       for (const node of nodes.values()) {
         const beat = node.hot ? 0.35 * (0.5 + 0.5 * Math.sin(t * 6 + node.phase)) : 0.08 * Math.sin(t * 1.4 + node.phase);
-        node.halo.scale.setScalar(node.radius * 5 * (1 + beat));
+        node.halo.scale.setScalar(node.radius * 7 * (1 + beat));
       }
       for (const p of pulses) {
         if (p.delay > 0) { p.delay -= dt; continue; }

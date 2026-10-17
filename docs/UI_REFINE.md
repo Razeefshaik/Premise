@@ -303,22 +303,3 @@ historical. Existing system-record drift and decoration exceptions were not cano
 The finish review caught text touching the brain; a desktop-only heading measure restored clear
 separation. Fresh captures resolved that finding with no regressions: disposition **ship** for
 the scored heading-clearance correction.
-
-## Hero spacing and network legibility - 2026-10-17
-
-The follow-up screenshots showed crowded copy/statistics and graph connections lost in the
-bright anatomical surface. Kept the large wordmark and central brain, separated health statistics
-into a full-width desktop row, and stacked the metrics on phones. The headline has more line
-spacing; copy, action and metrics now have distinct groups. Counts and copy remain unchanged.
-
-`brain3d.js` now draws the real network above a softer MRI surface. Connections have a dark
-casing and thicker ice-coloured centres; reduced node halos leave lines visible. Hovering or
-checking a change further dims the anatomy, retaining the existing red/green path semantics,
-tooltips, rotation and pulses. The shared design tokens and other pages were preserved.
-
-Validation: **6 showcase tests passed in 8.46s**. Browser checks at 390x844, 768x1024, 1440x900
-and 1920x1080 passed with no horizontal overflow or page/console errors. Checks cover metric
-spacing, hover tracing, real S1 `BLOCKED` and verified-fix `CLEAR_WITHIN_SCOPE`; normal motion,
-drag rotation and reduced motion were exercised. Captures and the report are under ignored
-`.impeccable/review/hero-readability/`. The full suite/scenarios were not rerun for this visual
-change. `scripts/showcase_checks.py` retains spacing checks for subsequent live/replay runs.

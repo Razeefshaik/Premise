@@ -47,17 +47,6 @@ def assert_landing(page):
     else:
         expect(cta).to_be_visible()
     assert page.locator('.showcase-stats>div').count()==3
-    stats=page.locator('.showcase-stats')
-    first_stat=stats.locator('>div').first.bounding_box()
-    action=cta.bounding_box()
-    assert first_stat['y']>=action['y']+action['height']+24, 'Health summary crowds the story action'
-    if page.viewport_size['width']>1100:
-        assert stats.bounding_box()['width']>page.locator('.hero-copy').bounding_box()['width']*2, 'Health summary is squeezed into the copy column'
-    elif page.viewport_size['width']<760:
-        metrics=stats.locator('>div').all()
-        for previous,current in zip(metrics,metrics[1:]):
-            before,after=previous.bounding_box(),current.bounding_box()
-            assert after['y']>=before['y']+before['height']+20, 'Phone health metrics must have separate rows'
     assert page.locator('.showcase-hero [data-fire]').count()==0
     assert page.locator('.network [data-fire]').count()==4
     assert page.locator('.network #fire-result').count()==1

@@ -1,27 +1,23 @@
 /* V3 surfaces (Explorer, Benchmark, Continuity, time machine, Cypher inspector), built only on tokens.css. */
 
 /* Showcase: preserve the Cortex world, lead with the product and its real result. */
-/* Keep the Cortex composition, with a separate health row below copy and brain. */
-.showcase-hero .hero-copy h1 { font-size:clamp(24px,2.2vw,32px); line-height:1.32; max-width:none; margin-bottom:var(--space-5); }
-@media(min-width:1101px) {
- .showcase-hero .hero-copy { bottom:180px; width:min(480px,36%); }
- .showcase-hero .hero-copy h1 { max-width:480px; }
- .showcase-hero .brain-stage { bottom:140px; }
- .showcase-hero .showcase-stats { position:absolute; z-index:3; bottom:var(--space-6); left:40px; right:40px; }
-}
+/* Use the original Cortex hero: bright wordmark above the central brain, copy below-left.
+   Shared style.css owns that layout and its mobile stacking. */
+.showcase-hero .hero-copy h1 { font-size:clamp(24px,2.2vw,32px); line-height:1.18; max-width:none; margin-bottom:var(--space-5); }
+@media(min-width:1101px) { .showcase-hero .hero-copy h1 { max-width:480px; } }
 .showcase-hero h1 span { color:var(--ice); }
 .page-brain .bar nav { min-width:0; overflow-x:auto; }
 .page-brain .bar nav a { white-space:nowrap; }
 .page-assessment .page-head-copy { min-width:0; }
 .page-assessment .page-head h1 { font-size:clamp(24px,4.5vw,64px); max-width:none; overflow-wrap:anywhere; }
-.showcase-hero .statement { font-size:var(--text-base); line-height:1.65; max-width:42ch; margin-bottom:var(--space-6); }
-.showcase-story { margin:0; }
-.showcase-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--space-7); margin:0; }
-.showcase-stats>div { min-width:0; }
+.showcase-hero .statement { font-size:var(--text-lg); max-width:42ch; }
+.showcase-story { margin:var(--space-2) 0 var(--space-6); }
+.showcase-stats { display:flex; gap:var(--space-5); flex-wrap:wrap; margin:0; }
+.showcase-stats>div { flex:1 1 120px; }
 .showcase-stats dt { color:var(--ink-2); font-size:var(--text-sm); }
 .showcase-stats dd { margin:var(--space-2) 0 0; font-size:var(--text-xl); font-weight:700; font-variant-numeric:tabular-nums; }
 .showcase-stats dd span { color:var(--ink-2); font-size:var(--text-base); }
-.showcase-stats small { color:var(--ink-2); font-size:var(--text-sm); font-weight:500; margin-top:var(--space-2); }
+.showcase-stats small { color:var(--ink-3); font-size:var(--text-xs); font-weight:500; margin-top:var(--space-1); }
 .page-brain .network { grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr); }
 .network-copy .fire { margin:var(--space-5) 0; }
 .network-copy .fire-result { padding:var(--space-4) 0; }
@@ -63,18 +59,14 @@
 .continuity-bridge-panel { padding:var(--space-5); background:var(--panel-solid); border-radius:var(--r-card); align-self:start; }
 .continuity-bridge-panel p,#continuity-projection,#continuity-graph-status { font-size:var(--text-sm); }
 #continuity-canvas { height:440px; background:var(--frame); border-radius:var(--r-card); }
-@media(max-width:1100px) {
- .showcase-hero .hero-copy { padding:var(--space-6) var(--space-6) 0; }
- .showcase-hero .showcase-stats { padding:var(--space-6); gap:var(--space-5); }
-}
 @media(max-width:760px) {
- .showcase-hero .hero-copy { padding:var(--space-5); padding-bottom:0; }
- .showcase-hero .hero-copy h1 { font-size:clamp(24px,6vw,36px); max-width:none; line-height:1.32; }
+ .showcase-hero .hero-copy h1 { font-size:clamp(24px,6vw,36px); max-width:none; line-height:1.2; }
  .showcase-hero .statement { font-size:var(--text-base); }
- .showcase-hero .showcase-stats { grid-template-columns:minmax(0,1fr); padding:var(--space-6) var(--space-5); gap:var(--space-5); }
- .showcase-stats dd { display:flex; align-items:baseline; gap:var(--space-3); }
- .showcase-stats>div:first-child dd { gap:var(--space-1); }
- .showcase-stats small { margin:0; }
+ .showcase-story { margin:var(--space-2) 0 var(--space-5); }
+ .showcase-stats { gap:var(--space-3); }
+ .showcase-stats>div { flex-basis:80px; }
+ .showcase-stats dt { font-size:var(--text-xs); }
+ .showcase-stats small { font-size:var(--text-xs); }
  .page-brain .network { grid-template-columns:minmax(0,1fr); }
  .benchmark-result { gap:var(--space-4); margin:var(--space-6) 0; flex-wrap:wrap; }
  .benchmark-result strong { font-size:clamp(32px,9vw,54px); }
