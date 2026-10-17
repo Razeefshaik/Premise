@@ -303,3 +303,11 @@ historical. Existing system-record drift and decoration exceptions were not cano
 The finish review caught text touching the brain; a desktop-only heading measure restored clear
 separation. Fresh captures resolved that finding with no regressions: disposition **ship** for
 the scored heading-clearance correction.
+
+## Replay landing (GitHub Pages front door)
+
+The Pages replay now opens on the landing page instead of the Explorer. `index.html` is the landing and
+`explore.html` is the Explorer. Three.js is vendored under `static/vendor/three-0.160.0/`, and the live app
+uses the same local copy. The brain model loads relative to its module. `fire.js` uses the shared data
+source, and `window.premiseEntity` sends entity links to the recorded Explorer. `check_replay.py` covers
+the landing at 1440 and 390 and passed with zero external requests; `check_ui.py` passed on the live app.

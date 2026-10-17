@@ -38,7 +38,7 @@ async function main() {
   controls.addEventListener('start', () => stage.classList.add('touched'));
 
   // Brain mesh: compact indexed binary ('PBRN', counts, half-extent, int16 xyz, u16 indices)
-  const buffer = await (await fetch('/static/models/brain.bin')).arrayBuffer();
+  const buffer = await (await fetch(new URL('./models/brain.bin', import.meta.url))).arrayBuffer();
   const view = new DataView(buffer);
   const nv = view.getUint32(4, true), nt = view.getUint32(8, true);
   const packed = new Int16Array(buffer, 16, nv * 3);
@@ -299,7 +299,7 @@ async function main() {
   renderer.domElement.addEventListener('pointerup', event => {
     if (!down || Math.hypot(event.clientX - down[0], event.clientY - down[1]) > 5) return;
     const id = pick(event);
-    if (id) location.href = `/entities/${encodeURIComponent(id)}`;
+    if (id) location.href = window.premiseEntity(id);
   });
 
   // Size, visibility and the frame loop

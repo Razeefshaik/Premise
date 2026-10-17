@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from explorer_checks import assert_canvas_in_first_screen, assert_hypothetical_status, assert_continuity_names, assert_verdict_visible, assert_story_runs, assert_reduced_motion
-from showcase_checks import assert_benchmark, assert_continuity_controls
+from showcase_checks import assert_benchmark, assert_continuity_controls, assert_replay_landing
 
 
 def main():
@@ -22,6 +22,12 @@ def main():
         for width in (1440,390):
             page.set_viewport_size({'width':width,'height':900 if width==1440 else 844})
             page.goto(base+'/index.html',wait_until='networkidle')
+            assert_replay_landing(page)
+            page.screenshot(path=str(artifact/f'landing-{width}.png'),full_page=True)
+            page.locator('.showcase-story').click()
+            page.wait_for_function('window.premiseStory?.index>=0')
+            assert page.url.startswith(base+'/explore.html')
+            page.goto(base+'/explore.html',wait_until='networkidle')
             page.wait_for_function('window.premiseExplorer?.cy.nodes().length>5')
             assert page.locator('.v3-replay').is_visible()
             assert_canvas_in_first_screen(page)
@@ -41,7 +47,7 @@ def main():
             page.get_by_role('tab',name='Evidence',exact=True).click()
             page.evaluate('window.scrollTo(0,0)')
             page.screenshot(path=str(artifact/f'explore-{width}.png'),full_page=True)
-            page.goto(base+'/index.html?at=2027-03-02',wait_until='networkidle')
+            page.goto(base+'/explore.html?at=2027-03-02',wait_until='networkidle')
             page.wait_for_function('window.premiseExplorer?.cy.getElementById("G_DEDUPE").data("health")==="unknown"')
             page.goto(base+'/benchmark.html',wait_until='networkidle')
             page.locator('#benchmark-chart svg').wait_for()
@@ -53,7 +59,7 @@ def main():
             assert_continuity_controls(page)
             page.screenshot(path=str(artifact/f'continuity-{width}.png'),full_page=True)
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
-        assert_reduced_motion(browser, base+'/index.html')
+        assert_reduced_motion(browser, base+'/explore.html')
         browser.close()
     assert not errors,errors
     assert all(url.startswith(base) or url.startswith(('blob:','data:')) for url in network),network

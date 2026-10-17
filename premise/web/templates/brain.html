@@ -104,8 +104,8 @@
 {% block scripts %}
 <script src="/static/ask.js" defer></script>
 <script type="module" src="/static/time.js"></script>
-<script src="/static/fire.js" defer></script>
+<script type="module" src="/static/fire.js"></script>
 <script src="/static/plate.js" defer></script>
-<script type="importmap">{"imports": {"three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="importmap">{"imports": {"three": "/static/vendor/three-0.160.0/three.module.min.js", "three/addons/controls/OrbitControls.js": "/static/vendor/three-0.160.0/OrbitControls.js"}}</script>
 <script type="module" src="/static/brain3d.js"></script>
 {% endblock %}

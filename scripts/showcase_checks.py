@@ -51,3 +51,24 @@ def assert_landing(page):
     assert page.locator('.network [data-fire]').count()==4
     assert page.locator('.network #fire-result').count()==1
     expect(page.get_by_role('heading',name='What still holds?',exact=True)).to_be_visible()
+
+
+def assert_replay_landing(page):
+    """The recorded landing: brain drawn from local files, fire chips answered from recorded checks."""
+    expect(page.locator('.v3-replay')).to_be_visible()
+    expect(page.locator('#hero-title')).to_contain_text('Premise finds consequences.')
+    page.locator('#brain canvas').wait_for()
+    story=page.locator('.showcase-story')
+    assert story.get_attribute('href')=='./explore.html?story=1'
+    expect(page.locator('#health-title')).to_contain_text('Recorded from FalkorDB')
+    assert page.locator('.showcase-stats>div').count()==3
+    chips=page.locator('[data-fire]')
+    assert chips.count()==4
+    for i in range(chips.count()):
+        chips.nth(i).click()
+        page.locator('#fire-result .verdict-line').wait_for()
+        assert 'could not' not in page.locator('#fire-result').inner_text()
+        chips.nth(i).click()
+    assert all(a.startswith('./explore.html') for a in page.locator('.g-card').evaluate_all('els=>els.map(e=>e.getAttribute("href"))'))
+    assert page.locator('#ask-form').count()==0
+    assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')

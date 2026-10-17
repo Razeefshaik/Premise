@@ -92,7 +92,7 @@ async function apply() {
     card.classList.add('is-' + n.health);
     const badge = card.querySelector('.badge');
     if (badge) badge.replaceWith(window.premiseBadge(n.health));
-    card.href = '/explore?focus=' + encodeURIComponent(n.id) + '&at=' + date.value;
+    card.href = (replay ? './explore.html' : '/explore') + '?focus=' + encodeURIComponent(n.id) + '&at=' + date.value;
     for (const p of card.querySelectorAll('.prereq,.dots,.g-foot')) p.hidden = true;
   }
 }

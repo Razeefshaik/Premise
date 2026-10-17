@@ -295,6 +295,7 @@ Record a `HealthSnapshot {rev, at_ms, statuses_json}` at each ingest, in operati
 - The explorer JS reads from a data source interface: `LiveSource` (fetch `/api/...`) or `ReplaySource` (fetch `site/data/...json`). The same UI serves both.
 - A banner on every page: **"Replay of recorded FalkorDB results. Run locally for live checks."** Show Cypher still shows the recorded queries and timings.
 - A GitHub Actions workflow builds and deploys `site/` to GitHub Pages on pushes to `main`.
+- `index.html` is the landing page (the 3D brain), rendered by the app from the same fresh graph. Three.js 0.160.0 and the brain model are served locally, so the site makes no external requests. The fire chips use recorded `/api/check` results, entity links open the recorded Explorer (`explore.html?focus=ID`), and Ask is replaced by a note that it needs a local run.
 - The README top links to it.
 - **Test:** the export runs, every referenced JSON file exists, and the replay page loads with no console errors.
 

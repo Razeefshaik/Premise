@@ -179,8 +179,8 @@
       cell.addEventListener('pointerleave', untrace);
       cell.addEventListener('focus', () => trace(id));
       cell.addEventListener('blur', untrace);
-      cell.addEventListener('click', () => { location.href = `/entities/${encodeURIComponent(id)}`; });
-      cell.addEventListener('keydown', event => { if (event.key === 'Enter') location.href = `/entities/${encodeURIComponent(id)}`; });
+      cell.addEventListener('click', () => { location.href = window.premiseEntity(id); });
+      cell.addEventListener('keydown', event => { if (event.key === 'Enter') location.href = window.premiseEntity(id); });
     }
   }
 

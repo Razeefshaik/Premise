@@ -66,6 +66,10 @@ window.premiseMotion = {
   token: name => getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim(),
 };
 
+// Entity pages exist only on the live app; the replay opens the same node in the recorded Explorer.
+window.premiseEntity = id => document.documentElement.dataset.source === 'replay'
+  ? `./explore.html?focus=${encodeURIComponent(id)}` : `/entities/${encodeURIComponent(id)}`;
+
 window.premiseIcon = name => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'i');

@@ -1,5 +1,7 @@
 // "Fire a change": posts a saved scenario to the read-only /api/check, reports the verdict in the HUD,
 // lights the affected guarantee cards, and broadcasts the result so the 3D brain and the 2D plate react together.
+import {source as api, replay} from './source.js';
+
 (() => {
   const source = document.getElementById('plate-data');
   const out = document.getElementById('fire-result');
@@ -36,7 +38,7 @@
     line.append(text);
     const advice = document.createElement('p');
     advice.textContent = check.advice;
-    const url = new URL('/what-if', location.origin);
+    const url = new URL(replay ? './explore.html' : '/what-if', location.href);
     for (const c of changes) url.searchParams.append('set', `${c.fact}=${JSON.stringify(c.value)}`);
     const link = document.createElement('a');
     link.href = url.pathname + url.search;
@@ -56,13 +58,11 @@
     if (active === preset.id) return reset();
     active = preset.id;
     buttons.forEach(b => b.setAttribute('aria-pressed', String(b === button)));
-    const changes = Object.entries(preset.values).map(([fact, value]) => ({fact, value}));
+    const changes = Object.entries(preset.values).sort(([a], [b]) => a.localeCompare(b)).map(([fact, value]) => ({fact, value}));
     out.replaceChildren(Object.assign(document.createElement('p'), {textContent: 'Tracing the change through the graph…'}));
     try {
-      const response = await fetch('/api/check', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({changes})});
-      const check = await response.json();
+      const check = await api.request('/api/check', {}, {changes}).catch(() => { throw new Error('The graph could not check this change.'); });
       if (active !== preset.id) return;
-      if (!response.ok) throw new Error('The graph could not check this change.');
       report(check, changes);
       markCards(check);
       emit({check, changes});
