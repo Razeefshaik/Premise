@@ -1,7 +1,8 @@
 # V3 phase status
 
 Design: [Premise_V3_Design.md](Premise_V3_Design.md). V3 is roadmap Phase A.
-Each phase has its own branch and local commits. No V3 merge or push has been performed.
+Each phase has its own branch and local commits. The agent did not merge or push the original V3 build.
+The 2026-10-17 Explorer correction and its checks are recorded in [V3_EXPLORER_FIXES.md](V3_EXPLORER_FIXES.md).
 
 | Phase | Status | Branch |
 | --- | --- | --- |
