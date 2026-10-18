@@ -30,6 +30,15 @@ For the <b>full version</b> (live What if checks, Ask the company, PR assessment
 
 </div>
 
+## Two tracks, one brain
+
+| | Track | What Premise does |
+| --- | --- | --- |
+| **Part 1** | **Company Brain** | Ingest workers and v2 listening workers build one FalkorDB graph of decisions, guarantees, assumptions, config facts, people, teams, services and sources. It answers with paths and citations, flags accountability gaps, and keeps itself current through grounded, human merged proposals. |
+| **Part 2** | **Agents That Act on Connected Data** | Built on that brain: on every pull request it computes the blast radius of the change, posts BLOCKED, NEEDS_REVIEW or CLEAR_WITHIN_SCOPE with the broken chain and the right reviewers, and opens a fix PR only after the graph proves the fix complete. Coding agents get the same check through MCP. |
+
+The agent is only possible because of the brain: it knows what every promise rests on.
+
 ---
 
 ## Contents
