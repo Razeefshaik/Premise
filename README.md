@@ -10,7 +10,7 @@
 ![Red team 35/35 safe](https://img.shields.io/badge/red%20team-35%2F35%20safe-2ea043)
 ![Python 3.12](https://img.shields.io/badge/python-3.12-3776ab)
 
-### [▶&nbsp; Try the live replay](https://razeefshaik.github.io/Premise/) &nbsp;·&nbsp; [🎬&nbsp; Watch the demo](https://razeefshaik.github.io/Premise/explore.html?story=1) &nbsp;·&nbsp; [🔴→🟢&nbsp; See a real PR go red, then green](#the-real-github-flow)
+### [🎬&nbsp; Watch the 7 minute demo](https://youtu.be/Ki3UHkeXfrE) &nbsp;·&nbsp; [▶&nbsp; Try the live replay](https://razeefshaik.github.io/Premise/) &nbsp;·&nbsp; [📝&nbsp; Read the blog](https://dev.to/razeef_shaik/search-finds-documents-my-graph-finds-consequences-434o) &nbsp;·&nbsp; [🔴→🟢&nbsp; See a real PR go red, then green](#the-real-github-flow)
 
 <sub>The live replay is a <b>read-only recording</b> of real FalkorDB results, so anyone can explore it without installing anything.<br>
 For the <b>full version</b> (live What if checks, Ask the company, PR assessments, verified fix PRs and the MCP server for coding agents),
@@ -99,6 +99,8 @@ includes reviewer evidence counts, requirement paths and source citations.
 ## When a change arrives
 
 Because the brain knows what every promise rests on, it can tell what a change will break.
+
+**Its blast radius, computed before merge.** A changed fact breaks an assumption, and the failure climbs `REQUIRES` (up to 6 hops) to every guarantee that depends on it. [`guarantee_impact.cypher`](premise/graph/queries/guarantee_impact.cypher) then returns the accepted decisions that provide or rely on each broken guarantee, the services they govern with their criticality tiers, and the services that call them through `DEPENDS_ON` (up to 3 hops). It is a blast radius for a *change*, caught at pull request time, not for an outage. An empty result is never treated as safety: the passing verdict is `CLEAR_WITHIN_SCOPE`, and an expired attestation makes a guarantee unknown, never healthy.
 
 | 🔎 Trace | 🛑 Decide | 🩹 Heal |
 | :-- | :-- | :-- |
