@@ -18,7 +18,9 @@ Checked against official documentation on 18 October 2026:
 - [FalkorDB plans](https://www.falkordb.com/plans/) advertises a Free plan, but currently
   lists TLS as excluded. Check the actual instance connection screen. Website HTTPS does
   not encrypt the separate Render-to-database connection. Do not claim transport security
-  if that endpoint only supports plaintext; use an available TLS endpoint or retain the replay.
+  if that endpoint only supports plaintext. The user confirmed that their Free instance has
+  no TLS and explicitly chose this tradeoff for an isolated fictional-data demo. Use a
+  unique password, no private company data, and keep TLS disabled for this endpoint.
 - [Hugging Face Spaces](https://huggingface.co/docs/hub/spaces-overview) currently requires
   a paid plan to create a Docker Space, despite CPU Basic having no hourly charge.
 
@@ -172,8 +174,29 @@ ADR-012 deterministic Ask with citations, and disabled actions (403).
 
 - Focused public/config plus existing web/preflight/continuity tests: **62 passed**.
 - Public/config tests after adding the request-context write boundary: **24 passed**.
-- Full suite: running; result pending.
-- Twelve scenarios: pending.
-- Docker image build: **passed locally**; container smoke pending.
-- FalkorDB Cloud credentials/instance and hosted endpoint: not provided or tested yet.
+- Full suite: **373 passed in 415.89 seconds (6 minutes 55 seconds)**.
+- Twelve scenarios: **12 PASS** against a separate local graph.
+- Docker image build: **passed locally** on the final code image.
+- Public container API smoke: **PASS** (port supplied as 10000, published locally on 8017).
+  Node/edge counts stayed **284 / 510**; the fact hash remained
+  `e072844bd6e1b5ea305e7d60400b02c2127dd34ccbe6e6eb80dae200cf541185`.
+- Public browser smoke: **PASS** at 1440x900 and 390x844: visible canvas/verdict,
+  G_DEDUPE labelled broken, complete preset-repair story, zero page errors.
+- User confirmed a FalkorDB Free instance without TLS. Credentials and hosted endpoint have not been provided or tested.
 - Nothing pushed; README live link unchanged. Local tests do not prove cloud connectivity.
+
+## Final local diff for review
+
+- Optional database username/password and verified TLS, propagated to secondary graphs
+  and Redis administration clients. Local defaults are preserved.
+- Public request boundary, deterministic Ask, overlay-only checks, disabled action paths,
+  bounded bodies/rates/concurrency, public banner, and startup-only continuity projections.
+- Restart-safe fixture ingestion and labelled example assessments; host-provided HTTP port.
+- Public story uses the bundled repair preset, with desktop/mobile canvas space for the banner.
+- Regression tests, public API/browser smoke scripts, environment example and this route audit.
+- **No changes to verdict evaluation code or verdict Cypher.** No README live link added.
+
+Review the complete patch locally with `git diff main...deploy/live`. The ignored review
+copy is `.runtime/deploy-live.diff`; it must not be committed. After review, the user can
+publish only this branch with `git push -u origin deploy/live` and select it in Render.
+Main does not need to be merged for this deployment.
