@@ -43,7 +43,7 @@ def projection(client, person):
     return result,[{**q,'graph':graph.graph_name} for q in trace.entries]
 
 
-def create_continuity_router(client, at_ms=None):
+def create_continuity_router(client, at_ms=None, *, startup_cache=None):
     router=APIRouter(route_class=GraphRoute)
 
     @router.get('/api/continuity')
@@ -73,7 +73,13 @@ def create_continuity_router(client, at_ms=None):
                     current=active or [c.person for c in candidates]
                     if person in current:
                         routing.append({'id':d['id'],'before':current,'after':remaining or [c.person for c in alternatives]})
-                analysis,projected=projection(client,person)
+                if startup_cache is None:
+                    analysis,projected=projection(client,person)
+                else:
+                    cached = startup_cache.get(person)
+                    if not cached or cached[0] != state:
+                        raise GraphUnavailable('continuity snapshot unavailable; restart the demo')
+                    _, analysis, projected = cached
                 if client.named('graph_state')[0]!=state:raise GraphUnavailable('revision changed; retry')
                 return {'graph_rev':state['rev'],'person':person,'people':people,'hypothetical':True,
                         'orphaned_decisions':orphaned,'unverified_assumptions':unverified,

@@ -82,10 +82,14 @@ def summary(row, local):
             "age": age(row.get("created_ms")), "private": private}
 
 
-def create_app(staging: Staging, decision, knowledge, model_root, bind="127.0.0.1"):
+def create_app(staging: Staging, decision, knowledge, model_root, bind="127.0.0.1", config=None):
     if len({staging.c.graph_name, decision.graph_name, knowledge.graph_name}) != 3:
         raise ValueError("review graphs must be distinct")
     app = FastAPI(title="Premise v2 review", docs_url=None, redoc_url=None, openapi_url=None)
+    from premise.config import settings
+    from premise.public_demo import PublicDemoMiddleware
+    if (config or settings()).public_demo:
+        app.add_middleware(PublicDemoMiddleware, allowed_posts=())
     app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")
     templates = Jinja2Templates(directory=HERE / "templates")
     secret = secrets.token_bytes(32)

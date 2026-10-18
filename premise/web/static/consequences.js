@@ -14,6 +14,7 @@ const factsData = await source.request('/api/graph/facts');
 
 el(root, 'h2', 'What if');
 el(root, 'p', 'Hypothetical. Nothing is stored or posted.', 'v3-hypothetical');
+if (document.body.dataset.publicDemo === 'true') el(root, 'p', 'Repair search is disabled here. Try S1_FIXED to check the bundled repair as another hypothetical proposal.');
 if (replay) el(root, 'p', 'Recorded presets and verified repairs. Run locally to try arbitrary values.');
 const presets = el(root, 'div', '', 'preset-row');
 for (const preset of factsData.presets) {

@@ -58,6 +58,11 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("reset", help="delete the v2 staging graph and stream (never the decision graph of v1)")
     args = ap.parse_args(argv)
 
+    if s.public_demo and args.cmd != "registry-check":
+        from premise.public_demo import DISABLED
+        print(DISABLED, file=sys.stderr)
+        return 2
+
     if args.cmd == "registry-check":
         errors = check_relations(Ext.load(args.model).relations)
         print("registry ok" if not errors else "\n".join(errors))

@@ -60,6 +60,9 @@ class GraphClient:
         return [dict(zip(names, row)) for row in result.result_set]
 
     def write(self, cypher: str, params: dict | None = None) -> list[dict[str, Any]]:
+        from ..public_demo import read_only_request, PublicDemoDisabled
+        if read_only_request.get():
+            raise PublicDemoDisabled()
         try:
             return self._to_dicts(self.graph.query(cypher, params or {}))
         except _OUTAGE as exc:
@@ -84,6 +87,9 @@ class GraphClient:
         return self.read(query_text(name), params)
 
     def delete_graph(self) -> None:
+        from ..public_demo import read_only_request, PublicDemoDisabled
+        if read_only_request.get():
+            raise PublicDemoDisabled()
         try:
             self.graph.delete()
         except Exception:

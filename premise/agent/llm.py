@@ -7,6 +7,8 @@ from anthropic import Anthropic
 
 
 def make_adapter(settings, graph=None):
+    from ..public_demo import require_private
+    require_private(settings)
     if settings.llm_provider == "codex-cli":
         from .codex_cli import CodexAdapter
         return CodexAdapter(settings.codex_binary, settings.codex_model, graph, settings.codex_timeout_seconds)

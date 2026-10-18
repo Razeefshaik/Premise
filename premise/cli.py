@@ -60,6 +60,11 @@ def main(argv: list[str] | None = None) -> int:
     p_reset.add_argument("--demo",action="store_true",required=True)
     args = ap.parse_args(argv)
 
+    if s.public_demo and args.cmd not in {"health", "ask", "check", "serve"}:
+        from .public_demo import DISABLED
+        print(DISABLED, file=sys.stderr)
+        return 2
+
     client = GraphClient.from_settings(s, host=args.host, port=args.port, graph_name=args.graph)
     if args.cmd == 'redteam':
         from .redteam import report
@@ -98,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
                     parsed = raw
                 changes.append({'fact': fact, 'value': parsed})
             files = {repo_path(p): (Path(args.repo) / p).read_text(encoding='utf-8') for p in args.files}
-            result = check_proposal(client, changes=changes or None, files=files or None)
+            result = check_proposal(client, changes=changes or None, files=files or None, include_fixes=not s.public_demo)
         except (ValueError, OSError, GraphUnavailable) as exc:
             print(json.dumps({'verdict': 'ERROR', 'error': str(exc)}))
             return 1
@@ -108,7 +113,7 @@ def main(argv: list[str] | None = None) -> int:
         import uvicorn
         from .web.app import create_app
         from dataclasses import replace
-        uvicorn.run(create_app(client,replace(s,graph_name=args.graph,falkordb_host=args.host,falkordb_port=args.port)),host=args.bind,port=args.web_port)
+        uvicorn.run(create_app(client,replace(s,graph_name=args.graph,falkordb_host=args.host,falkordb_port=args.port)),host=args.bind,port=args.web_port, proxy_headers=False)
         return 0
     if args.cmd == "mcp":
         from .mcp_server import create_server

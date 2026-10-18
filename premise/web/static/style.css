@@ -426,3 +426,6 @@ body > footer > span { display: block; margin-bottom: 6px; }
   .brain-stage { height: 360px; margin-top: -20px; }
   .specimen-stage { aspect-ratio: 4 / 5; }
 }
+
+/* Public deployment mode: shared by every rendered application page. */
+.public-demo-banner{padding:8px 16px;text-align:center;font-size:12px;background:#17212b;color:#f5f5fa;border-bottom:1px solid #46546a}.public-demo-banner a{color:#7cf0c8;text-decoration:underline}
