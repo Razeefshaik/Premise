@@ -10,7 +10,19 @@
 ![Red team 35/35 safe](https://img.shields.io/badge/red%20team-35%2F35%20safe-2ea043)
 ![Python 3.12](https://img.shields.io/badge/python-3.12-3776ab)
 
-### [🌐&nbsp; Live app on FalkorDB Cloud](https://premise-43eh.onrender.com/) &nbsp;·&nbsp; [🎬&nbsp; Watch the 7 minute demo](https://youtu.be/Ki3UHkeXfrE) &nbsp;·&nbsp; [▶&nbsp; Recorded replay](https://razeefshaik.github.io/Premise/) &nbsp;·&nbsp; [📝&nbsp; Blog](https://dev.to/razeef_shaik/search-finds-documents-my-graph-finds-consequences-434o) &nbsp;·&nbsp; [🔴→🟢&nbsp; Real PR, red then green](#the-real-github-flow)
+<p>
+  <a href="https://premise-43eh.onrender.com/" title="Live app on FalkorDB Cloud"><b>Live app</b></a>
+  &nbsp; · &nbsp;
+  <a href="https://youtu.be/Ki3UHkeXfrE"><b>Watch demo</b></a>
+  &nbsp; · &nbsp;
+  <a href="https://razeefshaik.github.io/Premise/"><b>Recorded replay</b></a>
+</p>
+
+<p>
+  <a href="https://dev.to/razeef_shaik/search-finds-documents-my-graph-finds-consequences-434o">Read the blog</a>
+  &nbsp; · &nbsp;
+  <a href="#the-real-github-flow">See the GitHub PR workflow</a>
+</p>
 
 <sub>The live replay is a <b>read-only recording</b> of real FalkorDB results, so anyone can explore it without installing anything.<br>
 For the <b>full version</b> (live What if checks, Ask the company, PR assessments, verified fix PRs and the MCP server for coding agents),
