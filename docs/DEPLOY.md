@@ -107,6 +107,18 @@ Behind Render, requests may therefore share a proxy's bucket. This deliberately 
 conservative limit over spoofable per-visitor identity. A verified trusted-proxy policy is
 needed before increasing traffic or using multiple workers.
 
+## Keepalive
+
+[Keep live demo awake](../.github/workflows/keepalive.yml) requests the public graph
+overview every ten minutes and can also be run manually from GitHub Actions. It needs no
+repository checkout, credentials or token permissions. A successful request prints `awake`.
+The supplied workflow emits a warning if all requests fail, so a green job alone does not
+prove the service responded; check its log for `awake`.
+
+GitHub scheduled jobs are best effort and may be delayed or dropped during high load;
+this reduces idle time but is not an uptime guarantee. See
+[GitHub's schedule documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).
+
 ## Route audit
 
 | Method and route | Public behavior |
