@@ -10,7 +10,7 @@
 ![Red team 35/35 safe](https://img.shields.io/badge/red%20team-35%2F35%20safe-2ea043)
 ![Python 3.12](https://img.shields.io/badge/python-3.12-3776ab)
 
-### [🎬&nbsp; Watch the 7 minute demo](https://youtu.be/Ki3UHkeXfrE) &nbsp;·&nbsp; [▶&nbsp; Try the live replay](https://razeefshaik.github.io/Premise/) &nbsp;·&nbsp; [📝&nbsp; Read the blog](https://dev.to/razeef_shaik/search-finds-documents-my-graph-finds-consequences-434o) &nbsp;·&nbsp; [🔴→🟢&nbsp; See a real PR go red, then green](#the-real-github-flow)
+### [🌐&nbsp; Live app on FalkorDB Cloud](https://premise-43eh.onrender.com/) &nbsp;·&nbsp; [🎬&nbsp; Watch the 7 minute demo](https://youtu.be/Ki3UHkeXfrE) &nbsp;·&nbsp; [▶&nbsp; Recorded replay](https://razeefshaik.github.io/Premise/) &nbsp;·&nbsp; [📝&nbsp; Blog](https://dev.to/razeef_shaik/search-finds-documents-my-graph-finds-consequences-434o) &nbsp;·&nbsp; [🔴→🟢&nbsp; Real PR, red then green](#the-real-github-flow)
 
 <sub>The live replay is a <b>read-only recording</b> of real FalkorDB results, so anyone can explore it without installing anything.<br>
 For the <b>full version</b> (live What if checks, Ask the company, PR assessments, verified fix PRs and the MCP server for coding agents),
@@ -415,6 +415,8 @@ docker compose exec app premise demo
 ```
 
 Open **[localhost:8000](http://localhost:8000)**. No API keys are needed for the local demo. Real GitHub actions require explicit setup and a sandbox token: [publishing guide](docs/PUBLISH.md).
+
+The public live app is read only: GitHub actions, fix search, language models and v2 writes are disabled. Run locally for those features; see the [deployment guide](docs/DEPLOY.md).
 
 **Stack:** Python · FastAPI · FalkorDB · Cypher · GitHub API · MCP
 
