@@ -79,7 +79,7 @@ def run(client, *, questions=None, encoder=None, download=False):
     passages = client.read("MATCH (p:Passage)-[:PART_OF]->(s:Source {kind:'adr'}) WHERE p.retired_rev IS NULL RETURN p.id AS id,p.text AS text,s.decision AS decision ORDER BY id")
     if not passages:
         raise ValueError('No indexed ADR passages')
-    vector = GraphClient(client.host, client.port, 'premise_bench_vectors_' + uuid.uuid4().hex)
+    vector = client.sibling('premise_bench_vectors_' + uuid.uuid4().hex)
     now = scenario_now(load_scenarios(ROOT / 'scenarios/scenarios.yaml'))
     rows, setup_queries = [], []
     try:

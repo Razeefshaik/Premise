@@ -58,6 +58,11 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("reset", help="delete the v2 staging graph and stream (never the decision graph of v1)")
     args = ap.parse_args(argv)
 
+    if s.public_demo and args.cmd != "registry-check":
+        from premise.public_demo import DISABLED
+        print(DISABLED, file=sys.stderr)
+        return 2
+
     if args.cmd == "registry-check":
         errors = check_relations(Ext.load(args.model).relations)
         print("registry ok" if not errors else "\n".join(errors))
@@ -82,14 +87,14 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _execute(args: argparse.Namespace, s) -> int:
-    r = redis.Redis(host=args.host, port=args.port)
-    staging = GraphClient(args.host, args.port, args.staging_graph)
-    decision = GraphClient(args.host, args.port, args.decision_graph)
+    r = redis.Redis(host=args.host, port=args.port, **s.database_options)
+    staging = GraphClient.from_settings(s, host=args.host, port=args.port, graph_name=args.staging_graph)
+    decision = GraphClient.from_settings(s, host=args.host, port=args.port, graph_name=args.decision_graph)
     if args.cmd == "serve":
         import uvicorn
         from .staging import Staging
         from .web import create_app
-        app = create_app(Staging(staging), decision, GraphClient(args.host, args.port, args.knowledge_graph),
+        app = create_app(Staging(staging), decision, GraphClient.from_settings(s, host=args.host, port=args.port, graph_name=args.knowledge_graph),
                          args.model, bind=args.bind)
         uvicorn.run(app, host=args.bind, port=args.web_port, proxy_headers=False)
         return 0
@@ -99,7 +104,7 @@ def _execute(args: argparse.Namespace, s) -> int:
         try:
             sha = require_merged_model(args.model)
             ingest(decision, args.model, sha)
-            result = load_knowledge(GraphClient(args.host, args.port, args.knowledge_graph), decision, args.model, args.protected_graphs)
+            result = load_knowledge(GraphClient.from_settings(s, host=args.host, port=args.port, graph_name=args.knowledge_graph), decision, args.model, args.protected_graphs)
         except (ValueError, OSError) as exc:
             print(str(exc), file=sys.stderr)
             return 2
@@ -113,13 +118,13 @@ def _execute(args: argparse.Namespace, s) -> int:
     if args.cmd == "eval":
         if args.gold:
             from .gold import run_gold, write_markdown
-            report = run_gold(args.host, args.port, args.model, str(__import__("pathlib").Path(args.fixtures) / "gold"))
+            report = run_gold(args.host, args.port, args.model, str(__import__("pathlib").Path(args.fixtures) / "gold"), connection_options=s.database_options)
             if args.write:
                 write_markdown(report, args.write)
             print(json.dumps(report, indent=2, default=str))
             return 1 if report["floor_failures"] else 0
         from .evaluate import run_eval
-        report = run_eval(r, args.host, args.port, args.model, args.fixtures)
+        report = run_eval(r, args.host, args.port, args.model, args.fixtures, connection_options=s.database_options)
         if args.write:
             from .evaluate import write_markdown
             write_markdown(report, args.write)

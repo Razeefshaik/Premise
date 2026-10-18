@@ -1,7 +1,7 @@
 {% extends 'base.html' %}{% from '_ui.html' import icon %}
 {% block title %}Decision Explorer · Premise{% endblock %}
 {% block page %}v3-app xp-page{% endblock %}
-{% block head %}<link rel="stylesheet" href="{{ url_for('static',path='v3.css') }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/v3.css">{% endblock %}
 {% block content %}
 <div class="xp">
   <header class="xp-head">
@@ -68,4 +68,4 @@
   <details id="cypher-drawer" class="v3-cypher"><summary>{{ icon('braces') }}<span>Show Cypher</span> <span id="cypher-count"></span></summary><div id="cypher-queries"></div></details>
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static',path='vendor/cytoscape-3.30.4.min.js') }}"></script><script type="module" src="{{ url_for('static',path='explore.js') }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/cytoscape-3.30.4.min.js"></script><script type="module" src="/static/explore.js"></script>{% endblock %}

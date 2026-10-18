@@ -20,6 +20,7 @@ from ..agent.render import mermaid, provenance, render_comment
 from ..github.store import Store
 from ..reasoning.preflight import ChangeArgs, FileArgs
 from ..reasoning.models import AssessmentResult, GuaranteeResult
+from ..public_demo import PublicDemoMiddleware, PublicDemoDisabled, DISABLED, BANNER
 
 ROOT = Path(__file__).parent
 templates = Jinja2Templates(directory=str(ROOT/"templates"))
@@ -88,12 +89,20 @@ class Question(BaseModel):
 
 def create_app(client=None, config=None, *, graph_api_at_ms=None, graph_node_cap=300):
     s = config or get_settings()
-    graph = client or GraphClient(s.falkordb_host,s.falkordb_port,s.graph_name)
+    graph = client or GraphClient.from_settings(s)
     tools, store = GraphTools(graph), Store(graph)
+    continuity_cache = {} if s.public_demo else None
 
     @asynccontextmanager
     async def lifespan(app):
         task, github = None, None
+        if s.public_demo and graph_ready(graph)[0]:
+            # Native descriptive algorithms run once at startup, never on a public request.
+            from .continuity import projection
+            revision = graph.named('graph_state')[0]
+            for row in graph.read('MATCH (p:Person) WHERE p.retired_rev IS NULL RETURN p.id AS id'):
+                analysis, queries = projection(graph, row['id'])
+                continuity_cache[row['id']] = (revision, analysis, [{**q, 'recorded_at_startup': True} for q in queries])
         if s.poll_enabled and s.github_token:
             from ..github.api import GitHub
             from ..github.gitrepo import GitRepo
@@ -109,11 +118,32 @@ def create_app(client=None, config=None, *, graph_api_at_ms=None, graph_node_cap
         if github:
             github.close()
 
-    app = FastAPI(title="Premise", lifespan=lifespan)
+    app = FastAPI(title="Premise", lifespan=lifespan,
+                  docs_url=None if s.public_demo else '/docs', redoc_url=None if s.public_demo else '/redoc')
+    app.state.public_demo = s.public_demo
+    if s.public_demo:
+        app.add_middleware(PublicDemoMiddleware)
+        from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+
+        def public_docs(response):
+            banner = f'<aside style="padding:12px;text-align:center;background:#17212b;color:white">{BANNER}</aside>'
+            return HTMLResponse(response.body.decode().replace('<body>', '<body>' + banner))
+
+        @app.get('/docs', include_in_schema=False)
+        def docs():
+            return public_docs(get_swagger_ui_html(openapi_url='/openapi.json', title='Premise API'))
+
+        @app.get('/redoc', include_in_schema=False)
+        def redoc():
+            return public_docs(get_redoc_html(openapi_url='/openapi.json', title='Premise API'))
+
+    @app.exception_handler(PublicDemoDisabled)
+    async def disabled(request, exc):
+        return JSONResponse({'detail': DISABLED}, status_code=403)
     from .graph_api import create_graph_router
     app.include_router(create_graph_router(graph, at_ms=graph_api_at_ms, node_cap=graph_node_cap))
     from .continuity import create_continuity_router
-    app.include_router(create_continuity_router(graph, at_ms=graph_api_at_ms))
+    app.include_router(create_continuity_router(graph, at_ms=graph_api_at_ms, startup_cache=continuity_cache))
     app.mount("/static",StaticFiles(directory=str(ROOT/"static")),name="static")
 
     @app.exception_handler(GraphUnavailable)
@@ -154,9 +184,14 @@ def create_app(client=None, config=None, *, graph_api_at_ms=None, graph_node_cap
             return {**response, 'queries': recorder.entries}
 
     def checked_change(payload):
+        arguments = payload.model_dump(exclude_unset=True)
+        if s.public_demo:
+            if arguments.get('include_fixes'):
+                raise PublicDemoDisabled()
+            arguments['include_fixes'] = False
         try:
             result = tools.call('check_change' if isinstance(payload, ChangeArgs) else 'check_files',
-                                payload.model_dump(exclude_unset=True))
+                                arguments)
         except ValueError as exc:
             raise HTTPException(422, 'Invalid hypothetical proposal') from exc
         if any(r['code'] == 'R_UNTRACKED' for r in result['reasons']):

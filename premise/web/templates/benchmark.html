@@ -26,6 +26,6 @@
     <div class="v3-table"><table><thead><tr><th scope="col">Test subset</th><th scope="col">System</th><th scope="col">k</th><th scope="col">Precision</th><th scope="col">Recall</th><th scope="col">F1</th><th scope="col">Exact</th><th scope="col">p50 ms</th><th scope="col">p95 ms</th></tr></thead><tbody id="benchmark-rows"></tbody></table></div>
   </details>
   <details id="cypher-drawer" class="v3-cypher"><summary>Show recorded Cypher <span id="cypher-count"></span></summary><div id="cypher-queries"></div></details>
-</div><link rel="stylesheet" href="{{ url_for('static',path='v3.css') }}">
+</div><link rel="stylesheet" href="/static/v3.css">
 {% endblock %}
-{% block scripts %}<script type="module" src="{{ url_for('static',path='benchmark.js') }}"></script>{% endblock %}
+{% block scripts %}<script type="module" src="/static/benchmark.js"></script>{% endblock %}

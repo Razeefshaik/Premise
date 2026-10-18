@@ -7,6 +7,8 @@ const $ = id => document.getElementById(id);
 const bar = $('story-bar'), caption = $('story-caption'), progress = $('story-progress'), count = $('story-count');
 const playButton = $('story-play'), pauseButton = $('story-pause');
 const preset = whatIf.presets.find(p => p.id === 'S1');
+const publicDemo = document.body.dataset.publicDemo === 'true';
+const repairPreset = whatIf.presets.find(p => p.id === 'S1_FIXED');
 const FORECAST = '2027-03-02';
 const pretty = value => new Date(value).toLocaleDateString('en-GB', {day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC'});
 const list = items => items.length > 1 ? items.slice(0, -1).join(', ') + ' and ' + items.at(-1) : items[0] || '';
@@ -39,12 +41,12 @@ const steps = [
     async play({instant}) { const ids = ctx.result.decisions.map(d => d.id); explorer.cy.elements().addClass('faded'); for (const id of ids) explorer.cy.getElementById(id).closedNeighborhood().removeClass('faded'); explorer.select(ids.includes('ADR-012') ? 'ADR-012' : ids[0]); await explorer.fit(explorer.cy.collection(ids.map(id => explorer.cy.getElementById(id))).closedNeighborhood(), {instant, padding: 60}); },
   },
   {
-    caption: () => { const fix = ctx.result.verified_fixes[0]; return fix ? `It has already verified a complete fix: ${Object.entries(fix.changes).map(([k, v]) => `${k} = ${v}`).join(' and ')}.` : 'No verified fix was returned for this change.'; },
+    caption: () => { const fix = ctx.result.verified_fixes[0]; return publicDemo ? 'Repair search is disabled in the public demo. Next, test the bundled repair preset as another hypothetical change.' : fix ? `It has already verified a complete fix: ${Object.entries(fix.changes).map(([k, v]) => `${k} = ${v}`).join(' and ')}.` : 'No verified fix was returned for this change.'; },
     async play({instant}) { explorer.unspotlight(); await explorer.fit(undefined, {instant}); document.querySelector('#explorer-verdict .metal')?.classList.add('pulse'); },
   },
   {
-    async prepare({instant}) { const fix = ctx.result.verified_fixes[0]; ctx.fixRun = await whatIf.stage({...preset.values, ...(fix?.changes || {})}, {instant}); ctx.fixed = ctx.fixRun?.result; },
-    caption: () => `Applied as a proposal: the graph heals in reverse order. Verdict: ${ctx.fixed?.verdict === 'CLEAR_WITHIN_SCOPE' ? 'CLEAR' : ctx.fixed?.verdict}.`,
+    async prepare({instant}) { const fix = ctx.result.verified_fixes[0]; ctx.fixRun = await whatIf.stage({...preset.values, ...(publicDemo ? repairPreset?.values || {} : fix?.changes || {})}, {instant}); ctx.fixed = ctx.fixRun?.result; },
+    caption: () => `${publicDemo ? 'Bundled repair preset checked as a hypothetical proposal' : 'Applied as a proposal'}: the graph heals in reverse order. Verdict: ${ctx.fixed?.verdict === 'CLEAR_WITHIN_SCOPE' ? 'CLEAR' : ctx.fixed?.verdict}.`,
     async play() { await ctx.fixRun.all(); },
   },
   {

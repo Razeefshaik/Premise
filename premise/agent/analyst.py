@@ -33,6 +33,8 @@ def row_answer(name, rows):
 def answer_question(tools, question, settings=None, adapter=None):
     if not isinstance(question,str) or not question.strip() or len(question)>2000:
         raise ValueError("Question must contain 1 to 2000 characters")
+    if settings and settings.public_demo:
+        adapter = None
     tools.guard()
     calls = []
     def dispatch(name,args):

@@ -76,6 +76,8 @@ class FixSession:
 
 
 def augment_fixes(client, result, settings, adapter=None):
+    from ..public_demo import require_private
+    require_private(settings)
     if not any(a.state == "violated" for a in result.assumptions) or (not settings.llm_enabled and adapter is None):
         return
     session = FixSession(client, result)

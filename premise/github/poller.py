@@ -16,6 +16,8 @@ log = logging.getLogger(__name__)
 
 class Pipeline:
     def __init__(self, client, github, gitrepo, settings):
+        from ..public_demo import require_private
+        require_private(settings)
         self.client, self.github, self.git, self.settings = client, github, gitrepo, settings
         self.store = Store(client)
         self.executor = Executor(client, github, settings.public_base_url, settings.auto_fix_pr)

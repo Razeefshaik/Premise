@@ -176,7 +176,7 @@ def test_fresh_graph_bootstraps_without_hiding_query_bugs(new_graph,monkeypatch)
     from redis.exceptions import ResponseError
     client=new_graph()
     assert graph_ready(client)[0] is False
-    monkeypatch.setattr(bootstrap,'GraphClient',lambda *args:client)
+    monkeypatch.setattr(bootstrap.GraphClient,'from_settings',lambda config:client)
     monkeypatch.setattr(bootstrap,'settings',lambda:replace(Settings(),poll_enabled=False,
         sandbox_dir=str(SANDBOX),anthropic_api_key=''))
     starts=[]

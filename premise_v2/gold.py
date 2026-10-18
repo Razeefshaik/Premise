@@ -92,12 +92,12 @@ def score(name, expected, actual):
 
 
 def run_gold(host, port, model_root, root="fixtures/v2/gold", split=None, capture=None,
-             extractor_names=("E3", "K2", "K2_LLM", "E1"), budget=40):
+             extractor_names=("E3", "K2", "K2_LLM", "E1"), budget=40, connection_options=None):
     """capture is a real adapter only in the explicitly executed recording script."""
     root, model_root = Path(root), Path(model_root)
     manifest, examples = corpus(root)
-    stage_c = GraphClient(host, port, "premise_gold_stage_" + uuid.uuid4().hex[:10])
-    decision = GraphClient(host, port, "premise_gold_decision_" + uuid.uuid4().hex[:10])
+    stage_c = GraphClient(host, port, "premise_gold_stage_" + uuid.uuid4().hex[:10], **(connection_options or {}))
+    decision = GraphClient(host, port, "premise_gold_decision_" + uuid.uuid4().hex[:10], **(connection_options or {}))
     try:
         ingest(decision, model_root, "gold-frozen-model", "https://example.invalid/synthetic")
         staging = Staging(stage_c)
