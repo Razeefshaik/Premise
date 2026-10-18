@@ -14,8 +14,11 @@ def row_answer(name, rows):
         d=rows["decision"]
         provided=sorted({p["guarantee"] for p in rows["paths"] if p["role"]=="PROVIDES"})
         relied=sorted({p["guarantee"] for p in rows["paths"] if p["role"]=="RELIES_ON"})
-        reviewers=", ".join(rows["reviewers"]) or "No active reviewer found"
-        evidence="; ".join(f"{c['person']}: {c['evidence']} recent authored sources" for c in rows["candidates"])
+        names = rows.get('names', {})
+        def person(id):
+            return f"{names[id]} ({id})" if names.get(id) else id
+        reviewers=", ".join(person(id) for id in rows["reviewers"]) or "No active reviewer found"
+        evidence="; ".join(f"{person(c['person'])}: {c['evidence']} recent authored sources" for c in rows["candidates"])
         return f"{d['id']}: {d['title']}. Lifecycle: {d['status']}. Provides {', '.join(provided) or 'no guarantees'}; relies on {', '.join(relied) or 'no guarantees'}. Current reviewers: {reviewers}. {evidence}. The requirement paths and source lines are shown below."
     if name == "guarantee_health" and isinstance(rows,dict):
         bad=[f"{g['id']} is {g['status']}" for g in rows["guarantees"] if g["status"]!='holds']

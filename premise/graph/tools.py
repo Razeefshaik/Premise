@@ -111,10 +111,13 @@ class GraphTools:
         paths = self.client.named("decision_lineage", {"id":id})
         supersedes = self.client.read("MATCH (d:Decision {id:$id})-[r:SUPERSEDES]-(s:Decision) RETURN s.id AS id, startNode(r).id AS newer", {"id":id})
         active, gone, candidates = _route(self.client, id, self.now-self.since_days*DAY_MS, gone=self.gone)
+        person_ids = sorted(set(active) | {c.person for c in candidates})
+        names = {p['id']: p['name'] for p in self.client.read(
+            'MATCH (p:Person) WHERE p.id IN $ids RETURN p.id AS id,p.name AS name', {'ids':person_ids})} if person_ids else {}
         ids = [id] + [x for p in paths for x in [*p["chain"],*p["facts"]]]
         return {"decision":entity[0]["decision"], "paths":paths, "supersession":supersedes,
                 "active_accountable":active, "unavailable":gone, "candidates":[c.model_dump() for c in candidates],
-                "reviewers":active or [c.person for c in candidates], "sources":provenance(self.client,ids)}
+                "reviewers":active or [c.person for c in candidates], "names":names, "sources":provenance(self.client,ids)}
 
     def who_knows(self, id):
         rows = self.client.named("who_knows", {"id":id, "since":self.now-self.since_days*DAY_MS})
