@@ -182,8 +182,8 @@ ADR-012 deterministic Ask with citations, and disabled actions (403).
   `e072844bd6e1b5ea305e7d60400b02c2127dd34ccbe6e6eb80dae200cf541185`.
 - Public browser smoke: **PASS** at 1440x900 and 390x844: visible canvas/verdict,
   G_DEDUPE labelled broken, complete preset-repair story, zero page errors.
-- User confirmed a FalkorDB Free instance without TLS. Credentials and hosted endpoint have not been provided or tested.
-- Nothing pushed; README live link unchanged. Local tests do not prove cloud connectivity.
+- User confirmed a FalkorDB Free instance without TLS. The deployed endpoint is `https://premise-43eh.onrender.com/`; cloud HTTP API smoke checks passed. Operator-side cloud credentials were not supplied, so direct cloud graph immutability was not checked.
+- The user pushed the deployment branch and deployed it on Render. The README live link is still unchanged pending confirmation of working pages.
 
 ## Final local diff for review
 
@@ -200,3 +200,28 @@ Review the complete patch locally with `git diff main...deploy/live`. The ignore
 copy is `.runtime/deploy-live.diff`; it must not be committed. After review, the user can
 publish only this branch with `git push -u origin deploy/live` and select it in Render.
 Main does not need to be merged for this deployment.
+
+## HTTPS asset correction after the first Render deployment
+
+The live database APIs returned successful results, but Explorer, Continuity and Benchmark
+rendered absolute HTTP asset links from the internal request scheme. Render terminates
+HTTPS before forwarding to Uvicorn; browsers blocked those scripts and styles as mixed
+content. The HTTP localhost smoke did not expose that hosting difference.
+
+The correction uses root-relative asset paths in those three templates. It does not trust
+forwarded client IPs or change the request limits. Six new regression cases simulate an
+HTTP upstream behind an HTTPS proxy in public and normal modes.
+
+- Targeted HTTPS/public/Explorer tests after the correction: **31 passed**.
+- Replay rendering of all three corrected templates: **PASS**, with relative replay assets.
+- Hosted API smoke: **PASS** for retained pages/APIs, Paylane at 72 (BLOCKED, four broken
+  guarantees), the repair preset (CLEAR), ADR-012 deterministic Ask with sources, and
+  forbidden write requests (403). HTTP status alone does not prove browser scripts loaded.
+- Browser diagnosis against the hosted APIs: Explorer loads and shows hypothetical broken
+  labels; Benchmark displays the actual recorded graph F1 and chart; Continuity displays
+  departure analysis. These checks corrected only asset URLs inside the test browser.
+  Benchmark and Continuity then reported no browser errors. This proves the correction
+  addresses the observed failure; it does not mean the server already serves the hotfix.
+- The 373-test full-suite result above precedes this template correction; it is not a
+  claim that the full suite was repeated after the correction.
+- The asset correction must be pushed and deployed before the public browser fix is live.
