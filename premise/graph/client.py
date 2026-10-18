@@ -29,15 +29,26 @@ class GraphUnavailable(RuntimeError):
 
 
 class GraphClient:
-    def __init__(self, host: str = "localhost", port: int = 6379, graph_name: str = "premise_kestrel"):
+    def __init__(self, host: str = "localhost", port: int = 6379, graph_name: str = "premise_kestrel", **connection_options):
         self.host, self.port, self.graph_name = host, port, graph_name
+        self._connection_options = dict(connection_options)
         self._g = None
+
+    @classmethod
+    def from_settings(cls, config, *, host=None, port=None, graph_name=None):
+        return cls(host or config.falkordb_host, port or config.falkordb_port,
+                   graph_name or config.graph_name, **config.database_options)
+
+    def sibling(self, graph_name):
+        """A separate graph on the same authenticated, TLS-verified connection settings."""
+        return GraphClient(self.host, self.port, graph_name, **self._connection_options)
 
     @property
     def graph(self):
         if self._g is None:
             try:
-                db = FalkorDB(host=self.host, port=self.port, socket_timeout=5, socket_connect_timeout=2)
+                db = FalkorDB(host=self.host, port=self.port, socket_timeout=5, socket_connect_timeout=2,
+                              **self._connection_options)
                 self._g = db.select_graph(self.graph_name)
             except _OUTAGE as exc:
                 raise GraphUnavailable(str(exc)) from exc

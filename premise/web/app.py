@@ -88,7 +88,7 @@ class Question(BaseModel):
 
 def create_app(client=None, config=None, *, graph_api_at_ms=None, graph_node_cap=300):
     s = config or get_settings()
-    graph = client or GraphClient(s.falkordb_host,s.falkordb_port,s.graph_name)
+    graph = client or GraphClient.from_settings(s)
     tools, store = GraphTools(graph), Store(graph)
 
     @asynccontextmanager

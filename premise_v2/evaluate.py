@@ -37,11 +37,11 @@ def _probe_grounding(ext: Ext) -> dict:
             "reasons": {name: why for name, (_, why) in results.items()}}
 
 
-def run_eval(r: redis.Redis, host: str, port: int, model_root: str, fixtures: str) -> dict:
+def run_eval(r: redis.Redis, host: str, port: int, model_root: str, fixtures: str, *, connection_options=None) -> dict:
     expected = yaml.safe_load((Path(fixtures) / "expected.yaml").read_text(encoding="utf-8"))
     tag = uuid.uuid4().hex[:8]
-    staging = GraphClient(host, port, f"premise_v2_eval_staging_{tag}")
-    decision = GraphClient(host, port, f"premise_v2_eval_decision_{tag}")
+    staging = GraphClient(host, port, f"premise_v2_eval_staging_{tag}", **(connection_options or {}))
+    decision = GraphClient(host, port, f"premise_v2_eval_decision_{tag}", **(connection_options or {}))
     stream = f"premise:v2:eval:{tag}"
     try:
         p = Pipeline(r, staging, decision, model_root, fixture_workers(fixtures), out_dir=None, stream_name=stream)

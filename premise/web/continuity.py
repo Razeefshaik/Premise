@@ -16,7 +16,7 @@ def projection(client, person):
     ids=[n['id'] for n in nodes]
     edges=client.read("MATCH (a:Entity)-[r:ACCOUNTABLE_FOR|GOVERNS]->(b:Entity) WHERE a.id IN $ids AND b.id IN $ids RETURN a.id AS source,b.id AS target,type(r) AS type",{'ids':ids})
     edges+=client.read("MATCH (p:Person)-[m:MEMBER_OF]->(:Team)-[:OWNS]->(s:Service) WHERE p.id IN $ids AND s.id IN $ids AND m.until IS NULL RETURN p.id AS source,s.id AS target,'TEAM_OWNERSHIP' AS type",{'ids':ids})
-    graph=GraphClient(client.host,client.port,'premise_proj_'+uuid.uuid4().hex)
+    graph=client.sibling('premise_proj_'+uuid.uuid4().hex)
     with QueryRecorder(graph) as trace:
         try:
             for label in ('Person','Service','Decision'):

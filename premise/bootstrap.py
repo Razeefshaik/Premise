@@ -9,7 +9,7 @@ from .web.app import create_app
 
 def main():
     s=settings()
-    client=GraphClient(s.falkordb_host,s.falkordb_port,s.graph_name)
+    client=GraphClient.from_settings(s)
     if not s.poll_enabled and not graph_ready(client)[0]:
         ingest(client,s.sandbox_dir,"local",f"https://github.com/{s.sandbox_repo}")
     uvicorn.run(create_app(client,s),host="0.0.0.0",port=8000)

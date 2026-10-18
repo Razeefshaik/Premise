@@ -8,7 +8,7 @@ from .reasoning.preflight import ChangeItem
 
 def create_server(client=None):
     s = settings()
-    tools = GraphTools(client or GraphClient(s.falkordb_host,s.falkordb_port,s.graph_name))
+    tools = GraphTools(client or GraphClient.from_settings(s))
     server = FastMCP("Premise Company Brain")
 
     @server.tool()

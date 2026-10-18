@@ -60,7 +60,7 @@ def main(argv: list[str] | None = None) -> int:
     p_reset.add_argument("--demo",action="store_true",required=True)
     args = ap.parse_args(argv)
 
-    client = GraphClient(args.host, args.port, args.graph)
+    client = GraphClient.from_settings(s, host=args.host, port=args.port, graph_name=args.graph)
     if args.cmd == 'redteam':
         from .redteam import report
         result = report(args.host,args.port)
