@@ -169,6 +169,7 @@
 
 .xp-canvas-wrap { position: relative; border-radius: var(--r-card); overflow: hidden; background: radial-gradient(70% 70% at 50% 40%, rgb(91 99 255 / 0.12), transparent 70%), var(--panel-solid); box-shadow: 0 0 0 1px var(--line) inset; }
 #explorer-canvas { width: 100%; height: clamp(300px, calc(100dvh - 386px), 720px); }
+body[data-public-demo="true"] #explorer-canvas { height: clamp(240px, calc(100dvh - 450px), 656px); }
 .v3-app:has(.v3-replay) #explorer-canvas { height: clamp(260px, calc(100dvh - 432px), 720px); }
 .xp-legend { position: absolute; top: var(--space-3); left: var(--space-3); display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-3); max-width: calc(100% - 24px); margin: 0; padding: 6px 12px; list-style: none; border-radius: var(--r-pill); background: rgb(9 10 18 / 0.72); box-shadow: 0 0 0 1px var(--line) inset; font-size: var(--text-xs); color: var(--ink-2); pointer-events: none; }
 .xp-legend li { display: inline-flex; align-items: center; gap: 5px; }
@@ -317,6 +318,7 @@
   .xp-scope { justify-content: flex-start; }
   .xp-main.v3-explorer { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
   #explorer-canvas { height: clamp(260px, calc(100dvh - 362px), 560px); }
+  body[data-public-demo="true"] #explorer-canvas { height: clamp(200px, calc(100dvh - 450px), 472px); }
   .v3-app:has(.v3-replay) #explorer-canvas { height: clamp(220px, calc(100dvh - 420px), 560px); }
   .v3-replay { padding: 6px var(--space-3); font-size: var(--text-xs); line-height: 1.4; }
   .v3-replay small { display: block; margin: 2px 0 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }

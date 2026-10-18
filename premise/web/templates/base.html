@@ -13,8 +13,8 @@
 {% block head %}{% endblock %}
 <script>document.documentElement.classList.add('js')</script>
 </head>
-<body class="{% block page %}{% endblock %}"{% if request.app.state.public_demo %} data-public-demo="true"{% endif %}>
-{% if request.app.state.public_demo %}<aside class="public-demo-banner" role="note">Public demo on FalkorDB Cloud. Read only. <a href="https://github.com/Razeefshaik/Premise#run-locally">Run locally for GitHub actions and v2.</a></aside>{% endif %}
+<body class="{% block page %}{% endblock %}"{% if request.app is defined and request.app.state.public_demo %} data-public-demo="true"{% endif %}>
+{% if request.app is defined and request.app.state.public_demo %}<aside class="public-demo-banner" role="note">Public demo on FalkorDB Cloud. Read only. <a href="https://github.com/Razeefshaik/Premise#run-locally">Run locally for GitHub actions and v2.</a></aside>{% endif %}
 <a class="skip" href="#main">Skip to content</a>
 {% set path = request.url.path %}
 <header class="bar">

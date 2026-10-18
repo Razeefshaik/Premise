@@ -1,117 +1,179 @@
-# Public live deployment: preflight only
+# Public live deployment
 
-**Not ready to deploy.** This report records inspection on 18 October 2026. Work began at
-15:57 IST against the requested 16:00 IST cutoff. No public-mode implementation, credentials,
-cloud smoke test or deployment was completed. Use the existing replay and local setup for
-this submission. The README has not gained a live-app link.
+Work is on `deploy/live`. Changes are local until reviewed; no deployment branch has been
+pushed. The earlier 16:00 IST cutoff was withdrawn: the user gave eight more hours.
+The README live-app link stays unchanged until a real deployment is confirmed.
 
-## Current entry points and route audit
+## Free hosting and account setup
 
-These are current behaviors, not implemented public-mode guarantees. Routes grouped below
-share the stated behavior. Framework documentation routes are included.
+Use **Render Web Service (Docker, Free)** for the app and **FalkorDB Cloud** for its graph.
+These are separate services: Render serves the website, and FalkorDB stores the company graph.
 
-| Method and route | Current behavior | Public deployment requirement |
-| --- | --- | --- |
-| GET `/` | Reads health, orphaned decisions, recent assessments and fixture presets; renders landing | Keep; banner |
-| GET `/healthz` | Reads graph readiness and revision | Keep |
-| GET `/what-if`, `/explore` | Checks readiness and renders UI | Keep; banner |
-| POST `/api/check` | Overlay evaluation; repair search enabled by default through `include_fixes` | Keep overlay checks; disable repair search server-side; cap streamed body bytes and rate-limit |
-| POST `/api/ask` | Deterministic tools or optional model adapter, depending on configuration | Force deterministic tools; no model or model-cache writes; cap body and rate-limit |
-| GET `/api/health` | Reads computed guarantee health | Keep |
-| GET `/benchmark`, `/continuity` | Renders page templates | Keep; banner |
-| GET `/api/benchmark/questions` | Reads benchmark dataset files | Keep; no benchmark execution |
-| GET `/api/benchmark` | Reads recorded JSON results | Keep |
-| GET `/assessments/{aid}`, `/api/assessments/{aid}` | Reads existing assessments, evidence and related graph data | Keep; missing records still 404 |
-| GET `/entities/{id}` | Resolves entity and reads lineage, health, ownership, history and provenance | Keep; banner |
-| GET `/api/graph/timeline` | Reads dated attestation/health information | Keep |
-| GET `/api/graph/overview`, `/api/graph/neighborhood` | Reads graph views, including evaluation-date overlays | Keep existing bounds |
-| GET `/api/graph/facts` | Reads registered facts/presets | Keep |
-| GET `/api/graph/path`, `/api/graph/node/{id}` | Reads paths and node evidence | Keep existing bounds |
-| GET `/api/continuity` | Reads main graph, but creates/writes/deletes a temporary graph for betweenness/WCC | Must retain main-graph immutability; decide how to support projections within cloud permissions and resource limits |
-| `/static/*` | Serves packaged frontend assets | Keep |
-| GET `/docs`, `/redoc`, `/openapi.json` (framework defaults) | API schema/documentation | Account for banner requirement on documentation HTML or explicitly disable documentation UIs |
-| v2 GET `/`, `/item/{key:path}`, `/relations`, `/static/*` | Separate v2 server; reads staging/knowledge with visibility handling | Not mounted by v1 bootstrap; do not expose this separate server |
-| v2 POST `/item/{key:path}/dismiss` | Writes rejection state to staging | Must return 403 in public mode if v2 server is started |
+Checked against official documentation on 18 October 2026:
 
-No direct v1 HTTP endpoint for ingest, steward, GitHub publication or CLI invocation was
-found. However, the web application's lifespan starts the poller when polling and a token
-are enabled. That background pipeline fetches and ingests main, stores assessments, invokes
-optional fix augmentation, publishes statuses/comments/fix PRs, and can run the steward.
-Public mode must prevent the entire lifecycle path regardless of supplied flags.
+- [Render Free](https://render.com/docs/free) offers web services with 750 instance hours
+  per workspace/month. Apps sleep after 15 idle minutes and can take about a minute to wake.
+  No-card accounts are documented, but account-specific verification has not been tested.
+  Excess outbound traffic, including external database traffic, can cause suspension.
+- [FalkorDB plans](https://www.falkordb.com/plans/) advertises a Free plan, but currently
+  lists TLS as excluded. Check the actual instance connection screen. Website HTTPS does
+  not encrypt the separate Render-to-database connection. Do not claim transport security
+  if that endpoint only supports plaintext; use an available TLS endpoint or retain the replay.
+- [Hugging Face Spaces](https://huggingface.co/docs/hub/spaces-overview) currently requires
+  a paid plan to create a Docker Space, despite CPU Basic having no hourly charge.
 
-The current What if Apply fix button fills hypothetical values and calls the overlay API;
-it does not itself open a GitHub PR. Disabling repair search means the UI must handle absent
-fix suggestions honestly. Pre-recorded story behavior also needs checking.
+### Do now: accounts only
 
-CLI entry points are not shell-executed by web handlers. `serve` shares `create_app`;
-`poll-once`, `assess --execute`, `steward --execute`, `ingest`, `reset`, `demo`, benchmark
-execution and v2 commands are separate administrative surfaces. A public-mode implementation
-must inventory and guard them deliberately rather than assume disabling polling guards all writes.
+1. Sign up at [FalkorDB Cloud](https://app.falkordb.cloud/).
+2. Create a dedicated Free demo instance, if the account offers it. Use only the fictional
+   sandbox data. Record its connection settings privately; never paste credentials into chat.
+3. Check the offered port and TLS support. Do not infer them from examples or assume port 6379.
+4. Sign up at [Render](https://dashboard.render.com/) using GitHub. Connect only the Premise
+   repository if the permission picker permits that scope.
+5. Confirm that the Free web-service plan is available without purchasing anything. Stop
+   before deploying the old main branch: it does not contain these public-mode protections.
 
-## Connections that need authenticated/TLS configuration
+### After local review and the user's push
 
-- `premise/graph/client.py`: underlying FalkorDB constructor currently passes host/port and timeouts only.
-- Main entry points: `premise/bootstrap.py`, `premise/web/app.py`, `premise/cli.py`, `premise/mcp_server.py`.
-- Secondary clients: `premise/web/continuity.py` and `premise/benchmark/run.py` currently copy only host/port, losing any future auth/TLS unless explicitly propagated.
-- v2: `premise_v2/cli.py` constructs Redis and staging/decision/knowledge graph clients; `evaluate.py` and `gold.py` construct isolated evaluation graphs.
+1. In Render, choose **New -> Web Service**, then the Premise repository.
+2. Select the reviewed branch/commit containing these changes. Choose **Docker**, the
+   repository root as build context, and `./Dockerfile`. Select **Free** compute.
+3. Use the region nearest the database when both providers offer that region.
+4. Enter the environment settings below in Render's Environment settings. Enable public
+   demo mode and use a dedicated graph namespace. Do not upload `.env` or add GitHub/model keys.
+5. Leave the Docker command at its default: `python -m premise.bootstrap`. Render supplies
+   `PORT`; the process binds to it on `0.0.0.0`. Its local fallback port is 8000.
+6. Set the health-check path to `/healthz`. Use one instance/worker; request limits are
+   process-local. Turn off automatic deploys during review if offered.
+7. Create the service after the exact commit and environment have been reviewed. Watch logs
+   until graph startup is complete and the health check is successful.
+8. Copy the generated HTTPS address into `PUBLIC_BASE_URL` in the host's settings.
+9. Run the smoke checks below against that HTTPS address. Test the link while logged out,
+   including after an idle cold start. Confirm success before adding it to the README.
 
-Implement optional username/password/TLS without changing current local defaults; hide the
-password from repr and logs. Test secondary-client propagation and TLS certificate validation.
+## Environment variable names
 
-## Startup findings
+No credentials or concrete connection values belong in this document.
 
-`python -m premise.bootstrap` currently uses the bundled `sandbox/kestrel-platform`; it
-does not clone a repository. With polling disabled, it ingests when the graph is not ready,
-and skips ingest when ready. This behavior was inspected in source, not cloud-tested.
-Repeated/concurrent startup and a changed bundled fixture version still need verification.
-It currently binds `0.0.0.0:8000` and does not read `PORT`.
+| Variable | Purpose |
+| --- | --- |
+| `PUBLIC_DEMO` | Enable the public safety boundary; required for this deployment |
+| `FALKORDB_HOST` | Cloud endpoint hostname, without a URL scheme |
+| `FALKORDB_PORT` | Exact database port from the connection screen |
+| `FALKORDB_USERNAME` | Optional database username |
+| `FALKORDB_PASSWORD` | Database password; enter as a host secret |
+| `FALKORDB_TLS` | Enable only when the endpoint supports TLS; verifies certificate and hostname |
+| `GRAPH_NAME` | Dedicated public demo graph, separate from existing company/v2 graphs |
+| `SANDBOX_DIR` | Optional override for the bundled fixture directory |
+| `PORT` | Host-supplied HTTP listening port |
+| `PUBLIC_BASE_URL` | The service's public HTTPS origin |
+| `POLL_ENABLED` | Forced off by public mode regardless of supplied setting |
+| `AUTO_FIX_PR` | Forced off by public mode |
+| `STEWARD_ENABLED` | Forced off by public mode |
+| `LLM_PROVIDER` | Forced to the disabled provider by public mode |
 
-Initial ingest does not create the saved scenario assessments produced by `premise demo`.
-A fresh cloud database therefore needs an explicit startup seeding decision if existing
-assessment pages and landing history must contain demo records. Never seed from an HTTP request.
+No GitHub token, Anthropic key or Codex login is needed. Auth/TLS settings propagate to
+FalkorDB clients, temporary graphs and the Redis connections in v2 administration.
+Defaults preserve unauthenticated local Docker use. Passwords are excluded from Settings repr.
 
-## Proposed configuration names (not implemented yet)
+## Startup and request boundaries
 
-`FALKORDB_HOST`, `FALKORDB_PORT`, `FALKORDB_USERNAME`, `FALKORDB_PASSWORD`, `FALKORDB_TLS`,
-`GRAPH_NAME`, `SANDBOX_DIR`, `PUBLIC_DEMO`, `PORT`, `PUBLIC_BASE_URL`,
-`POLL_ENABLED`, `AUTO_FIX_PR`, `STEWARD_ENABLED`, `LLM_PROVIDER`.
+The bootstrap uses `sandbox/kestrel-platform` bundled in the image. It neither clones a
+repository nor calls GitHub. If the graph is ready, it skips ingestion; otherwise it loads
+the fixture. Public startup seeds four labelled fixture assessments without repair search.
+Restarting a ready graph skips existing seed assessments for that revision.
 
-Public mode must override unsafe flags and provider settings, enforce the requested 403
-message, and add the public-demo banner. Validate the body limit before JSON parsing, including
-chunked requests. Rate limiting needs bounded memory and a trusted-proxy/IP policy so forwarded
-headers cannot bypass it. Consider expensive continuity/graph endpoints as well as Ask and What if.
+Continuity's native betweenness/WCC projections are computed once during app startup in
+owned temporary graphs, which are then deleted. Requests use their cached results. The
+query viewer marks these traces `recorded_at_startup`; their timings are startup timings.
+A changed main-graph revision invalidates the cache and returns 503 until restart. These
+algorithms describe continuity and never decide verdicts.
 
-Do not supply GitHub or model tokens to the public host. Enter database credentials only
-through host secrets or the approved local shell, never source files or chat.
+Public HTTP requests cannot call the GraphClient write/delete methods. Unsupported mutation
+methods are rejected before route dispatch. Existing What if checks only evaluate overlays;
+explicit repair-search requests are denied. Story mode tests the bundled repair preset as
+an overlay and labels it as a preset, not a newly generated fix.
 
-## Hosting findings and future setup
+Raw bodies are capped at 64 KiB before JSON parsing, including chunked bodies, with a
+10-second body-read timeout. Ask and What if share 30 requests per minute per observed
+client IP; other API reads and landing reads allow 120. At most four expensive requests
+run concurrently. The IP table is bounded to 2,048 buckets; new buckets are rejected when
+full. Limits reset on restart and require a single worker.
 
-The user has not selected a host. On 18 October 2026, the official
-[Hugging Face Spaces overview](https://huggingface.co/docs/hub/spaces-overview) says creating
-a Docker Space requires a paid plan, despite CPU Basic having no hourly cost. Its documented
-outbound ports also require checking against the actual cloud database endpoint.
+The server disables proxy-header rewriting and does not trust user-supplied forwarded IPs.
+Behind Render, requests may therefore share a proxy's bucket. This deliberately favors a
+conservative limit over spoofable per-visitor identity. A verified trusted-proxy policy is
+needed before increasing traffic or using multiple workers.
 
-[Render's free service documentation](https://render.com/docs/free) supports free web
-services and describes operation without a payment method. Account-specific signup/card
-verification was not tested. Free services sleep after 15 minutes and can be suspended for
-unusually high outbound traffic, including external database access.
+## Route audit
 
-If deployment is resumed after the submission with a new time budget:
+| Method and route | Public behavior |
+| --- | --- |
+| GET `/` | Live graph health, presets, orphaned decisions and stored fixture assessments |
+| GET `/healthz` | Graph ready/revision, 200 or 503 |
+| GET `/what-if`, `/explore` | Interactive overlays, graph, time machine and query viewer |
+| POST `/api/check` | Overlay only, bounded body/rate; omitted repair flag forced off; explicit repair flag returns 403 |
+| POST `/api/ask` | Deterministic read tools only; no adapter or model-cache writes |
+| GET `/api/health` | Computed guarantee health |
+| GET `/benchmark`, `/continuity` | Page views with public banner |
+| GET `/api/benchmark/questions`, `/api/benchmark` | Bundled benchmark data/results; never executes benchmark/model download |
+| GET `/assessments/{aid}`, `/api/assessments/{aid}` | Stored assessment/evidence; 404 if missing |
+| GET `/entities/{id}` | Entity lineage, ownership, health, history and source evidence |
+| GET `/api/graph/timeline` | Attestation dates and evaluated health |
+| GET `/api/graph/overview`, `/api/graph/neighborhood` | Bounded graph views with optional evaluation date |
+| GET `/api/graph/facts` | Registered facts and fixed scenario presets |
+| GET `/api/graph/path`, `/api/graph/node/{id}` | Paths and node evidence |
+| GET `/api/continuity` | Main graph reads plus startup-recorded native projection results |
+| GET `/static/*` | Packaged assets |
+| GET `/docs`, `/redoc`, `/openapi.json` | Schema/docs; documentation HTML includes public banner |
+| All other mutation requests | 403 before dispatch; no GitHub/ingest/steward action route exists in v1 |
+| v2 GET `/`, `/item/{key:path}`, `/relations`, `/static/*` | Separate local review server; not mounted or launched by public bootstrap |
+| v2 POST `/item/{key:path}/dismiss` | 403 in public mode, even if someone constructs the separate v2 app |
 
-1. Finish public-mode code and the required regression, immutability and rate-limit tests first.
-2. Provision FalkorDB Cloud; privately record its endpoint, port, username, password and TLS requirement.
-3. Choose a host that accepts the account without a card and permits outbound database TCP/TLS.
-4. For Render, create a Web Service using the repository Dockerfile and choose Free. Do not deploy today's unguarded main. Use only the reviewed, tested deployment commit after the user pushes it.
-5. Enter the configuration in host settings. Start with `python -m premise.bootstrap`; the pending code must read the host's `PORT` and force public mode's safe settings.
-6. Confirm `/healthz`, all retained pages, blocked write routes, deterministic Ask, and the Paylane overlay from outside the local machine. Compare main node/edge counts and fact hashes before/after batches.
-7. Only after the user confirms success, add the live URL to the README. Keep the replay available.
+The exact disabled message is: **Disabled in the public demo. Run Premise locally for the full version.**
+Every application HTML page includes the public demo banner. Normal local mode keeps its
+existing routes, repair search, optional adapters and polling behavior.
 
-## Validation and diff for this timebox
+No web handler shells out to a CLI. The `serve` CLI shares this app and its public boundary.
+In public mode, main CLI `health`, `ask`, `check` and `serve` remain available (`check` omits
+repair search). `ingest`, `reset`, `demo`, `assess`, `assess-scenario`, `scenarios`, `poll-once`,
+`reconcile`, `steward`, `bench`, `redteam` and `mcp` are denied. All v2 CLI commands except
+`registry-check` are denied. Startup seeding is the deliberate pre-request exception.
+Direct pipeline construction, model-adapter construction and bounded fix augmentation are
+also denied when given public settings. Core verdict code and verdict Cypher are unchanged.
 
-- Source inspection only: routes, entry points, connection constructors, startup, Apply fix behavior.
-- Full pytest suite: **not run**. Scenarios: **not run**. Cloud credentials: **not supplied**.
-- Cloud and public endpoint smoke tests: **not run**. Immutability tests: **not implemented/run**.
-- No runtime code, verdict logic, verdict Cypher, Dockerfile or README changes.
-- Only this deployment preflight report was added on `deploy/live`; no push or deployment.
+## Verification
 
-This is a handoff, not evidence that the requested public deployment is safe or complete.
+Run the regular full suite against local FalkorDB with public mode disabled:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m premise.cli --graph premise_deploy_validation scenarios
+```
+
+Use a separately ingested validation graph for scenarios; never target the live database.
+Run a public-mode instance with its credentials supplied privately through environment
+variables, then point the smoke script at it:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/check_public_demo.py --base-url http://127.0.0.1:8000 --verify-database
+```
+
+The operator-side `--verify-database` option reads the configured graph directly and compares
+node count, edge count and a SHA-256 hash of all fact values before/after repeated HTTP calls.
+It prints no credentials. For external HTTP-only checks, omit that option and supply the
+public HTTPS URL. Database immutability is then explicitly reported as not checked.
+
+The smoke script checks kept pages, graph/date/path/continuity/benchmark APIs, stored
+assessments, Paylane at 72 (BLOCKED, four broken guarantees), the repair preset (CLEAR),
+ADR-012 deterministic Ask with citations, and disabled actions (403).
+
+### Actual results for this branch
+
+- Focused public/config plus existing web/preflight/continuity tests: **62 passed**.
+- Public/config tests after adding the request-context write boundary: **24 passed**.
+- Full suite: running; result pending.
+- Twelve scenarios: pending.
+- Docker image build: **passed locally**; container smoke pending.
+- FalkorDB Cloud credentials/instance and hosted endpoint: not provided or tested yet.
+- Nothing pushed; README live link unchanged. Local tests do not prove cloud connectivity.

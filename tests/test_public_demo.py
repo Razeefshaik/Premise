@@ -28,6 +28,9 @@ def test_public_requests_are_read_only_and_keep_real_verdicts(new_graph, monkeyp
     seeded = snapshot(graph)
     prepare_graph(graph, config)
     assert snapshot(graph) == seeded  # no duplicate records or re-ingestion on restart
+    graph.write('MATCH (a:Assessment) REMOVE a.public_seed_ready')
+    prepare_graph(graph, config)  # complete a seed interrupted before its final marker
+    assert snapshot(graph) == seeded
     app = create_app(graph, config, graph_api_at_ms=NOW)
     with TestClient(app) as http:
         # The startup-only temporary projections are complete; requests may not create any.
@@ -160,3 +163,21 @@ def test_host_port_and_proxy_policy(monkeypatch):
     monkeypatch.setattr(bootstrap.uvicorn, 'run', run)
     bootstrap.main()
     assert run.call_args.kwargs == dict(host='0.0.0.0', port=10000, proxy_headers=False)
+
+
+def test_request_context_rejects_writes_and_resets_after_response():
+    from premise.graph.client import GraphClient
+    from premise.public_demo import read_only_request
+    graph = GraphClient()
+    http = TestClient(create_app(graph, Settings(public_demo=True)))
+    @http.app.get('/probe-write')
+    def probe():
+        graph.write('CREATE (:ShouldNeverExist)')
+    @http.app.get('/probe-delete')
+    def probe_delete():
+        graph.delete_graph()
+    for path in ('/probe-write', '/probe-delete'):
+        response = http.get(path)
+        assert response.status_code == 403 and response.json()['detail'] == DISABLED
+    assert graph._g is None  # no connection was needed to reject the operation
+    assert not read_only_request.get()
