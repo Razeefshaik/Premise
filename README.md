@@ -11,26 +11,40 @@
 ![Python 3.12](https://img.shields.io/badge/python-3.12-3776ab)
 
 <p>
-  <a href="https://premise-43eh.onrender.com/" title="Live app on FalkorDB Cloud"><b>Live app</b></a>
+  <a href="https://premise-43eh.onrender.com/" title="Live app on FalkorDB Cloud"><b>🌐 Live app</b></a>
   &nbsp; · &nbsp;
-  <a href="https://youtu.be/Ki3UHkeXfrE"><b>Watch demo</b></a>
+  <a href="https://youtu.be/Ki3UHkeXfrE"><b>🎬 Watch demo</b></a>
   &nbsp; · &nbsp;
-  <a href="https://razeefshaik.github.io/Premise/"><b>Recorded replay</b></a>
+  <a href="https://razeefshaik.github.io/Premise/"><b>▶ Recorded replay</b></a>
 </p>
 
 <p>
-  <a href="https://dev.to/razeef_shaik/search-finds-documents-my-graph-finds-consequences-434o">Read the blog</a>
+  <a href="https://dev.to/razeef_shaik/search-finds-documents-my-graph-finds-consequences-434o">📝 Read the blog</a>
   &nbsp; · &nbsp;
-  <a href="#the-real-github-flow">See the GitHub PR workflow</a>
+  <a href="#the-real-github-flow">🔀 GitHub PR workflow</a>
 </p>
 
 <sub>The live replay is a <b>read-only recording</b> of real FalkorDB results, so anyone can explore it without installing anything.<br>
 For the <b>full version</b> (live What if checks, Ask the company, PR assessments, verified fix PRs and the MCP server for coding agents),
 <a href="#run-locally"><b>run it locally in two commands</b></a>.</sub>
 
-[The company brain](#the-company-brain) · [How it is built](#how-the-brain-is-built) · [Ask the company](#ask-the-company) · [When a change arrives](#when-a-change-arrives) · [Graph data model](#graph-data-model) · [Cypher and algorithms](#cypher-and-graph-algorithms) · [Benchmark](#benchmark-what-does-structure-buy) · [Run locally](#run-locally)
-
 </div>
+
+---
+
+## Contents
+
+1. [The company brain](#the-company-brain)
+2. [How it is built](#how-the-brain-is-built)
+3. [Ask the company](#ask-the-company)
+4. [When a change arrives](#when-a-change-arrives)
+5. [A tour in screenshots](#a-tour-in-screenshots)
+6. [The real GitHub flow](#the-real-github-flow)
+7. [Graph data model](#graph-data-model)
+8. [Cypher and graph algorithms](#cypher-and-graph-algorithms)
+9. [Benchmark](#benchmark-what-does-structure-buy)
+10. [Results and evidence](#results-and-evidence)
+11. [Run locally](#run-locally)
 
 ---
 
